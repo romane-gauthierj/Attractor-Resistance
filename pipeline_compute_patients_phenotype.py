@@ -15,6 +15,7 @@ from boxplot_phenotype_V2 import create_boxplot
 from create_phenotypes_patients_table import vizualise_table_phenotype_condition
 from patients_ids_phenotype_table import create_table_patients_phenotypes
 from genes_signature import compute_genes_mean_signature
+import numpy as np
 
 
 
@@ -55,7 +56,8 @@ bnd_dir_sens = f'{folder}/sensitive_patient/personalized_boolean_modified/models
 # tissue_interest = 'Lung'
 # top_resistant_ids, top_sensitive_ids= get_patients_top_10(drug_data, annotations_models, drug_interest, tissue_interest)
 drug_interest = 'AZD8931' #'Avagacestat' AZD8931
-top_resistant_ids, top_sensitive_ids= get_patients_top_10(drug_data, annotations_models, drug_interest)
+tissue_remove = 'Haematopoietic and Lymphoid'
+top_resistant_ids, top_sensitive_ids, drug_tissue_data= get_patients_top_10(drug_data, annotations_models, drug_interest)
 patients_ids = top_sensitive_ids + top_resistant_ids
 
 # check if KRAS is also in the montagud_data
@@ -150,9 +152,56 @@ genes_stats_results_prolif_egf = compute_genes_mean_signature(folder, montagud_n
 
 
 
+# -----------------  Step 11: check there is not correlation between phenotype distribution and cancer type ----------------------------
+patients_phenot_table['SANGER_MODEL_ID'] = patients_phenot_table['Unnamed: 0'].str.split('_').str[0]
+conditions = [
+    patients_phenot_table['SANGER_MODEL_ID'].isin(top_resistant_ids),
+    patients_phenot_table['SANGER_MODEL_ID'].isin(top_sensitive_ids)
+    ]
+choices = ['Resistant', 'Sensitive']
+patients_phenot_table.loc[:,'Drug status'] = np.select(conditions, choices, default = '')
 
 
 
+ids_tissue_data = drug_tissue_data[['SANGER_MODEL_ID', 'tissue']]
+ids_tissue_data = ids_tissue_data.drop_duplicates(subset='SANGER_MODEL_ID')
+
+
+# merge tissues and model id 
+patients_phenot_table = pd.merge(patients_phenot_table, ids_tissue_data, on = 'SANGER_MODEL_ID')
+print(patients_phenot_table)
+
+
+
+# look the number of each cancer for the condition-phenotype of interest
+condition = 'TGFb'
+phenotype = 'Metastasis'
+
+
+
+# resistant group changes according to what is the condition and the phenotype
+# group_proliferation_resistant: group with high phenotype 
+
+group_phenotype_resistant = patients_phenot_table[
+    (patients_phenot_table['Drug status'] == 'Resistant') & 
+    (patients_phenot_table[f'{condition}_ON_{phenotype}'] >= 0.1)
+]
+
+
+
+
+print(group_phenotype_resistant['tissue'].value_counts()) # EGF- proliferation: 4 lung, 1 breast, 1 haematopoetic
+                                                          # TGFb- Metastasis: 21 haemato, 2 skin, 2 breast, 1 lung, 1 large intestine, 1 endom, 1 liver
+
+
+
+
+
+
+
+
+# ???????
+# how to check that specific cancers are more present in one category???
 
 
 

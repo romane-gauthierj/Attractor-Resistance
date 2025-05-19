@@ -387,5 +387,11 @@ validate my result (BCL2 higher expressed - anti apoptotic gene) with papers
 
 
 
+TO DO: check the resistant id are above 2 and sensitive id are below -2 !!!!!!!!!!!!!!!!!!!
+check that the fct that removes
+
+results: if i remove haemopotoic -> not many data for sensitiviness....-> to check
+
 Mai 20
-to do: try to remove haematopoetic and see if this changes the distribution of phenotype
+to do: try to remove haematopoetic and see if this changes the distribution of phenotype and try to run the file to see 
+if maboss is well installed
