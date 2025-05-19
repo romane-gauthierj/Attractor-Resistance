@@ -41,8 +41,8 @@ def get_patients_top_10(drug_data, annotations_models, drug_interest, tissue_int
 
 
 # def get_patients_top_10(tissue_interest, drug_interest):
-#     drug_data = pd.read_csv('../cancer_data/drug_sensitivity.csv')
-#     annotations_models = pd.read_csv('../cancer_data/model_list_20250407.csv')
+#     drug_data = pd.read_csv('../data/drug_sensitivity.csv')
+#     annotations_models = pd.read_csv('../data/model_list_20250407.csv')
 #     annotations_models['tissue'] = annotations_models['tissue'].str.upper()
 
 #     #annotations_models = annotations_models[annotations_models['cancer_type_detail'] == 'Lung Adenocarcinoma']
@@ -67,9 +67,9 @@ def get_patients_top_10(drug_data, annotations_models, drug_interest, tissue_int
 
 
 # def get_patients_zscore_strict(tissue_interest, drug_interest):
-#     drug_data = pd.read_csv('../cancer_data/drug_sensitivity.csv')
+#     drug_data = pd.read_csv('../data/drug_sensitivity.csv')
 #     # identify the drug data for LUNG cancer
-#     annotations_models = pd.read_csv('../cancer_data/model_list_20250407.csv')
+#     annotations_models = pd.read_csv('../data/model_list_20250407.csv')
 #     annotations_models['tissue'] = annotations_models['tissue'].str.upper()
 
 #     #annotations_models = annotations_models[annotations_models['cancer_type_detail'] == 'Lung Adenocarcinoma']

@@ -1,0 +1,391 @@
+
+April 28 
+- Finished : identify lung drug and stratify patients according to LN_IC50
+- Tried : download omnipath and understanding omnipath, run ROMA on lung cancer according to drug sensitivity 
+- Todo : try to download omnipath, try having a margin when stratify patients, identify differently expressed proteins in lung with ROMA + identify differently expressed pathways in lung, try to change the transition rate to random in the general cfg file, find papers about how to create cfg files based on data expression/ abundance and papers about explore drug sensitivity, clean organization 
+
+
+April 29
+
+- Finished : downloaded omnipath on R, reorganized folders
+- Tried: filter out some of the samples and try running ROMA on smaller dataset on 10 patient samples but no pathway/ gene significantly differently expressed bw sensitive and resistant.
+- Todo:
+ROMA : genes contribute most to overdispersion are selected like in the paper (L1 in the rRoma.output$ModuleMatrix)-> maybe shifted is better ?pathways only overdispersed not shifted
+
+proteomics data cell model passport:  mass spectrometry data provides relative intensity -> can compare accross samples.
+
+
+TO DO - try repeat it but with other samples ID (more based on IC50 than z score; only based on z score)- try repeat the same but with protein expression instead
+- find github single cell sequencing
+
+
+Results and follow up
+only two sensitive for proteins -> look at it again, find another way to create sensitive vs resistant patients (only based on IC50) and add more samples maybe 7-8 in each category 
+
+
+
+
+
+
+
+
+
+April 30 
+finished: literature review, chose adenocarcinoma as lung subtype due to many existing targeted therapies and resistance to treatment observed due to activation of some signaling pathway, identified driver mutations in lung adenocarcinoma from literature and ROMA, started creating generic boolean tailor to lung adenocarcinoma
+tried: create plots of genes expression according to groups with ROMA
+to do: finish generic lung boolean cfg (think about what signaling pathways to keep) and start bnd(think about what node to remove and how to change logical rules accordingly) and try computing attractors with Maboss web for some initial states. Do we obtain the same phenotype as for prostate paper? 
+1) keep all inputs off
+2) keep all nutritents ON
+3) keep all stress/ acidic/ DNA damage ON 
+
+
+
+
+
+
+
+to do !!
+- check if there is the common protein mutated in lung in the hallmark file and in the original prostate boolean network 
+In original prostate Boolean 
+-> EGFR yes
+-> ALK no
+-> ROS1 no
+
+
+lung- EGFR and KRAS mutations at the origin
+-> EGFR yes
+-> KRAS not really we have RAS
+
+
+
+challenge:
+- select genes to add to the generic boolean and then combine them to the original 
+
+
+Boolean networks of lung adenocarcinoma :
+- key genes, signaling pathways, microenvironment cues
+- driven by oncogenic mutations and dysregulated pathways
+
+- mutated genes
+    Driver genes and oncoproteins: KRAS; EGFR (frequently overexpressed), ALK (fusion oncogene - EML4-ALK), ROS1 - fusion oncogene; BRAF - can be muated; MET- amplification; RET - fusion partner gene;
+
+    Tumor suppressor genes: TP53, STK11, KEAP1, RB1 
+
+- Signaling pathways
+    PI3K/AKT/mTOR - upregulated
+    MAPK (RAF/MEK/ERK) - downstream of KRAS, EGFR
+    JAK/STAT3 
+    WNT/b-catenin
+
+
+- microenvironment inputs 
+    Hypoxia - tumor oxigen deprivation
+    acidosis - tumor metabolism
+    immune checkpoint - PD-L1/ CTLA-4
+    TAMs - Tumor-associated macrophages (IL6, TNF-a)
+    Tregs - immunosuppressive signaling (IL10, TGF-B)
+
+
+
+Lung 
+literature: KRAS mutation, EGFR mutation
+ROMA: TFF1 (ER response early), CACNA2D2 (ER response late), CLDN18 (Apical junction), GPX2 (P53), FOSB (UV rep), SPP1 (angiogenesis), HBB (heme metabolism), 
+SCGB1A1 (peroxisome)
+
+
+
+
+
+
+escape mechanisms: MET amplification, EGFR amplification KRAS and BRAF mutation
+
+Prostate
+specific genes/ mutations: SPOP and AR
+pathways identified using ROMA (for each pathway - genes contribute the most to overdispersion)
+omnipath 
+up-to-date literature
+final network: androgen receptor, MAPK, Wnt, NFkB, PI3K/AKT, MAPK, mTOR, SHH, the cell cycle, the epithelial-mesenchymal transition (EMT), apoptosis and DNA damage pathways.
+challenge: don't know the original generic boolean network... no available data
+
+from chatgpt: AR, AR_ERG, ERG, NKX3_1, and SPOP most prostate cancer–specific markers 
+
+
+
+
+Mai 1 
+
+Finished: learn how to use WebMaBoSS, slightly change the generic prostate model to lung and run simulation using WebMaBoSS,
+          confirmed cell model passport patients data have common data with MaBoSS prostate
+Tried: found out that only 8 resistant vs 128 sensitive against Avagacestat
+To do: try to do a sensitivity analysis with WebMaBoSS (give many mutations and see which one lead to which phenotypes); try to understand why in the resistant patients there are not rna seq ..; and compute proba associated with state based on max expression gene in the rnaseq 
+
+
+tailor generic boolean network to lung 
+- RAS -> KRAS
+- remove AR_ERG
+- keep AR
+- keep foxa1 (TF can be dysregulated in cancer, can explain drug resistance)
+- want to add Sox9 (linked to EMT, cancer drug resistance) but not many data -> not added yet   
+- keep p53 (frequently mutated)
+- remove NKX3_1 (marker of prostate cancer)
+- remove SPOP (not many research)
+- remove fused_event
+
+
+later: check ROMA genes 
+
+
+- for the inputs keep them external
+
+
+- can use neo4j to see if there is any interaction between my new protein and proteins of the generic prostate model such as:
+
+(MATCH (p:Protein {name: "NEW_PROTEIN"})-[]-(s:Protein)
+WHERE s.name IN ["P53", "BRCA1", "MYC"]
+RETURN s.name)
+
+WebMaBoSS
+- can directly change the initial state, specify the output, add mutation (red -knock out; green - activation)
+- look at the effect of the mutation by looking at state probability trajectory graph
+
+
+assumptions
+- lung cancer and prostate based on same signaling pathways altered but on top lung has KRAS and EGFR mutations
+
+
+
+
+
+Mai 2
+tried: for the u_gene and d_gene: computes a probability between 0 and 1, based on relative expression, run MaBoSS simulation with python and compute metrics of probability
+
+protein, gene: continuous -> change u_gene/d_gene according to gene expression and protein abundance 
+
+to do: try to find a way to extract the data associated with proliferation/ metastasis/ apoptosis from WebMaBoSS and see how they compare to drug sensitivity 
+- have to add the low gene expressed 
+- state all assumptions and try to validate with literature (can we use RNA seq expression and protein abundance as transition rates?), and can we say that the u_gene is = proba based on its expression?
+
+- create pipeline to compare the distribution of each phenotype between sensitives and resistants
+
+
+
+
+
+Mai 3
+finished: merge the proba phenotypes dataframe with drug sensitivity (IC50) and compute correlation (result: not high negative correlation)
+to do: repeat the process with protein abundance instead and then combine both and see if get better result
+
+should maybe increase the time of the simulation ? since apoptosis does not behave in the expected way 
+change the way i identify sensitive vs resistant (maybe not restrictif enough)
+pick another cancer and drug 
+
+
+assumption: protein overwrite gene (high protein level more significant than low same gene level)
+            multiomics data of patient same time as the drug measurement
+
+
+
+
+Mai 4
+finished: run generic lung model when inputs off and nutrients on and EGFR/KRAS mutated-> get expected results, found out it is better to run MaBoSS pipeline.
+Started: poster
+to do: change figures of the poster, try to simulate KRAS/EGFR mutated in sensitive and resistant; compare results phenotype distribution bw if use proteins or genes or both
+check that we can reproduce prostate results
+
+
+try simulate KRAS and EGFR mutated in all patients, then simulate EGFR inhibitor (drug) and check if different response to treatment 
+
+try to simulate effect of EGFR inhibitor when KRAS is present
+
+
+Mai 5
+finished: some vizualisations for the poster, identify different phenotype distribution according to each patient when KRAS and EGFR are mutated
+
+Mai 6
+finished: create bnd file, in the progress of changing bnd files manually with KRAS/ EGFR mutations if missense (leads to overactivation)
+tried: to change KRAS and EGFR directly in a pipeline, try to simulate cancer with specific mutations and simulate behavior of drug and see if some patients response in a different way
+Results: there are some patients who do not have the same phenotype distribution but we cannot see that when EGFR is mutated this seem to significantly change the phenotype distribution (by blocking metastasis for example)
+
+
+
+
+
+to do:
+- try to see if the 2% is significant (stats test between the two means)
+- try to stratify all the patients (resist and patients) according to their phenotype distribution
+-try to see if we can simulate less strongly 
+- check if the algo has many different inputs at the beginning  of the simulation ??????
+- for poster: table (row: sensitive, resistant and column: proliferation, metastasis)
+- check if patients have or not mutations EGFR, FGF (part of personalization)
+- try to investigate why some patients (such as SIDM01149) has more metastasis than other
+- try to see if there is a correlation between z score and %metastasis/ apoptosis
+- read paper again to check the protein abundance/ gene expression and see if we can change the transition rate like this 
+check again the protein/ gene in the common signaling pathways related to cancer
+
+
+
+
+1) create table changing inputs (genes now and then proteins)
+
+does not make change to compare between groups if random inputs unless there are many inputs 
+try to do it on the generic one (random inputs) and compare with the random inputs and KRAS mutated of sensitive/resistant
+
+- try to see all permutations but can start with only one ON and all the other off -> heatmap ? add variance (see which input show the biggest variance)
+- understand MaBoSS simulation
+
+
+-> manually changed mutations_kras_ids: ['SIDM00344', 'SIDM00771', 'SIDM00143', 'SIDM00925', 'SIDM00921', 'SIDM00138'] 
+-> mutations_egfr_ids: ['SIDM00755']
+
+
+to do
+- check again the MaBoSS phenotype file, how can i create a dataframe with sensitive and resistant on rows and different inputs fixed on columns with the mean for each phenotype in the table??
+
+
+
+Mai 7 
+finished: compute phenotypes distribution for diff inputs for sensitive and resistant.
+tried:
+to do: create functions for each of the file + documentation, vizualise the outputs in a table
+
+results info
+very different results in terms of phenotype distribution accross the resistant patients, I am not sure the mean will be representative
+not many lung adenocarcinoma, so keep all lung cancer, then resistance computed with z score (-2; 2), have 4 resistant and 9 sensitive
+
+
+
+
+Mai 8 
+
+Finished: create pipeline and modularize the files with specific functions, added more samples in the two categories - resistant and sensitive
+tried: to compute p value for each condition-phenotype pairs with Shapiro-Wilk Test but the samples is too small (need at least 5 values) -> restratify the patients according to their drug sensitivity (largest 10 z score and lowest 10 z score)
+
+Results
+
+- Identify 3 resistants/10 with KRAS mutations 
+- Identify 7 sensitives/10 with KRAS mutations
+- KRAS mutations: ['SIDM00344', 'SIDM00771', 'SIDM00143', 'SIDM00925', 'SIDM00547', 'SIDM00921', 'SIDM00702', 'SIDM01119', 'SIDM00138', 'SIDM00512']
+
+Data values are not normalized (shapiro test) -> Mann-Whitney U Test (test two independents samples: sensitive vs resistant)
+
+
+
+Test with alternative = two-sided 
+                        Mannwhitneyu_P_value_Resistant
+Phenotype  Condition                                   
+Apoptosis  Nutrients_ON                        0.037667
+           Acidosis_ON                         0.008350
+           TNFalpha_ON                         0.004484
+Metastasis EGF_ON                              0.008728
+           Androgen_ON                         0.008728
+
+
+
+Test with alternative = Greater
+                            Mannwhitneyu_P_value_Resistant
+Phenotype     Condition                                   
+Apoptosis     Nutrients_ON                        0.018834 *
+              Hypoxia_ON                          0.034080 *
+              Acidosis_ON                         0.004175 **
+              TNFalpha_ON                         0.002242 **
+Proliferation EGF_ON                              0.049035 *
+              Androgen_ON                         0.049035 *
+Metastasis    EGF_ON                              0.004364 **
+              FGF_ON                              0.046926 *
+              Acidosis_ON                         0.046217 *
+              Androgen_ON                         0.004364 **
+    
+p-value < 0.05 → One star *
+p-value < 0.01 → Two stars **
+
+p-value < 0.001 → Three stars ***
+
+
+Apparently EGF will drive more proliferation in resistant than sensitive -> try to block EGFR ? (confirm why there are available drugs that block EGFR)
+
+
+To do: Create another table for better vizualisation (look at the python file)
+       stratify patients according to their distribution of phenotype and identify the drivers to these phenotype
+       find again the paper about the interested drug and its maybe potential to become a anti-lung cancer -> so i can talk about it in my poster and justify my choice and explain that i can use this pipeline for more cancers/ drugs
+
+
+Mai 9 
+to do: take some time to visualise the results (create a heatmap of different inputs and the output, create a nicer table), learn what does MaBoSS do (same as random walk but with proba?)
+if time: stratify patients according to their phenotypes and identify the drivers
+heatmap one for resistant and one for sensitive
+
+
+to do: confirm the table has the right values!! and create boxplot of the table
+
+
+
+Mai 10- 11
+to do: finish boxplot of phenotype distribution + mutations/ gene signature to clusters, finish introduction part of the paper 
+
+
+
+Mai 12
+finished: boxplot,
+tried: 
+To do: simulate EGFR knock out, try varing K and see if nicer clusters
+
+
+
+Mai 13
+Finished: change poster forma
+to do: identify differently gene expressed (do it for metastasis and proliferation), simulate EGFR knock out
+
+
+Mai 14-15
+finished: poster, identified differently gene expressed
+
+Mai 16
+started to write a plan with what i want to say in the thesis
+
+
+
+Mai 17
+finished: generalize the code for combination of cancers and for any folder 
+
+to do: read prostate paper again and check if they look at drivers of resistance (genes enrichment in one specific phenotype), look at other papers about this, how can i have more patients data with cell model (enabling me to have drug sensitiviy data)
+significant results with only 15 patients in each group? should i take data for many cancer and see why resistant to a specific drug ?
+if look at combination of cancers -> can make sense as we are interested in the crosstalk of signaling pathways and in cancer 
+to do: try repeating this but for many diff cancers with the same drug and find an example in papers where we know that a particular 
+protein is responsible for resistance 
+
+
+Mai 19-20 
+
+
+to do: 
+- check that differences of phenotype is not linked to cancer type
+- look at the validation of prostate personalized boolean paper
+- look at common signaling pathways that lead to resistance and check if there are genes related to resistance
+
+create github clean 
+- clean the pipeline 
+- comment the functions 
+
+
+
+
+
+
+Results (when we combine many cancers together and look for one drug)
+- some gene makes sense (bcl2, myc) to be higher expressed in one group but there are also other genes (pten) that is not supposed to be highly expressed 
+and expect EGFR to be higher expressed in the resistant group as higher proliferation when EGFR si activated upon EGF...
+no apoptosis condition significant 
+
+discuss with graeme: can i just say that one or two genes are differently expressed in one group even if other are not as expected?
+validate my result (BCL2 higher expressed - anti apoptotic gene) with papers 
+
+
+
+
+
+-> manage to create github with the pipeline and virtual environment (res_attr) and required files but some issues when try to recreate virtual MaBoSS so did not manage to run the pipeline
+
+
+
+Mai 20
+to do: try to remove haematopoetic and see if this changes the distribution of phenotype

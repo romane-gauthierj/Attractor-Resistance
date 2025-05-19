@@ -19,15 +19,15 @@ from genes_signature import compute_genes_mean_signature
 
 
 # Import data
-annotations_models = pd.read_csv('../cancer_data/model_list_20250407.csv')
-mutations_data = pd.read_csv('../cancer_data/mutations_all_20250318.csv')
-drug_data = pd.read_csv('../cancer_data/drug_sensitivity.csv')
+annotations_models = pd.read_csv('../data/model_list_20250407.csv')
+mutations_data = pd.read_csv('../data/mutations_all_20250318.csv')
+drug_data = pd.read_csv('../data/drug_sensitivity.csv')
 
 montagud_data = (
-    pd.read_csv('../prostate/Montagud_data/Montagud_inter_nodes_data.csv', header=1)
+    pd.read_csv('../data/Montagud_inter_nodes_data.csv', header=1)
     .loc[:, ['Target node', 'Interaction type', 'Source']])
 montagud_nodes = list(set(montagud_data['Target node'].tolist() + montagud_data['Source'].tolist()))
-rna_seq_data = pd.read_csv('../cancer_data/rnaseq_merged/rnaseq_merged_20250117.csv')
+rna_seq_data = pd.read_csv('../data/rnaseq_merged/rnaseq_merged_20250117.csv')
 #genes_data_filtered = pd.read_csv('filtered_data/rna_seq_lung_clean.csv')
 
 

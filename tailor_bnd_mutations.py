@@ -1,5 +1,4 @@
 # Pipeline to tailor bnd files according to the KRAS and EGFR mutations
-# ???? DID NOT WORK ???? !!!! cannot replace logical in bnd file for the KRAS and EGFR mutations
 
 
 import os

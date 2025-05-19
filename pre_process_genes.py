@@ -1,6 +1,5 @@
 # Cell model passport - RNA seq expression
 
-import maboss
 import numpy as np
 import pandas as pd
 from get_patients_sens_res import get_patients_top_10

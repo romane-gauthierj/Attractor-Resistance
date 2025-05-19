@@ -13,7 +13,7 @@ def personalized_patients_genes_cfgs(montagud_data, original_data_dir, results_d
   montagud_nodes = montagud_data['Target_node'].tolist() + montagud_data['Source'].tolist()
   montagud_nodes = list(set(montagud_nodes))
   rna_seq_data = (
-      pd.read_csv('../cancer_data/rnaseq_merged/rnaseq_merged_20250117.csv')
+      pd.read_csv('../data/rnaseq_merged/rnaseq_merged_20250117.csv')
       .query('model_id in @patients_ids')
       .loc[:, ['model_id', 'gene_symbol', 'rsem_tpm']]
   )

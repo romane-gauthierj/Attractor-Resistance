@@ -41,7 +41,7 @@ def compute_genes_mean_signature(folder, montagud_nodes, phenotype,condition, da
     # extract gene expression data 
     patients_ids = top_resistant_ids + top_sensitive_ids
     genes_data = (
-    pd.read_csv('../cancer_data/rnaseq_merged/rnaseq_merged_20250117.csv')
+    pd.read_csv('../data/rnaseq_merged/rnaseq_merged_20250117.csv')
     .query('`model_id` in @patients_ids and `gene_symbol` in @montagud_nodes')
     .loc[:, ['model_id', 'gene_symbol', 'rsem_tpm']]
 )
@@ -125,7 +125,7 @@ def compute_genes_mean_signature(folder, montagud_nodes, phenotype,condition, da
 
 #     # extract gene expression data 
 #     genes_data = (
-#         pd.read_csv('../cancer_data/rnaseq_merged/rnaseq_merged_20250117.csv')
+#         pd.read_csv('../data/rnaseq_merged/rnaseq_merged_20250117.csv')
 #         .query('model_id in @patients_ids')
 #         .loc[:, ['model_id', 'gene_symbol', 'rsem_tpm']]
 #     )
