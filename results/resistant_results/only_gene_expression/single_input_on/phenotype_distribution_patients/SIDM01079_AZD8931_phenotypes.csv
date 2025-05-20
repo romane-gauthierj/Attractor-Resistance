@@ -1,0 +1,10 @@
+,<nil>,Apoptosis,Proliferation,Metastasis
+EGF_ON,0.905736,0.0,0.000833,0.07563
+FGF_ON,0.957386,0.033914,0.006,0.0008
+TGFb_ON,0.0002,0.9998,0.0,0.0
+Nutrients_ON,1.0,0.0,0.0,0.0
+Hypoxia_ON,0.996894,0.0,0.0,0.003106
+Acidosis_ON,1.0,0.0,0.0,0.0
+Androgen_ON,0.905536,0.0,0.000833,0.07543
+TNFalpha_ON,1.0,0.0,0.0,0.0
+Carcinogen_ON,0.974407,0.018086,0.005307,0.0006

@@ -395,3 +395,9 @@ results: if i remove haemopotoic -> not many data for sensitiviness....-> to che
 Mai 20
 to do: try to remove haematopoetic and see if this changes the distribution of phenotype and try to run the file to see 
 if maboss is well installed
+
+
+
+to do: 
+- try to see if we can find another drug with more patients sensitive and resistant regardless haematopoietic patients
+- try to have many inputs ON and rerun pipeline to see if this will impacts the proliferation phenotype between resistant group and sensitive group.
