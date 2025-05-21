@@ -35,8 +35,10 @@ def compute_genes_mean_signature(rna_seq_data, folder, phenotype,condition, data
     sensitive_group = data_phenotype_patients[data_phenotype_patients['Drug status'] == 'Sensitive']
     sensitive_group_ids = sensitive_group['Model_ID'].tolist()
 
+    len_resistant_group_ids = len(resistant_group_ids)
+    len_sensitive_group_ids = len(sensitive_group_ids)
+
     # extract gene expression data 
-    patients_ids = top_resistant_ids + top_sensitive_ids
     rna_seq_data = rna_seq_data[['model_id', 'gene_symbol', 'rsem_tpm']]
     
     mean_gene_rsem = (
@@ -88,7 +90,7 @@ def compute_genes_mean_signature(rna_seq_data, folder, phenotype,condition, data
 
     significant_genes = genes_stats_results[genes_stats_results['P-value'] <= 0.05]
     significant_genes.to_csv(f'{folder}/sensitive_resistant_results/genes_diff_expressed/significant_genes_{condition}_ON_{phenotype}.csv', index=True)
-    return significant_genes
+    return significant_genes, len_resistant_group_ids, len_sensitive_group_ids
 
 
 
