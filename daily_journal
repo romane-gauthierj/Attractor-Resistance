@@ -421,3 +421,10 @@ check if keep lung -> keep KRAS but if pan cancer -> keep RAS instead & add more
 idea: try another drug, gives more info to personalized networks 
 -> if personalization seems to work better try keeping the same on TCGA dataset (check if tumor stage)
 -> maybe now that we explore pan cancer, does not make sense to have only EGFR and KRAS mutation ? should have more mutations 
+
+
+
+1. try with two other drugs, if no interesting results-> include more multiomics info (mutations common in cancer, proteomics data, CNV)
+and also change initial state of EGF/FGF based on gene expression 
+(try to keep PAN CANCER)
+2. Once personalization done, test it on TCGA data (combined with stage info) to validate the personalization 
