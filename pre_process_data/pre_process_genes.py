@@ -17,6 +17,7 @@ def process_genes(patients_ids, montagud_nodes, rna_seq_data):
     rna_seq_data['gene_symbol_upper'] = rna_seq_data['gene_symbol'].str.upper()
     rna_seq_data = rna_seq_data[rna_seq_data['gene_symbol_upper'].isin(montagud_nodes)]
     rna_seq_data = rna_seq_data[rna_seq_data['model_id'].isin(patients_ids)]
+    rna_seq_data = rna_seq_data[['model_id', 'gene_symbol', 'rsem_tpm']]
     return rna_seq_data
      
 
