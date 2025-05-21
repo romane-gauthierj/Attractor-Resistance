@@ -63,9 +63,6 @@ def create_boxplot(folder, patient_res_values, patient_sens_values, data_two_sid
 #     df_combined = df_combined[
 #     df_combined.apply(lambda row: (row['Phenotype'], row['Condition']) in significant_pairs, axis=1)
 # ]
-    print('the df_combined is:')
-    print(df_combined)
-    print(df_combined['Phenotype'].unique())
 
     # Step 2: Plot — one figure per phenotype
     g = sns.catplot(

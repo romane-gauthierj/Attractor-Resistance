@@ -407,14 +407,17 @@ to do:
 
 
 Mai 21:
-to do: check gene enrichment method, summarize quickly the paper prostate personalized and find other papers about drug resistance, check code (change part with chatgpt), check if groups are balanced when assess EGFR higher expressed in the sensitive group
-try to remove haematopoietic 
-how validate personalization ? 
--> in the paper: create personalized boolean with TCGA dataset and check correlation with gleacson score and then create somewhere like 8 cell line models with other dataset; can repeat the same ?
-in the paper, more focus on target and explores mechanisms of treatment combination 
-add other mutations
 
-check if keep lung -> keep KRAS but if pan cancer -> keep RAS instead
+finished: removed haematopoietic tissue as does not behave like the other tissues-> found out that the origin drug selected does not show any sensitive patients (below 1.5>), tried with more inputs ON (EGF, TGF, Nutrients, Androgen)
+results: when remove haematopoietic tissue, does not have the expected results (tried with 20 and 50 per group) and with Pictilisib drug 
+when EGF, TGF, Nutrients, Androgen ON -> more metastasis (proliferation does not change)
 
 
-add more mutations and try to have more inputs ON to see if we can have more proliferation (check what inputs ON in the paper)
+to do: summarize quickly the paper prostate personalized and find other papers about drug resistance, -> in the paper: create personalized boolean with TCGA dataset and check correlation with gleacson score and then create somewhere like 8 cell line models with other dataset; can repeat the same ?
+
+check if keep lung -> keep KRAS but if pan cancer -> keep RAS instead & add more mutations
+
+
+idea: try another drug, gives more info to personalized networks 
+-> if personalization seems to work better try keeping the same on TCGA dataset (check if tumor stage)
+-> maybe now that we explore pan cancer, does not make sense to have only EGFR and KRAS mutation ? should have more mutations 

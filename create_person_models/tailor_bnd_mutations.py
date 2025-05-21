@@ -44,8 +44,6 @@ def personalized_patients_mutations_bnds(mutations_data, patients_ids, bnd_dir, 
            # why this is not working ??
 
             if (patient_id in mutations_kras_ids):
-                print(patient_id)
-                print('kras')
                 
                 kras_match = kras_pattern.search(content)
                 print(kras_match)

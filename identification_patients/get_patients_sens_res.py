@@ -36,21 +36,29 @@ def get_patients(number_patients, drug_data, annotations_models, drug_interest, 
     drug_data_filtered = drug_data_filtered[drug_data_filtered['DRUG_NAME'] == drug_interest]
     grouped_drug_data_filtered = drug_data_filtered.groupby('SANGER_MODEL_ID')['Z_SCORE'].mean().reset_index()
 
-    drug_data_filtered_ranked = grouped_drug_data_filtered.sort_values(by='Z_SCORE')
-    print('data for sensitive')
-    print(drug_data_filtered_ranked.head())
+
+    # sort from lowest to highest
+    drug_data_filtered_ranked = grouped_drug_data_filtered.sort_values(by='Z_SCORE', ascending=True)
+
     
     top_sensitive = drug_data_filtered_ranked.iloc[0:number_patients, :]
+    print('sensitive')
+    print(top_sensitive.tail())
 
     top_sensitive_ids = top_sensitive['SANGER_MODEL_ID'].tolist()
+
+
+    # sort from highest to lowest
     drug_data_filtered_ranked = grouped_drug_data_filtered.sort_values(by='Z_SCORE', ascending=False)
-    print('data for resistant')
-    print(drug_data_filtered_ranked.head())
     top_resistant = drug_data_filtered_ranked.iloc[0:number_patients, :]
+    print('resistant')
+    print(top_resistant.tail())
+
+
 
     top_resistant_ids = top_resistant['SANGER_MODEL_ID'].tolist()
     top_resistant_ids = list(set(top_resistant_ids))
     top_sensitive_ids = list(set(top_sensitive_ids))
 
-    return top_resistant_ids, top_sensitive_ids, drug_tissue_data
+    return top_resistant_ids, top_sensitive_ids, drug_data_filtered
 
