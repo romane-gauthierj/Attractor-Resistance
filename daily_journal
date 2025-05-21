@@ -401,3 +401,20 @@ if maboss is well installed
 to do: 
 - try to see if we can find another drug with more patients sensitive and resistant regardless haematopoietic patients
 - try to have many inputs ON and rerun pipeline to see if this will impacts the proliferation phenotype between resistant group and sensitive group.
+
+
+
+
+
+Mai 21:
+to do: check gene enrichment method, summarize quickly the paper prostate personalized and find other papers about drug resistance, check code (change part with chatgpt), check if groups are balanced when assess EGFR higher expressed in the sensitive group
+try to remove haematopoietic 
+how validate personalization ? 
+-> in the paper: create personalized boolean with TCGA dataset and check correlation with gleacson score and then create somewhere like 8 cell line models with other dataset; can repeat the same ?
+in the paper, more focus on target and explores mechanisms of treatment combination 
+add other mutations
+
+check if keep lung -> keep KRAS but if pan cancer -> keep RAS instead
+
+
+add more mutations and try to have more inputs ON to see if we can have more proliferation (check what inputs ON in the paper)

@@ -9,11 +9,9 @@ import scipy.stats as stats
 
 
 
-def compute_genes_mean_signature(folder, montagud_nodes, phenotype,condition, data_phenotype_patients,top_resistant_ids, top_sensitive_ids):
+def compute_genes_mean_signature(rna_seq_data, folder, phenotype,condition, data_phenotype_patients,top_resistant_ids, top_sensitive_ids):
 # identify the differently genes (higher expressed) in the resistant group compared to the sensitive group upon a specific phenotype- condition
     data_phenotype_patients['Model_ID'] = data_phenotype_patients['Unnamed: 0'].astype(str).str.split('_').str[0]
-    print(data_phenotype_patients)
-
     conditions = [
         data_phenotype_patients['Model_ID'].isin(top_resistant_ids),
         data_phenotype_patients['Model_ID'].isin(top_sensitive_ids)
@@ -21,9 +19,6 @@ def compute_genes_mean_signature(folder, montagud_nodes, phenotype,condition, da
 
     choices = ['Resistant', 'Sensitive']
     data_phenotype_patients.loc[:,'Drug status'] = np.select(conditions, choices, default = '')
-    print(data_phenotype_patients)
-
-
 # resistant group changes according to what is the condition and the phenotype
 # group_proliferation_resistant: group with high phenotype 
 
@@ -31,6 +26,9 @@ def compute_genes_mean_signature(folder, montagud_nodes, phenotype,condition, da
         (data_phenotype_patients['Drug status'] == 'Resistant') & 
         (data_phenotype_patients[f'{condition}_ON_{phenotype}'] >= 0.1)
     ]
+    # print('len of the phenotype group')
+    # print(len(group_phenotype_resistant))
+
     
     # 2 groups: resistant_proliferating_group and sensitive_group_ids
     resistant_group_ids = group_phenotype_resistant['Model_ID'].tolist()
@@ -39,14 +37,10 @@ def compute_genes_mean_signature(folder, montagud_nodes, phenotype,condition, da
 
     # extract gene expression data 
     patients_ids = top_resistant_ids + top_sensitive_ids
-    genes_data = (
-    pd.read_csv('../data/rnaseq_merged/rnaseq_merged_20250117.csv')
-    .query('`model_id` in @patients_ids and `gene_symbol` in @montagud_nodes')
-    .loc[:, ['model_id', 'gene_symbol', 'rsem_tpm']]
-)
+    rna_seq_data = rna_seq_data[['model_id', 'gene_symbol', 'rsem_tpm']]
     
     mean_gene_rsem = (
-        genes_data
+        rna_seq_data
         .groupby(['model_id', 'gene_symbol'])['rsem_tpm']
         .mean()
         .reset_index()
@@ -94,7 +88,6 @@ def compute_genes_mean_signature(folder, montagud_nodes, phenotype,condition, da
 
     significant_genes = genes_stats_results[genes_stats_results['P-value'] <= 0.05]
     significant_genes.to_csv(f'{folder}/sensitive_resistant_results/genes_diff_expressed/significant_genes_{condition}_ON_{phenotype}.csv', index=True)
-    print(significant_genes)
     return significant_genes
 
 
