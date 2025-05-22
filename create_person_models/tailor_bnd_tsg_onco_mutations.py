@@ -1,9 +1,6 @@
 import pandas as pd
-import numpy as np
-
 import os
 import re
-import sys
 
 
 def tailor_bnd_tsg_onco_mut(mutations_data_filtered_combined,bnd_dir_res, bnd_dir_sens, drug_interest):

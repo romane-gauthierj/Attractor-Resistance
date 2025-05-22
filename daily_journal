@@ -449,3 +449,47 @@ to do: try with only lung tissue
 select mutations -> OncogeneHighImpact (as high in VepImpact and are oncogenes)-> assumption: overactivation
                  -> TumorSuppressorHighImpact (as high in VepImpact and are tumor suppressor)-> assumption: loss of function
                  -> if in both -> OncogeneHighImpact
+
+
+select cnv      -> gain and amplification -> 1 group
+                -> loss and Deletion -> 1 group (assumption -> loss also deletion ?)
+
+
+Amplification 
+Node EP300 {
+    logic = 1;
+    rate_up = 1;
+    rate_down = 0;
+}
+
+Gain 
+Node EP300 {
+    logic = 1;
+    rate_up = 0.5;
+    rate_down = 0.1;
+}
+
+
+Loss (not complete):
+Node EP300 {
+    logic = EP300;
+    rate_up = 0.2;
+    rate_down = 1;
+}
+
+Deletion 
+Node EP300 {
+    logic = 0;
+    rate_up = 0;
+    rate_down = 1;
+}
+
+
+
+
+
+
+Mai 23
+to do: modify tailor gene expression to also change initial states (EGF, FGF at least)
+        normalize gene expression first? or used data already normalized??
+        check that cnv is normalized
