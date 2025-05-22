@@ -6,7 +6,7 @@ import re
 
 # Load patient IDs
 
-def create_generic_patients_cfgs_bnds(folder_generic_models_cfg,folder_generic_models_bnd , folder_pers_models, resistant_patients_ids, sensitive_patients_ids, drug_interest):
+def create_generic_patients_cfgs_bnds(folder_generic_models_cfg,folder_generic_models_bnd , folder_pers_models, resistant_patients_ids, sensitive_patients_ids, drug_interest, tissue):
     # --- Templates ---
     cfg_template_path = folder_generic_models_cfg
     bnd_template_path = folder_generic_models_bnd

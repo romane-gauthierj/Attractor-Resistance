@@ -4,10 +4,13 @@ import numpy as np
 
 #phenotype_data = pd.read_csv('../data/TCGA_data/tcga_gdc_pancan_phenotype.csv')
 tumor_stage_data = pd.read_csv('../data/TCGA_data/TCGA_GDC-PANCAN_tumor_stage_phenotype.csv')
+genes_data = pd.read_csv('../data/TCGA_data/TCGA_GDC-PANCAN_genes.csv')
 
 
-print(tumor_stage_data.head())
-print(tumor_stage_data['diagnoses.tumor_stage'].value_counts())
+
+
+# print(tumor_stage_data.head())
+# print(tumor_stage_data['diagnoses.tumor_stage'].value_counts())
 
 patients_ids = list(set(tumor_stage_data['sample']))
 
@@ -29,9 +32,13 @@ conditions = [
 choices = ['Local Cancer', 'Early Stage', 'Larger Tumor', 'Advanced Local Speed', 'Metastatic']
 
 patients_group_df.loc[:,'Tumor Stage'] = np.select(conditions, choices, default = '')
-print(patients_group_df)
-
-
 patients_group_df = patients_group_df[patients_group_df['Tumor Stage'].notna() & (patients_group_df['Tumor Stage'] != '')]
-print(patients_group_df)
-print(patients_group_df['Tumor Stage'].value_counts())
+# print(patients_group_df['Tumor Stage'].value_counts())
+patients_ids = patients_group_df.index.tolist()
+print(patients_ids)
+
+print(patients_group_df.head())
+print(genes_data)
+# filter genes to only keep the patients_ids info
+genes_data_filtered = genes_data[patients_ids]
+print(genes_data_filtered)

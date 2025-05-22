@@ -428,3 +428,24 @@ idea: try another drug, gives more info to personalized networks
 and also change initial state of EGF/FGF based on gene expression 
 (try to keep PAN CANCER)
 2. Once personalization done, test it on TCGA data (combined with stage info) to validate the personalization 
+
+( i have also changed the montagud nodes -> so i have KRAS now and used to have RAS, and remove genes specific to prostate so maybe diff due to this as well and not only blood tissue??)
+
+-> change so models are saved in a directory with the drug name 
+
+
+
+Mai 22
+finished:tried with two other drugs but no great results, no change if repeat with another drug or if keep original montagud nodes. Maybe just lung cancer works slightly better but not amazing
+to do: try with only lung tissue
+
+
+
+4. add mutations info, CNV, proteins abundance
+
+
+
+!!!!!
+select mutations -> OncogeneHighImpact (as high in VepImpact and are oncogenes)-> assumption: overactivation
+                 -> TumorSuppressorHighImpact (as high in VepImpact and are tumor suppressor)-> assumption: loss of function
+                 -> if in both -> OncogeneHighImpact

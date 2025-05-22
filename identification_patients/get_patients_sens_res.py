@@ -42,8 +42,8 @@ def get_patients(number_patients, drug_data, annotations_models, drug_interest, 
 
     
     top_sensitive = drug_data_filtered_ranked.iloc[0:number_patients, :]
-    print('sensitive')
-    print(top_sensitive.tail())
+    # print('sensitive')
+    # print(top_sensitive.tail())
 
     top_sensitive_ids = top_sensitive['SANGER_MODEL_ID'].tolist()
 
@@ -51,8 +51,8 @@ def get_patients(number_patients, drug_data, annotations_models, drug_interest, 
     # sort from highest to lowest
     drug_data_filtered_ranked = grouped_drug_data_filtered.sort_values(by='Z_SCORE', ascending=False)
     top_resistant = drug_data_filtered_ranked.iloc[0:number_patients, :]
-    print('resistant')
-    print(top_resistant.tail())
+    # print('resistant')
+    # print(top_resistant.tail())
 
 
 
