@@ -493,3 +493,14 @@ Mai 23
 to do: modify tailor gene expression to also change initial states (EGF, FGF at least)
         normalize gene expression first? or used data already normalized??
         try to run pipeline on tcga dataset
+
+
+Mai 26
+to do: finish validation pipeline, start background repos
+
+
+if filtered and keep only the common id -> only primary tumor as samples 
+-> group by disease stage
+
+check if genes data normalized or not, what file did i select?
+TRY TO ALSO MODIFY INITIAL STATE (EGF, FGF) based on gene expression
