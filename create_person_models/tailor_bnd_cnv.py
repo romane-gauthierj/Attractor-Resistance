@@ -36,7 +36,7 @@ def tailor_bnd_cnv_validation(df_melted_cnv, bnd_dir, tissue):
             print(f"🔍 Processing patient {patient}, gene: {gene}")
             pattern = re.compile(
                 rf"Node\s+{re.escape(gene)}\s*\{{[^{{}}]*?(?:\{{[^{{}}]*?\}}[^{{}}]*?)*\}}",
-                re.DOTALL,
+                re.DOTALL
             )
 
             if patient in gain_ids and patient in loss_ids:
@@ -133,7 +133,7 @@ def tailor_bnd_cnv_cm(cnv_data_filtered, bnd_dir_res, bnd_dir_sens, drug_interes
             print(f"🔍 Processing patient {patient}, gene: {gene}")
             pattern = re.compile(
                 rf"Node\s+{re.escape(gene)}\s*\{{[^{{}}]*?(?:\{{[^{{}}]*?\}}[^{{}}]*?)*\}}",
-                re.DOTALL,
+                re.DOTALL
             )
 
             if patient in gain_ids and patient in loss_ids:

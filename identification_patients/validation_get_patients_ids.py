@@ -44,4 +44,4 @@ def get_patients_valid(phenotype_data, genes_data, cnv_data):
         sampled_df["Tumor Group"].notna() & (sampled_df["Tumor Group"] != "")
     ]
     samples_ids = list(sampled_df["sample"])
-    return samples_ids
+    return samples_ids, phenotype_data_filtered

@@ -22,8 +22,8 @@ import os
 
 # montagud_nodes = [node for node in montagud_nodes if node not in to_remove]
 # montagud_nodes = list(set(montagud_nodes))
-# # chose folder where we want all the personalized boolean models and associated results saved 
-# drug_interest = 'Refametinib' #Pictilisib, 'Avagacestat' AZD8931 
+# # chose folder where we want all the personalized boolean models and associated results saved
+# drug_interest = 'Refametinib' #Pictilisib, 'Avagacestat' AZD8931
 # tissue_interest = 'Lung'
 # tissue_remove = 'Haematopoietic and Lymphoid'
 
@@ -32,14 +32,24 @@ import os
 # patients_ids = top_sensitive_ids + top_resistant_ids
 # cnv_data = pd.read_csv('../data/cellmodel_data/cnv_summary_20250207.csv')
 
-def preprocess_cnv(cnv_data, montagud_nodes,patients_ids):
+
+def preprocess_cnv(cnv_data, montagud_nodes, patients_ids):
     # filter out Neural Category
-    cnv_data_filtered = cnv_data[cnv_data['cn_category']!= 'Neutral']
+    cnv_data_filtered = cnv_data[cnv_data["cn_category"] != "Neutral"]
 
     # keep only the patients id and montagud nodes
-    cnv_data_filtered = cnv_data_filtered[cnv_data_filtered['symbol'].isin(montagud_nodes)]
-    cnv_data_filtered = cnv_data_filtered[cnv_data_filtered['model_id'].isin(patients_ids)]
-    cnv_data_filtered = cnv_data_filtered[['model_id', 'symbol', 'total_copy_number', 'cn_category']]
-    cnv_data_filtered = cnv_data_filtered[~cnv_data_filtered['total_copy_number'].isna()]
-    return(cnv_data_filtered)
+    cnv_data_filtered = cnv_data_filtered[
+        cnv_data_filtered["symbol"].isin(montagud_nodes)
+    ]
+    cnv_data_filtered = cnv_data_filtered[
+        cnv_data_filtered["model_id"].isin(patients_ids)
+    ]
+    cnv_data_filtered = cnv_data_filtered[
+        ["model_id", "symbol", "total_copy_number", "cn_category"]
+    ]
+    cnv_data_filtered.rename(columns={"symbol": "gene_symbol"}, inplace=True)
 
+    cnv_data_filtered = cnv_data_filtered[
+        ~cnv_data_filtered["total_copy_number"].isna()
+    ]
+    return cnv_data_filtered

@@ -5,8 +5,69 @@ import pandas as pd
 import numpy as np
 
 
+# change with the phenotypes columns of interest
+
+
+# MODEL_BND = "../models/personalized_boolean_Refametinib_PAN_CANCER/resistant_patient/personalized_boolean_modified/models_gene_expression/SIDM01120_Refametinib.bnd"
+# MODEL_CFG = "../models/personalized_boolean_Refametinib_PAN_CANCER/resistant_patient/personalized_boolean_modified/models_gene_expression/SIDM01120_Refametinib.cfg"
+
+# inputs_list = ["EGF", "FGF", "TNFa"]
+
+
+# model = maboss.load(MODEL_BND, MODEL_CFG)
+# last_states = pd.DataFrame()
+# name = "SIDM01120"
+# for active_input in inputs_list:
+#     model.network.set_istate(active_input, [0, 1])
+#     for inactive_input in inputs_list:
+#         if inactive_input != active_input:
+#             model.network.set_istate(inactive_input, [1, 0])
+#             res_model = model.run()
+#             last_state = res_model.get_last_states_probtraj()
+#             last_state.index = [name]
+#             last_states = pd.concat([last_states, last_state])
+# print(last_states)
+
+
+# def compute_phenotypes_distribution(folder,dir_files, inputs_list, group_label, drug_interest):
+#     output_dir = f'{folder}/{group_label}_results/only_gene_expression/single_input_on/phenotype_distribution_patients'
+#     cfg_files = [f for f in os.listdir(dir_files) if f.endswith(f"{drug_interest}.cfg")]
+#     patients_data_dict = {}
+#     for cfg_file in cfg_files:
+#         cfg_path = os.path.join(dir_files, cfg_file)
+#         base_name = os.path.splitext(cfg_file)[0]
+#         bnd_path = os.path.join(dir_files, base_name + ".bnd")
+#         #model = maboss.load(bnd_path, cfg_path)
+#         patients_results = pd.DataFrame()
+#         print(f"\n--- Results for patient: {base_name} ---")
+
+#         last_state = result.get_last_states_probtraj()
+#         for active_input in inputs_list:
+#             last_state.index = [f"{active_input}_ON"]
+#         for inactive_input in inputs_list:
+#             if inactive_input != active_input:
+#                 model.network.set_istate(inactive_input, [1, 0])
+
+#         patients_results = pd.concat([patients_results, last_state])
+#         expected_cols = ['<nil>', 'Apoptosis', 'Proliferation', 'Metastasis']
+#         available_cols = [col for col in expected_cols if col in patients_results.columns]
+
+#         patients_results = patients_results[available_cols]
+#         patients_results = patients_results.fillna(0)
+
+#         output_path = os.path.join(output_dir, f"{base_name}_phenotypes.csv")
+#         patients_results.to_csv(output_path)
+
+#         patients_data_dict[base_name] = patients_results
+#         print(patients_results)
+#     return patients_data_dict
+
+
+# why this function is not working?
+
+
 def compute_phenotypes_distribution(
-    folder, dir_files, inputs_list, drug_interest, group_label=None
+    phenotypes_list, folder, dir_files, inputs_list, drug_interest, group_label=None
 ):
     if group_label is not None:
         output_dir = f"{folder}/{group_label}_results/only_gene_expression/single_input_on/phenotype_distribution_patients"
@@ -19,44 +80,64 @@ def compute_phenotypes_distribution(
         cfg_path = os.path.join(dir_files, cfg_file)
         base_name = os.path.splitext(cfg_file)[0]
         bnd_path = os.path.join(dir_files, base_name + ".bnd")
-        # model = maboss.load(bnd_path, cfg_path)
+
+        if not os.path.exists(bnd_path):
+            print(f"Missing .bnd file: {bnd_path}")
+            continue
+        if not os.path.exists(cfg_path):
+            print(f"Missing .cfg file: {cfg_path}")
+            continue
+
         patients_results = pd.DataFrame()
+
         print(f"\n--- Results for patient: {base_name} ---")
 
         for active_input in inputs_list:
-            model = maboss.load(bnd_path, cfg_path)
-            model.network.set_istate(active_input, [0, 1])
+            try:
+                model = maboss.load(bnd_path, cfg_path)  # Reload fresh
+                model.network.set_istate(active_input, [0, 1])
+                for inactive_input in inputs_list:
+                    if inactive_input != active_input:
+                        model.network.set_istate(inactive_input, [1, 0])
+                result = model.run()
 
-            for inactive_input in inputs_list:
-                if inactive_input != active_input:
-                    model.network.set_istate(inactive_input, [1, 0])
+                last_state = result.get_last_states_probtraj()
 
-            result = model.run()
-            last_state = result.get_last_states_probtraj()
+            except Exception as e:
+                print(
+                    f"Error during simulation for {base_name} ({active_input} ON): {e}"
+                )
+                continue
             last_state.index = [f"{active_input}_ON"]
             patients_results = pd.concat([patients_results, last_state])
-            expected_cols = ["<nil>", "Apoptosis", "Proliferation", "Metastasis"]
-            available_cols = [
-                col for col in expected_cols if col in patients_results.columns
-            ]
-            patients_results = patients_results[available_cols]
-            patients_results = patients_results.fillna(0)
+            # available_cols = [
+            #     col for col in expected_cols if col in patients_results.columns
+            # ]
+            # patients_results = patients_results[available_cols]
+            # patients_results = patients_results.fillna(0)
+        print("patients columns are:", patients_results.columns)
 
-            # Save to CSV
-            output_path = os.path.join(output_dir, f"{base_name}_phenotypes.csv")
-            patients_results.to_csv(output_path)
+        for phenotype in phenotypes_list:
+            if phenotype not in patients_results.columns:
+                patients_results[phenotype] = 0.0
 
-            # Add to dictionary
-            patients_data_dict[base_name] = patients_results
-            # print(patients_results)
+        patients_results = patients_results[phenotypes_list]
 
+        # Save to CSV
+        os.makedirs(output_dir, exist_ok=True)
+        output_path = os.path.join(output_dir, f"{base_name}_phenotypes.csv")
+        patients_results.to_csv(output_path)
+
+        # Add to dictionary
         patients_data_dict[base_name] = patients_results
+        # print(patients_results)
+
         print(patients_results)
 
     return patients_data_dict
 
 
-def compute_mean_patients(dic_patients_data):
+def compute_mean_patients(phenotype_list, dic_patients_data):
     stats_results_data = {}
     results = {}
     flags_end = [False, False, False]
@@ -72,7 +153,7 @@ def compute_mean_patients(dic_patients_data):
             "TNFalpha_ON",
             "Carcinogen_ON",
         ],
-        columns=["<nil>", "Apoptosis", "Proliferation", "Metastasis"],
+        columns=phenotype_list,
     )
     df_results_std = pd.DataFrame(
         index=[
@@ -86,7 +167,7 @@ def compute_mean_patients(dic_patients_data):
             "TNFalpha_ON",
             "Carcinogen_ON",
         ],
-        columns=["<nil>", "Apoptosis", "Proliferation", "Metastasis"],
+        columns=phenotype_list,
     )
 
     for idx_patient, (patient_id, patient_data) in enumerate(

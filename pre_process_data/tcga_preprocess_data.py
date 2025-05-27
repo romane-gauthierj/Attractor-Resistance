@@ -5,7 +5,6 @@ import mygene
 def pre_process_tcga_data(cnv_data, genes_data, patients_id, montagud_nodes):
     cnv_col = ["Unnamed: 0"] + patients_id
     genes_col = ["xena_sample"] + patients_id
-
     cnv_data_filtered = cnv_data[cnv_col]
     genes_data_filtered = genes_data[genes_col]
 
@@ -54,7 +53,7 @@ def pre_process_tcga_data(cnv_data, genes_data, patients_id, montagud_nodes):
     ]
     choices = ["Loss", "Normal", "Gain"]
     df_melted_cnv.loc[:, "effect"] = np.select(conditions, choices, default="")
-    df_melted_cnv.to_csv("../data/TCGA_data/filtered_data/cnv_samples_table.csv")
+    df_melted_cnv.to_csv("data/TCGA_data/filtered_data/cnv_samples_table.csv")
 
     # # Filter genes dataset
     ensembl_ids_gene = list(genes_data_filtered["xena_sample"])
@@ -100,5 +99,5 @@ def pre_process_tcga_data(cnv_data, genes_data, patients_id, montagud_nodes):
             "expression_value": "rsem_tpm",
         }
     )
-    df_melted_genes.to_csv("../data/TCGA_data/filtered_data/genes_samples_table.csv")
+    df_melted_genes.to_csv("data/TCGA_data/filtered_data/genes_samples_table.csv")
     return df_melted_cnv, df_melted_genes

@@ -495,12 +495,68 @@ to do: modify tailor gene expression to also change initial states (EGF, FGF at 
         try to run pipeline on tcga dataset
 
 
+
+
+
 Mai 26
-to do: finish validation pipeline, start background repos
+Validation - TCGA gene data: FPKM_UQ -> already normalized, better for cross study (samples) comparison 
+           - TCGA CNV data: 
+           - TCGA mutations data: goal to identify LoF and gain of function Mutations 
+                    -> Sensitivity to real somatic mutations (true positives)
+                    -> Specificity (avoiding false positives)
+                    -> Functional impact annotations
+                -> MuTect2 recommended (Captures both LoF and GoF mutations)
+
+
+
+finished: change personalize boolean function to include both upper and lower cases, compute phenotype mean for each patient group 
+
 
 
 if filtered and keep only the common id -> only primary tumor as samples 
 -> group by disease stage
 
-check if genes data normalized or not, what file did i select?
 TRY TO ALSO MODIFY INITIAL STATE (EGF, FGF) based on gene expression
+
+
+
+Results: 
+- when we include CNV as bnd modifcation (change rules of genes) and genes expression we obtain that proliferation phenotype increases with the cancer stage
+- gene expression FPKM-UQ: normalized, better than FPKM for comparison between samples (more robust to technical variation and noise)
+- normalized by gene length & upper quartile of counts (ignores lowest 75% of genes)
+
+
+
+Proliferation level:
+Stage 1: 0.7
+Stage 2: 0.7
+Stage 3: 0.8
+Stage 4: 0.9
+However metastasis does not behave the expected way (we can't see a very strong increase)
+-> try to include somatic mutation data
+
+mutations overwrite CNV ???
+
+
+
+TO DO !!!
+pre-process of cfg files -> remove all _ in middle of the gene name
+for the main pipeline repeat but for all cancers 
+
+
+Mai 27 
+finished: add function to change the new phenotypes nodes of the bnd/ cfg files, adjust the validation pipeline to include for DNA repair, migration, invasion, (on top of proliferation and metastasis)
+tried: to change the cfg and bnd files with Ignore upper case but did not manage, to compute the phenotype distribution for the validation (with the new phenotypes) but does not work > get only 0 values
+to increase the max time and nb of samples but still only 
+-> try to see if this function works on the main pipeline??
+
+
+to do:
+try to rewrite the function compute phenotype 
+try to change all cfg and bnd files so they all have genes names in upper cases and remove all '_'
+to do: rerun main pipeline for Pan cancer to see if we have increase of proliferation in resistant
+
+
+
+
+in the main pipeline: invasion phenotype that is not in the validation pipeline, is the function wrong or its just that there is no phenotype??

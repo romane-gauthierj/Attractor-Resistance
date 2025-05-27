@@ -30,8 +30,7 @@ def personalized_patients_genes_cfgs(
     os.makedirs(original_data_dir, exist_ok=True)
 
     # Directory where modified files will be saved
-    # modified_output_dir = os.path.join(results_dir, "models_gene_expression")
-    # os.makedirs(modified_output_dir, exist_ok=True)
+    os.makedirs(results_dir, exist_ok=True)
 
     rna_seq_data_max = rna_seq_data
     rna_seq_data_max["gene_max"] = rna_seq_data_max.groupby("gene_symbol")[
@@ -76,14 +75,20 @@ def personalized_patients_genes_cfgs(
                             ].iloc[0]
                             prob_1 = min(max(gene_expr / expr_max, 0), 1)
 
-                            u_pattern = re.compile(rf"\$u_{gene}\s*=\s*(0|1);")
-                            d_pattern = re.compile(rf"\$d_{gene}\s*=\s*(0|1);")
+                            u_pattern = re.compile(
+                                rf"\$u_{gene}\s*=\s*(0|1);",
+                                re.DOTALL
+                            )
+                            d_pattern = re.compile(
+                                rf"\$d_{gene}\s*=\s*(0|1);",
+                                re.DOTALL
+                            )
                             u_line = f"$u_{gene} = {prob_1:.4f};"
                             d_line = f"$d_{gene} = {1 - prob_1:.4f};"
                             content = re.sub(u_pattern, u_line, content)
                             content = re.sub(d_pattern, d_line, content)
                 # modified_file_path = os.path.join(modified_output_dir, f'{filename}_{drug_name}')
-                modified_file_path = os.path.join(original_data_dir, filename)
+                modified_file_path = os.path.join(results_dir, filename)
 
                 with open(modified_file_path, "w") as file:
                     file.write(content)
