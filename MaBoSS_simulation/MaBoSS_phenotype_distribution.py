@@ -66,75 +66,76 @@ import numpy as np
 # why this function is not working?
 
 
-def compute_phenotypes_distribution(
-    phenotypes_list, folder, dir_files, inputs_list, drug_interest, group_label=None
-):
-    if group_label is not None:
-        output_dir = f"{folder}/{group_label}_results/only_gene_expression/single_input_on/phenotype_distribution_patients"
-    else:
-        output_dir = f"{folder}/only_gene_expression/single_input_on/phenotype_distribution_patients"
+# def compute_phenotypes_distribution(
+#     phenotypes_list, folder, dir_files, inputs_list, drug_interest, group_label=None
+# ):
+#     if group_label is not None:
+#         output_dir = f"{folder}/{group_label}_results/only_gene_expression/single_input_on/phenotype_distribution_patients"
+#     else:
+#         output_dir = f"{folder}/only_gene_expression/single_input_on/phenotype_distribution_patients"
 
-    cfg_files = [f for f in os.listdir(dir_files) if f.endswith(f"{drug_interest}.cfg")]
-    patients_data_dict = {}
-    for cfg_file in cfg_files:
-        cfg_path = os.path.join(dir_files, cfg_file)
-        base_name = os.path.splitext(cfg_file)[0]
-        bnd_path = os.path.join(dir_files, base_name + ".bnd")
+#     cfg_files = [f for f in os.listdir(dir_files) if f.endswith(f"{drug_interest}.cfg")]
+#     patients_data_dict = {}
+#     for cfg_file in cfg_files:
+#         cfg_path = os.path.join(dir_files, cfg_file)
+#         base_name = os.path.splitext(cfg_file)[0]
+#         bnd_path = os.path.join(dir_files, base_name + ".bnd")
 
-        if not os.path.exists(bnd_path):
-            print(f"Missing .bnd file: {bnd_path}")
-            continue
-        if not os.path.exists(cfg_path):
-            print(f"Missing .cfg file: {cfg_path}")
-            continue
+#         if not os.path.exists(bnd_path):
+#             print(f"Missing .bnd file: {bnd_path}")
+#             continue
+#         if not os.path.exists(cfg_path):
+#             print(f"Missing .cfg file: {cfg_path}")
+#             continue
 
-        patients_results = pd.DataFrame()
+#         patients_results = pd.DataFrame()
 
-        print(f"\n--- Results for patient: {base_name} ---")
+#         print(f"\n--- Results for patient: {base_name} ---")
 
-        for active_input in inputs_list:
-            try:
-                model = maboss.load(bnd_path, cfg_path)  # Reload fresh
-                model.network.set_istate(active_input, [0, 1])
-                for inactive_input in inputs_list:
-                    if inactive_input != active_input:
-                        model.network.set_istate(inactive_input, [1, 0])
-                result = model.run()
+#         for active_input in inputs_list:
+#             try:
+#                 model = maboss.load(bnd_path, cfg_path)  # Reload fresh
+#                 model.network.set_istate(active_input, [0, 1])
+#                 for inactive_input in inputs_list:
+#                     if inactive_input != active_input:
+#                         model.network.set_istate(inactive_input, [1, 0])
+#                 result = model.run()
 
-                last_state = result.get_last_states_probtraj()
+#                 last_state = result.get_last_states_probtraj()
 
-            except Exception as e:
-                print(
-                    f"Error during simulation for {base_name} ({active_input} ON): {e}"
-                )
-                continue
-            last_state.index = [f"{active_input}_ON"]
-            patients_results = pd.concat([patients_results, last_state])
-            # available_cols = [
-            #     col for col in expected_cols if col in patients_results.columns
-            # ]
-            # patients_results = patients_results[available_cols]
-            # patients_results = patients_results.fillna(0)
-        print("patients columns are:", patients_results.columns)
+#             except Exception as e:
+#                 print(
+#                     f"Error during simulation for {base_name} ({active_input} ON): {e}"
+#                 )
+#                 continue
+#             last_state.index = [f"{active_input}_ON"]
+#             patients_results = pd.concat([patients_results, last_state])
+#             # available_cols = [
+#             #     col for col in expected_cols if col in patients_results.columns
+#             # ]
+#             # patients_results = patients_results[available_cols]
+#             # patients_results = patients_results.fillna(0)
+#         print("patients columns are:", patients_results.columns)
 
-        for phenotype in phenotypes_list:
-            if phenotype not in patients_results.columns:
-                patients_results[phenotype] = 0.0
+#         for phenotype in phenotypes_list:
+#             if phenotype not in patients_results.columns:
+#                 patients_results[phenotype] = 0.0
 
-        patients_results = patients_results[phenotypes_list]
+#         patients_results = patients_results[phenotypes_list]
 
-        # Save to CSV
-        os.makedirs(output_dir, exist_ok=True)
-        output_path = os.path.join(output_dir, f"{base_name}_phenotypes.csv")
-        patients_results.to_csv(output_path)
+#         # Save to CSV
+#         os.makedirs(output_dir, exist_ok=True)
+#         output_path = os.path.join(output_dir, f"{base_name}_phenotypes.csv")
+#         patients_results.to_csv(output_path)
 
-        # Add to dictionary
-        patients_data_dict[base_name] = patients_results
-        # print(patients_results)
+#         # Add to dictionary
+#         patients_data_dict[base_name] = patients_results
+#         # print(patients_results)
 
-        print(patients_results)
+#         print(patients_results)
 
-    return patients_data_dict
+#     return patients_data_dict
+
 
 
 def compute_mean_patients(phenotype_list, dic_patients_data):

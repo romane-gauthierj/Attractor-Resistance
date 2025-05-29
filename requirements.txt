@@ -4,3 +4,5 @@ maboss
 ginsim
 seaborn
 os
+statsmodels
+scipy

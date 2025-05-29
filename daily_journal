@@ -551,12 +551,41 @@ to increase the max time and nb of samples but still only
 -> try to see if this function works on the main pipeline??
 
 
+
 to do:
-try to rewrite the function compute phenotype 
+try to rewrite the function compute phenotype (look at maboss library- reproduce the paper)
 try to change all cfg and bnd files so they all have genes names in upper cases and remove all '_'
 to do: rerun main pipeline for Pan cancer to see if we have increase of proliferation in resistant
 
-
+check why DNA repair is not activated (this and the proliferation should be the important phenotype that changes according to the 
+cancer stage)
 
 
 in the main pipeline: invasion phenotype that is not in the validation pipeline, is the function wrong or its just that there is no phenotype??
+
+
+
+
+
+
+Mai 28 
+finished: rewrote the function compute phenotype
+
+should we change the generic model to not only have Lung ??
+
+Results 
+- noticed that the phenotype converge to 0 -> compute the diff bw states and for all phenotypes get 0 -> reduce max time 
+
+
+
+Mai 29 
+finished: validation pipeline
+tried: to group 1-2 stages together and 3-4 together but not significant results 
+
+
+to do: try to understand why the results are not significant, not correct function or really not significant?
+         if so try to increase sample size and try to change the group (based on different form of disease and not stage??)
+-> try to group the early stages (1-2) and late stages (3-4) together
+
+
+ try to change all cfg and bnd files so they all have genes names in upper cases and remove all '_'
