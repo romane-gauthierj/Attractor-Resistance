@@ -3,9 +3,17 @@ import pandas as pd
 import os
 
 
-def compute_phenotype_table(patient_id, input_nodes, phenotypes_interest):
-    model_pers_bnd = f"validation/personalized_models/models_gene_expression/{patient_id}_PAN_CANCER.bnd"
-    model_pers_cfg = f"validation/personalized_models/models_gene_expression/{patient_id}_PAN_CANCER.cfg"
+def compute_phenotype_table(
+    folder_save_results,
+    folder_models,
+    patient_id,
+    input_nodes,
+    phenotypes_interest,
+    tissue,
+):
+    model_pers_bnd = f"{folder_models}/{patient_id}_{tissue}.bnd"
+    model_pers_cfg = f"{folder_models}/{patient_id}_{tissue}.cfg"
+
     model_pers_lung = maboss.load(model_pers_bnd, model_pers_cfg)
 
     results = pd.DataFrame(index=input_nodes, columns=phenotypes_interest)
@@ -48,9 +56,7 @@ def compute_phenotype_table(patient_id, input_nodes, phenotypes_interest):
         for phenotype in phenotypes_interest:
             if phenotype in final_probs.index:
                 results.loc[active_node, phenotype] = final_probs[phenotype]
-    results.to_csv(
-        f"validation/results/phenotype_distribution/phenotype_table_{patient_id}.csv"
-    )
+    results.to_csv(f"{folder_save_results}_{patient_id}.csv")
     return results
 
 

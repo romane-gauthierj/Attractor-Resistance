@@ -589,3 +589,97 @@ to do: try to understand why the results are not significant, not correct functi
 
 
  try to change all cfg and bnd files so they all have genes names in upper cases and remove all '_'
+
+
+ Observation/ potential explanation of not significant results:
+ -> Tumor stage measures extent of spread (size, local invasion, metastasis), not necessarily cell proliferation rate.
+ -> A tumor could be small and highly proliferative, or large and slowly growing.
+ -> Stage definitions differ by cancer type (e.g. TNM system varies).
+ -> Kruskal-Wallis needs reasonable group sizes to detect differences.
+ -> Gleason is histological; stage is anatomical. They're not directly equivalent.
+
+
+
+
+observation: 
+- there is no diagnoses.tumor_grade data
+
+
+primary_gleason_grade.diagnoses
+secondary_gleason_grade.diagnoses
+which one to chose ?
+-> values: patterns 1,2,3,4,5
+
+TO DO:
+- Try to repeat this but with prostate data -> so we have the gleason score and we can validate our approach to personalize the networks directly 
+
+
+
+
+Mai 30 
+- rerun validation pipeline on prostate data 
+
+illumina seq genes data (first dataset)
+
+later: try with protein abundance instead of gene expression and repeat to see if get results closer to reality
+
+prostate data
+genes: illumina seq (normalized log)
+phenotypes
+CNV: GISTIC2 Thresholded (gene level, removed germline cnv (inherited and also present in normal tissues),discrete values -> -2, -1, 0, 1, 2)
+
+
+pre-processing
+1) gleason score (sum of primary and secondary grade)
+    6 = least aggressive cancer typically reported
+    7 = moderately aggressive
+    8–10 = High-grade, aggressive cancer
+
+    -> rewrite all the generic model with upper cases (manually)
+
+
+changes generic prostate model 
+-> b-catenin -> CTNNB1
+-> caspase 3, 8, 9 -> CASP3, 8, 9
+-> CHK1_2 -> two rows for CHK1 and CHK2 -> (CHK1 | CHK2)
+-> cyclin B -> CCNB1
+-> cyclin D -> CCND1
+-> cycC -> CYCS
+-> Dsh -> DVL1
+-> e cadherin  -> CDH1
+
+
+-> MEK1_2 -> MEK1 and MEK2
+-> NF_kB  -> NFKB 
+-> Snail -> SNAI1
+(all remove all the _)
+-> TNF -> TNFalpha
+-> TSC1_2 -> TSC1 and TSC2
+-> BCL_XL -> BCL2L1
+-> MAP3K1_3 ->  
+
+
+Node mTORC1 {
+  logic = ((AKT | (AKT & Rheb)) & !AMPK & !TSC1 & !TSC2);
+  rate_up = @logic ? $u_mTORC1 : 0;
+  rate_down = @logic ? 0 : $d_mTORC1;
+}
+
+
+
+/// issues here no?? since RAF not sufficient to activate ERK??
+Node ERK {
+  logic = (RAF | (MEK1 | MEK2));
+  rate_up = @logic ? $u_ERK : 0;
+  rate_down = @logic ? 0 : $d_ERK;
+} 
+
+
+
+
+
+
+to do:
+- montagud nodes -> apply my changes 
+- in gene expression -> remove all the '_' 
+- rerun the pipeline of personalization

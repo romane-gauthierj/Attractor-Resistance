@@ -2,7 +2,8 @@ import numpy as np
 import mygene
 
 
-def pre_process_tcga_data(cnv_data, genes_data, patients_id, montagud_nodes):
+# if cnv is with "ensembl.gene" instead of gene names
+def pre_process_tcga_data(cnv_data, genes_data, patients_id, montagud_nodes, tissue):
     cnv_col = ["Unnamed: 0"] + patients_id
     genes_col = ["xena_sample"] + patients_id
     cnv_data_filtered = cnv_data[cnv_col]
@@ -42,9 +43,9 @@ def pre_process_tcga_data(cnv_data, genes_data, patients_id, montagud_nodes):
             "expression_value": "rsem_tpm",
         }
     )
-    group_loss = [-1]
+    group_loss = [-1, -2]
     group_normal = [0]
-    group_gain = [1]
+    group_gain = [1, 2]
 
     conditions = [
         df_melted_cnv["rsem_tpm"].isin(group_loss),
@@ -99,5 +100,7 @@ def pre_process_tcga_data(cnv_data, genes_data, patients_id, montagud_nodes):
             "expression_value": "rsem_tpm",
         }
     )
-    df_melted_genes.to_csv("data/TCGA_data/filtered_data/genes_samples_table.csv")
+    df_melted_genes.to_csv(
+        f"data/TCGA_data/filtered_data/genes_samples_table{tissue}.csv"
+    )
     return df_melted_cnv, df_melted_genes
