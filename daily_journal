@@ -641,6 +641,7 @@ pre-processing
 changes generic prostate model 
 -> b-catenin -> CTNNB1
 -> caspase 3, 8, 9 -> CASP3, 8, 9
+
 -> CHK1_2 -> two rows for CHK1 and CHK2 -> (CHK1 | CHK2)
 -> cyclin B -> CCNB1
 -> cyclin D -> CCND1
@@ -658,6 +659,8 @@ changes generic prostate model
 -> BCL_XL -> BCL2L1
 -> MAP3K1_3 ->  
 
+
+attention: HSPs -> HSPS
 
 Node mTORC1 {
   logic = ((AKT | (AKT & Rheb)) & !AMPK & !TSC1 & !TSC2);
@@ -678,8 +681,5 @@ Node ERK {
 
 
 
-
-to do:
-- montagud nodes -> apply my changes 
-- in gene expression -> remove all the '_' 
-- rerun the pipeline of personalization
+June 1 
+finished: changed montagud nodes with gene names, validation with prostate data

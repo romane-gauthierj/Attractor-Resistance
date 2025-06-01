@@ -68,6 +68,7 @@ def compute_phenotype_mean_group_validation(
 
     for group in stages_groups:
         folder_path = f"{folder_groups_means}/{group}"
+        os.makedirs(folder_path, exist_ok=True)
         files = [f for f in os.listdir(folder_path) if f.endswith(".csv")]
 
         dfs = []
@@ -88,24 +89,19 @@ def compute_phenotype_mean_group_validation(
             mean_df = pd.concat([mean_df, mean_row.to_frame().T])
             print(mean_df)
 
-            mean_df.to_csv(f"{folder_groups_means}/{group}_mean_phenotype_values.csv")
+            mean_df.to_csv(
+                f"{folder_groups_means}/{group}/{group}_mean_phenotype_values.csv"
+            )
 
         else:
             print(f"No CSV files found in {folder_path}")
     return mean_df
 
 
-def combine_groups_values(base_path):
+def combine_groups_values(folder_to_group, base_path):
     # Folder and grouping setup
-
-    folder_to_group = {
-        "stage_1_group": "GroupA",
-        "stage_2_group": "GroupA",
-        "stage_3_group": "GroupB",
-        "stage_4_group": "GroupB",
-    }
     all_folders = list(folder_to_group.keys())
-    groups = list(set(folder_to_group.values()))  # ['GroupA', 'GroupB']
+    groups = list(set(folder_to_group.values()))
 
     # Storage
     data_combined = {}
@@ -123,7 +119,8 @@ def combine_groups_values(base_path):
                         key = (input_name, phenotype)
                         if key not in data_combined:
                             data_combined[key] = {g: [] for g in groups}
-                        value = df.loc[input_name, phenotype]
+                        value = df.at[input_name, phenotype]
+
                         data_combined[key][group_label].append(float(value))
 
     return data_combined
