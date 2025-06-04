@@ -42,13 +42,13 @@ def compute_mannwhitneyu_test_means(
         patient_sens_stats_values.columns[0], inplace=True
     )
 
-    patient_res_stats_values.index.name = "Phenotype"
-    patient_sens_stats_values.index.name = "Phenotype"
+    patient_res_stats_values.index.name = "Condition"
+    patient_sens_stats_values.index.name = "Condition"
 
-    phenotypes_list_res = patient_res_stats_values.index
-    conditions_list_res = patient_res_stats_values.columns
-    phenotypes_list_sens = patient_sens_stats_values.index
-    conditions_list_sens = patient_sens_stats_values.columns
+    phenotypes_list_res = patient_res_stats_values.columns
+    conditions_list_res = patient_res_stats_values.index
+    phenotypes_list_sens = patient_sens_stats_values.columns
+    conditions_list_sens = patient_sens_stats_values.index
 
     # p_values_records_shapiro = []
     p_values_records_mannwhitneyu_two_sides = []
@@ -59,10 +59,10 @@ def compute_mannwhitneyu_test_means(
         if phenotype in phenotypes_list_sens:
             for condition in conditions_list_res:
                 if condition in conditions_list_sens:
-                    stats_data_res = patient_res_stats_values.loc[phenotype, condition]
+                    stats_data_res = patient_res_stats_values.loc[condition, phenotype]
 
                     stats_data_sens = patient_sens_stats_values.loc[
-                        phenotype, condition
+                        condition, phenotype
                     ]
 
                     stats_data_res = ast.literal_eval(stats_data_res)
@@ -92,24 +92,24 @@ def compute_mannwhitneyu_test_means(
                     # Mannwhitneyu: Append the row as a dictionary
                     p_values_records_mannwhitneyu_two_sides.append(
                         {
-                            "Phenotype": phenotype,
                             "Condition": condition,
+                            "Phenotype": phenotype,
                             "Mannwhitneyu_P_value_Resistant": p_value_res_sens,
                         }
                     )
 
                     p_values_records_mannwhitneyu_less.append(
                         {
-                            "Phenotype": phenotype,
                             "Condition": condition,
+                            "Phenotype": phenotype,
                             "Mannwhitneyu_P_value_Resistant": p_value_res_sens_less,
                         }
                     )
 
                     p_values_records_mannwhitneyu_greater.append(
                         {
-                            "Phenotype": phenotype,
                             "Condition": condition,
+                            "Phenotype": phenotype,
                             "Mannwhitneyu_P_value_Resistant": p_value_res_sens_greater,
                         }
                     )
@@ -127,16 +127,16 @@ def compute_mannwhitneyu_test_means(
         p_values_records_mannwhitneyu_two_sides
     )
     p_values_df_mannwhitneyu_two_sides.set_index(
-        ["Phenotype", "Condition"], inplace=True
+        ["Condition", "Phenotype"], inplace=True
     )
 
     p_values_df_mannwhitneyu_less = pd.DataFrame(p_values_records_mannwhitneyu_less)
-    p_values_df_mannwhitneyu_less.set_index(["Phenotype", "Condition"], inplace=True)
+    p_values_df_mannwhitneyu_less.set_index(["Condition", "Phenotype"], inplace=True)
 
     p_values_df_mannwhitneyu_greater = pd.DataFrame(
         p_values_records_mannwhitneyu_greater
     )
-    p_values_df_mannwhitneyu_greater.set_index(["Phenotype", "Condition"], inplace=True)
+    p_values_df_mannwhitneyu_greater.set_index(["Condition", "Phenotype"], inplace=True)
 
     # check which one has a pvalue < 0.05
 
@@ -203,14 +203,19 @@ def compute_mannwhitneyu_test_means(
         conditions, choices, default=""
     )
 
+    p_values_df_mannwhitneyu_two_sides.reset_index()
     p_values_df_mannwhitneyu_two_sides.to_csv(
         f"{folder}/sensitive_resistant_results/p_values_df_mannwhitneyu_two_sides_{drug_interest}.csv",
         index=True,
     )
+    p_values_df_mannwhitneyu_less_sign.reset_index()
     p_values_df_mannwhitneyu_less_sign.to_csv(
         f"{folder}/sensitive_resistant_results/p_values_df_mannwhitneyu_less_sign_{drug_interest}.csv",
         index=True,
     )
+
+    p_values_df_mannwhitneyu_greater_sign.reset_index()
+
     p_values_df_mannwhitneyu_greater_sign.to_csv(
         f"{folder}/sensitive_resistant_results/p_values_df_mannwhitneyu_greater_sign_{drug_interest}.csv",
         index=True,

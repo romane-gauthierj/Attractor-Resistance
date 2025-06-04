@@ -15,13 +15,6 @@ def personalized_patients_genes_cfgs(
     rna_seq_data_filtered,
     drug_name,
 ):
-    # montagud_data = montagud_data.rename(
-    #     columns={"Target node": "Target_node", "Interaction type": "Interaction_type"}
-    # )
-    # montagud_nodes = (
-    #     montagud_data["Target_node"].tolist() + montagud_data["Source"].tolist()
-    # )
-    # montagud_nodes = list(set(montagud_nodes))
     rna_seq_data = rna_seq_data[rna_seq_data["model_id"].isin(patients_ids)]
 
     rna_seq_data = rna_seq_data[["model_id", "gene_symbol", "rsem_tpm"]]

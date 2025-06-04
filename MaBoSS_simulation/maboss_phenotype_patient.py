@@ -56,7 +56,7 @@ def compute_phenotype_table(
         for phenotype in phenotypes_interest:
             if phenotype in final_probs.index:
                 results.loc[active_node, phenotype] = final_probs[phenotype]
-    results.to_csv(f"{folder_save_results}_{patient_id}.csv")
+    results.to_csv(f"{folder_save_results}/_{patient_id}.csv")
     return results
 
 
@@ -124,3 +124,33 @@ def combine_groups_values(folder_to_group, base_path):
                         data_combined[key][group_label].append(float(value))
 
     return data_combined
+
+
+def compute_phenotype_mean(group, folder_groups_means, results_mean_folder):
+    # compute mean
+
+    folder_path = f"{folder_groups_means}"
+    os.makedirs(folder_path, exist_ok=True)
+    files = [f for f in os.listdir(folder_path) if f.endswith(".csv")]
+
+    dfs = []
+
+    for file in files:
+        file_path = os.path.join(folder_path, file)
+        df = pd.read_csv(file_path, index_col=0)  # Assuming first column is input IDs
+        dfs.append(df)
+
+    if dfs:
+        # Now concatenate all dataframes along a new axis to create a 3D structure (like a panel)
+        # Then compute mean across that new axis (axis=0 means across files)
+        mean_df = pd.concat(dfs, axis=0).groupby(level=0).mean()
+        mean_row = mean_df.mean(axis=0)
+        mean_row.name = "Overall_Mean"
+        mean_df = pd.concat([mean_df, mean_row.to_frame().T])
+        print(mean_df)
+
+        mean_df.to_csv(f"{results_mean_folder}/{group}_mean_phenotype_values.csv")
+
+    else:
+        print(f"No CSV files found in {folder_path}")
+    return mean_df

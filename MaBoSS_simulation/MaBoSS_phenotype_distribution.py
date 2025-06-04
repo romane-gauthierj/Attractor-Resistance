@@ -138,92 +138,92 @@ import numpy as np
 
 
 
-def compute_mean_patients(phenotype_list, dic_patients_data):
-    stats_results_data = {}
-    results = {}
-    flags_end = [False, False, False]
-    df_results_mean = pd.DataFrame(
-        index=[
-            "EGF_ON",
-            "FGF_ON",
-            "TGFb_ON",
-            "Nutrients_ON",
-            "Hypoxia_ON",
-            "Acidosis_ON",
-            "Androgen_ON",
-            "TNFalpha_ON",
-            "Carcinogen_ON",
-        ],
-        columns=phenotype_list,
-    )
-    df_results_std = pd.DataFrame(
-        index=[
-            "EGF_ON",
-            "FGF_ON",
-            "TGFb_ON",
-            "Nutrients_ON",
-            "Hypoxia_ON",
-            "Acidosis_ON",
-            "Androgen_ON",
-            "TNFalpha_ON",
-            "Carcinogen_ON",
-        ],
-        columns=phenotype_list,
-    )
+# def compute_mean_patients(phenotype_list, dic_patients_data):
+#     stats_results_data = {}
+#     results = {}
+#     flags_end = [False, False, False]
+#     df_results_mean = pd.DataFrame(
+#         index=[
+#             "EGF_ON",
+#             "FGF_ON",
+#             "TGFb_ON",
+#             "Nutrients_ON",
+#             "Hypoxia_ON",
+#             "Acidosis_ON",
+#             "Androgen_ON",
+#             "TNFalpha_ON",
+#             "Carcinogen_ON",
+#         ],
+#         columns=phenotype_list,
+#     )
+#     df_results_std = pd.DataFrame(
+#         index=[
+#             "EGF_ON",
+#             "FGF_ON",
+#             "TGFb_ON",
+#             "Nutrients_ON",
+#             "Hypoxia_ON",
+#             "Acidosis_ON",
+#             "Androgen_ON",
+#             "TNFalpha_ON",
+#             "Carcinogen_ON",
+#         ],
+#         columns=phenotype_list,
+#     )
 
-    for idx_patient, (patient_id, patient_data) in enumerate(
-        dic_patients_data.items(), 1
-    ):
-        if len(dic_patients_data) == idx_patient:
-            flags_end[0] = True
-        for idx_condition, (condition_name, phenotypes) in enumerate(
-            patient_data.iterrows(), 1
-        ):
-            if patient_data.shape[0] == idx_condition:
-                flags_end[1] = True
-            for idx_phenotype, (phenotype_name, phenotype_value) in enumerate(
-                phenotypes.items(), 1
-            ):
-                if len(phenotypes.values) == idx_phenotype:
-                    flags_end[2] = True
-                if condition_name not in results.keys():
-                    results[condition_name] = {}
-                if phenotype_name not in results[condition_name].keys():
-                    results[condition_name][phenotype_name] = []
+#     for idx_patient, (patient_id, patient_data) in enumerate(
+#         dic_patients_data.items(), 1
+#     ):
+#         if len(dic_patients_data) == idx_patient:
+#             flags_end[0] = True
+#         for idx_condition, (condition_name, phenotypes) in enumerate(
+#             patient_data.iterrows(), 1
+#         ):
+#             if patient_data.shape[0] == idx_condition:
+#                 flags_end[1] = True
+#             for idx_phenotype, (phenotype_name, phenotype_value) in enumerate(
+#                 phenotypes.items(), 1
+#             ):
+#                 if len(phenotypes.values) == idx_phenotype:
+#                     flags_end[2] = True
+#                 if condition_name not in results.keys():
+#                     results[condition_name] = {}
+#                 if phenotype_name not in results[condition_name].keys():
+#                     results[condition_name][phenotype_name] = []
 
-                results[condition_name][phenotype_name].append(phenotype_value)
-                temp_result = results[condition_name][phenotype_name]
+#                 results[condition_name][phenotype_name].append(phenotype_value)
+#                 temp_result = results[condition_name][phenotype_name]
 
-                # Stats test table
-                if condition_name not in stats_results_data.keys():
-                    stats_results_data[condition_name] = {}
-                if phenotype_name not in stats_results_data[condition_name].keys():
-                    stats_results_data[condition_name][phenotype_name] = []
+#                 # Stats test table
+#                 if condition_name not in stats_results_data.keys():
+#                     stats_results_data[condition_name] = {}
+#                 if phenotype_name not in stats_results_data[condition_name].keys():
+#                     stats_results_data[condition_name][phenotype_name] = []
 
-                stats_results_data[condition_name][phenotype_name].append(
-                    phenotype_value
-                )
+#                 stats_results_data[condition_name][phenotype_name].append(
+#                     phenotype_value
+#                 )
 
-                if False not in flags_end:
-                    mean = np.mean(temp_result)
-                    std = np.std(temp_result, ddof=1)
+#                 if False not in flags_end:
+#                     mean = np.mean(temp_result)
+#                     std = np.std(temp_result, ddof=1)
 
-                    # results[condition_name][phenotype_name] = [mean, std]
-                    # Put mean and std in dataframe
+#                     # results[condition_name][phenotype_name] = [mean, std]
+#                     # Put mean and std in dataframe
 
-                    if pd.isna(df_results_mean.at[condition_name, phenotype_name]):
-                        df_results_mean.at[condition_name, phenotype_name] = mean
-                    else:
-                        df_results_mean.at[condition_name, phenotype_name] += mean
+#                     if pd.isna(df_results_mean.at[condition_name, phenotype_name]):
+#                         df_results_mean.at[condition_name, phenotype_name] = mean
+#                     else:
+#                         df_results_mean.at[condition_name, phenotype_name] += mean
 
-                    # Same for std
-                    if pd.isna(df_results_std.at[condition_name, phenotype_name]):
-                        df_results_std.at[condition_name, phenotype_name] = std
-                    else:
-                        df_results_std.at[condition_name, phenotype_name] += std
+#                     # Same for std
+#                     if pd.isna(df_results_std.at[condition_name, phenotype_name]):
+#                         df_results_std.at[condition_name, phenotype_name] = std
+#                     else:
+#                         df_results_std.at[condition_name, phenotype_name] += std
 
-    stats_results_data_df = pd.DataFrame(stats_results_data)
-    print("Stats test table values")
-    print(stats_results_data_df)
+#     stats_results_data_df = pd.DataFrame(stats_results_data)
+#     print("Stats test table values")
+#     print(stats_results_data_df)
 
-    return df_results_mean.round(2), df_results_std.round(2), stats_results_data_df
+#     return df_results_mean.round(2), df_results_std.round(2), stats_results_data_df

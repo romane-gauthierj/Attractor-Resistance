@@ -682,4 +682,30 @@ Node ERK {
 
 
 June 1 
-finished: changed montagud nodes with gene names, validation with prostate data
+finished: changed montagud nodes with gene names, validation with prostate data -> no mutations yet
+to do: recreate generic pan cancer cfg and bnd from new montagud nodes (remove nodes specific to prostate cancer)
+    run the pipeline on the generic model, then only on model with gene expression, only with CNV, and with both 
+
+
+
+June 2: 
+to do: repeat all the pipeline for PAN CANCER with new generic and cfg files but without mutation data for now (as did not include them in the validation pipeline)
+modif of the lung model: 
+- remove AR_ERG
+- remove fused_event
+- keep NKX31 (not only highly expressed in prostate cancer but also )
+- keep SPOP 
+
+
+
+Jun 3:
+finished : computed stats p value
+to do: run boxplot, rerun on the generic models to check personalization works well 
+try proteins abundance instead of gene expression for the validation and see if can get better results
+start pipeline for biohackaton
+
+
+Jun 4: 
+finished: to recreate boxplot function
+to  do: make it as generalizable as possible
+if time -> run with only generic models and compute phenotype & replace genes by proteins data and do the validation again

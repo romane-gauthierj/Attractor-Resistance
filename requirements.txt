@@ -6,3 +6,5 @@ seaborn
 os
 statsmodels
 scipy
+ast
+shutil
