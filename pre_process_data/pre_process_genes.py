@@ -51,3 +51,36 @@ def create_table_rna_seq_patients(rna_seq_data):
     )
 
     return table_rna_seq_patients
+
+
+def create_table_proteins_patients(proteins_data):
+    # filter only data with patient id and the nodes of the montagud_data
+
+    proteins_data["z_score"] = proteins_data.groupby("protein_symbol")[
+        "rsem_tpm"
+    ].transform(lambda x: (x - x.mean()) / x.std())
+
+    proteins_data["protein_expression_level"] = proteins_data["z_score"].apply(
+        classify_expression
+    )
+
+    proteins_data = proteins_data[
+        ["model_id", "protein_symbol", "protein_expression_level"]
+    ]
+    proteins_data.rename(columns={"protein_symbol": "protein_name"}, inplace=True)
+    proteins_data = proteins_data[
+        proteins_data["protein_expression_level"].isin(["low", "high"])
+    ]
+
+    table_proteins_patients = proteins_data.pivot_table(
+        index="model_id",
+        columns="protein_expression_level",
+        values="protein_name",
+        aggfunc=lambda x: ", ".join(sorted(set(x))),
+    ).fillna("-")
+
+    table_proteins_patients = table_proteins_patients.rename(
+        columns={"low": "Low Protein Abundance", "high": "High Protein Abundance"}
+    )
+
+    return table_proteins_patients

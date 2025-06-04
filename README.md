@@ -8,3 +8,12 @@
 ```
 pip install -r requirements.txt
 ```
+
+3. Pipeline_validation_prostate: 
+create personalized boolean networks with TCGA prostate data, and compare to gleason score (Montagud paper)
+
+Pipeline_generic:
+Run MaBoSS simulation on generic model (no personalization) 
+
+Pipeline_pers:
+Create personalized Boolean Netorks with Cell Model Passport data of PAN CANCER (Except Hematopoietic tissue)

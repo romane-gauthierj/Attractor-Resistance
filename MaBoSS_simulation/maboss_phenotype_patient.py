@@ -13,6 +13,9 @@ def compute_phenotype_table(
 ):
     model_pers_bnd = f"{folder_models}/{patient_id}_{tissue}.bnd"
     model_pers_cfg = f"{folder_models}/{patient_id}_{tissue}.cfg"
+    if not os.path.exists(model_pers_bnd) or not os.path.exists(model_pers_cfg):
+        print(f"Missing model files for {patient_id}")
+        return None
 
     model_pers_lung = maboss.load(model_pers_bnd, model_pers_cfg)
 
@@ -27,6 +30,7 @@ def compute_phenotype_table(
         for inactive_node in input_nodes:
             if inactive_node != active_node:
                 model_pers_lung.network.set_istate(inactive_node, [1, 0])
+
         converged = False
         current_max_time = initial_max_time
         while not converged and current_max_time < max_time_limit:
@@ -34,6 +38,7 @@ def compute_phenotype_table(
                 time_tick=0.1, max_time=current_max_time, sample_count=500
             )
             res_lung_pers = model_pers_lung.run()
+
             last_state = res_lung_pers.get_nodes_probtraj()
             if len(last_state) < 10:
                 print(
@@ -58,6 +63,53 @@ def compute_phenotype_table(
                 results.loc[active_node, phenotype] = final_probs[phenotype]
     results.to_csv(f"{folder_save_results}/_{patient_id}.csv")
     return results
+
+
+# folder_models = "../validation/prostate/personalized_models/proteins_models"
+# folder_save_results = "../validation/prostate/results/proteins_models/phenotype_distribution/phenotype_table"
+# phenotypes_interest = [
+#     "Proliferation",
+#     "Invasion",
+#     "DNA_Repair",
+#     "Migration",
+#     "Apoptosis",
+# ]
+
+# inputs_list = [
+#     "EGF",
+#     "FGF",
+#     "TGFB",
+#     "Androgen",
+#     "Hypoxia",
+#     "Nutrients",
+#     "Carcinogen",
+#     "Acidosis",
+#     "TNF",
+#     "fused_event",
+#     "SPOP",
+# ]
+# patients_id = [
+#     "TCGA-ZG-A9L5-01",
+#     "TCGA-ZG-A9N3-01",
+#     "TCGA-V1-A9ZK-01",
+#     "TCGA-YL-A8SF-01",
+#     "TCGA-CH-5792-01",
+#     "TCGA-KK-A8I9-01",
+#     "TCGA-YL-A8HK-01",
+#     "TCGA-HC-A48F-01",
+#     "TCGA-ZG-A9LM-01",
+#     "TCGA-V1-A9ZR-01",
+#     "TCGA-XJ-A9DX-01",
+# ]
+# for patient in patients_id:
+#     compute_phenotype_table(
+#         folder_save_results,
+#         folder_models,
+#         patient,
+#         inputs_list,
+#         phenotypes_interest,
+#         tissue="Prostate",
+#     )
 
 
 def compute_phenotype_mean_group_validation(

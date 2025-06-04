@@ -623,7 +623,8 @@ illumina seq genes data (first dataset)
 
 later: try with protein abundance instead of gene expression and repeat to see if get results closer to reality
 
-prostate data
+
+Data: Cohort: TCGA Prostate Cancer (PRAD)
 genes: illumina seq (normalized log)
 phenotypes
 CNV: GISTIC2 Thresholded (gene level, removed germline cnv (inherited and also present in normal tissues),discrete values -> -2, -1, 0, 1, 2)
@@ -657,7 +658,7 @@ changes generic prostate model
 -> TNF -> TNFalpha
 -> TSC1_2 -> TSC1 and TSC2
 -> BCL_XL -> BCL2L1
--> MAP3K1_3 ->  
+-> MAP3K1_3 ->  MAP3K1 and MAP3K3
 
 
 attention: HSPs -> HSPS
@@ -706,6 +707,25 @@ start pipeline for biohackaton
 
 
 Jun 4: 
-finished: to recreate boxplot function
+finished: to recreate boxplot function, run simulation on generic PAN cancer model 
 to  do: make it as generalizable as possible
-if time -> run with only generic models and compute phenotype & replace genes by proteins data and do the validation again
+if time -> replace genes by proteins data and do the validation again
+
+
+should i create the downstream analysis in a new pipeline - where i do some gene enrichment?
+
+
+to do: create two generic model -> one for gene expression and one for protein abundance
+       changes the montagud nodes accordingly 
+
+
+
+       in the generic protein Prostate model -> 
+       replace CHK1_2 by CHK1 and CHK2 (etc..) but do not change the protein name to gene name
+
+
+       !!!!! make sure difference we see do not correlate with gender and cancer type!!!
+
+
+
+       check if better results with proteins (if can see a stronger diff bw stage 1 and 2) and if not -> try to add more proteins 
