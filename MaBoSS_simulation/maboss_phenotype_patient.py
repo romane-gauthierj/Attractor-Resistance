@@ -121,7 +121,11 @@ def compute_phenotype_mean_group_validation(
     for group in stages_groups:
         folder_path = f"{folder_groups_means}/{group}"
         os.makedirs(folder_path, exist_ok=True)
-        files = [f for f in os.listdir(folder_path) if f.endswith(".csv")]
+        files = [
+            f
+            for f in os.listdir(folder_path)
+            if f.startswith("_TCGA") and f.endswith(".csv")
+        ]
 
         dfs = []
 
