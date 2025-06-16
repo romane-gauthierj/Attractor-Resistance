@@ -45,10 +45,14 @@ def melt_df(df, group_label):
 
 
 def create_boxplot(res_data, sens_data, significant_df):
-    res_data.rename(columns={"Unnamed: 0": "Condition"}, inplace=True)
-    sens_data.rename(columns={"Unnamed: 0": "Condition"}, inplace=True)
-    phenotypes = list(res_data.columns[1:])
-    conditions = list(res_data["Condition"])
+    # res_data.rename(columns={"Unnamed: 0": "Condition"}, inplace=True)
+    # sens_data.rename(columns={"Unnamed: 0": "Condition"}, inplace=True)
+
+    phenotypes = significant_df["Phenotype"].unique()
+    conditions = significant_df["Condition"].unique()
+
+    # phenotypes = list(res_data.columns[1:])
+    # conditions = list(res_data.index)
 
     n_phenotypes = len(phenotypes)
     fig, axes = plt.subplots(
@@ -69,14 +73,12 @@ def create_boxplot(res_data, sens_data, significant_df):
         tick = 1  # x position for groups
 
         for condition in conditions:
-            res_value = res_data[res_data["Condition"] == condition][phenotype].iloc[0]
+            res_value = res_data[res_data.index == condition][phenotype].iloc[0]
             res_value_list = ast.literal_eval(res_value)
             resistant_data.append(res_value_list)
             resistant_positions.append(tick - 0.2)
 
-            sens_value = sens_data[sens_data["Condition"] == condition][phenotype].iloc[
-                0
-            ]
+            sens_value = sens_data[sens_data.index == condition][phenotype].iloc[0]
             sens_value_list = ast.literal_eval(sens_value)
             sensitive_data.append(sens_value_list)
             sensitive_positions.append(tick + 0.2)

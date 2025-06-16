@@ -699,6 +699,7 @@ modif of the lung model:
 
 
 
+
 Jun 3:
 finished : computed stats p value
 to do: run boxplot, rerun on the generic models to check personalization works well 
@@ -751,3 +752,63 @@ should i really remove the fused_event from the montagud nodes for the prostate 
 
 to do: try running gene pipeline prostate validation and see if works
 
+
+
+
+Jun 6:
+to do: debug pipeline pers with gene enrichment, start writing the abstract
+
+
+
+
+Jun 16:
+finished: computed variance of gene enrichment, 
+
+
+
+
+
+
+when we create the groups to then do gene enrichment, what value should we use here (0.1 is enough)? 
+
+ group_phenotype_resistant = data_phenotype_patients[
+        (data_phenotype_patients["Drug status"] == "Resistant")
+        & (data_phenotype_patients[f"{condition}_{phenotype}"] >= 0.1)
+    ]
+
+
+
+
+
+
+
+catch up Graeme 
+- had to create different boolean networks for proteins and genes -> difficult to combine both (or maybe creating a csv linking genes names and proteins)
+- not better results with proteins data
+- expected result: less proliferation for generic models than personalized 
+- for the attractors computation algo -> fine tune to identify the best time for convergence (if wait too late, seems that all attractors converge to 0)
+- genes enrichment analysis: compute mean and variance, how can i use the variance? -> what if abundance is tissue-dependent?
+- validation according to the gleason score (prolif and DNA repair as expected, apoptosis higher in the high gleason score group)
+
+-> only look at proliferation and DNA repair results ??
+
+-> invasion: 0.7 -> 0.3 -> 0.37 
+
+seems that migration is never ON????
+
+questions:
+- do we need to do a power analysis to compute the nb of patients needed to have statistically relevant results?
+- why proliferation is different but not invasion or metastasis phenotype? (but in the validation, paper used DNA repair and proliferation) -> what biological phenotype is sufficient to keep??
+
+
+
+to do:
+- power stats when create resistant and sensitive groups 
+- create boolean network with both genes and proteins (changes proteins names to genes)
+- what happens if we block some of the genes target ?? -> can we reduce proliferation??
+- compute ratio of each tissue and gender
+- gene enrichment in the validation pipeline?
+
+
+
+AR_ERG in the person models and not only in the validation??

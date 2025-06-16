@@ -4,9 +4,6 @@ import re
 import numpy as np
 
 
-
-
-
 def get_patients(
     number_patients,
     drug_data,
@@ -15,7 +12,6 @@ def get_patients(
     tissue_interest=None,
     tissue_remove=None,
 ):
-    # extract the top 100 and bottom 100 patients resitant to the drug
     if tissue_interest is not None:
         tissue_interest = tissue_interest.upper()
         annotations_models["tissue"] = annotations_models["tissue"].str.upper()
@@ -36,12 +32,6 @@ def get_patients(
     # merge drug data with tissue
     annotations_models_filtered.rename(
         columns={"model_id": "SANGER_MODEL_ID"}, inplace=True
-    )
-
-    # print(annotations_models_filtered.columns.tolist())
-
-    drug_tissue_data = pd.merge(
-        drug_data, annotations_models_filtered, on="SANGER_MODEL_ID"
     )
 
     drug_data_filtered = drug_data[drug_data["SANGER_MODEL_ID"].isin(models_id)]

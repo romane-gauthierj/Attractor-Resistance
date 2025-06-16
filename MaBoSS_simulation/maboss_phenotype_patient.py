@@ -2,7 +2,7 @@ import maboss
 import pandas as pd
 import os
 
-
+# loop over max time to identify the one for which the algo converges
 def compute_phenotype_table(
     folder_save_results,
     folder_models,
@@ -65,51 +65,12 @@ def compute_phenotype_table(
     return results
 
 
-# folder_models = "../validation/prostate/personalized_models/proteins_models"
-# folder_save_results = "../validation/prostate/results/proteins_models/phenotype_distribution/phenotype_table"
-# phenotypes_interest = [
-#     "Proliferation",
-#     "Invasion",
-#     "DNA_Repair",
-#     "Migration",
-#     "Apoptosis",
-# ]
 
-# inputs_list = [
-#     "EGF",
-#     "FGF",
-#     "TGFB",
-#     "Androgen",
-#     "Hypoxia",
-#     "Nutrients",
-#     "Carcinogen",
-#     "Acidosis",
-#     "TNF",
-#     "fused_event",
-#     "SPOP",
-# ]
-# patients_id = [
-#     "TCGA-ZG-A9L5-01",
-#     "TCGA-ZG-A9N3-01",
-#     "TCGA-V1-A9ZK-01",
-#     "TCGA-YL-A8SF-01",
-#     "TCGA-CH-5792-01",
-#     "TCGA-KK-A8I9-01",
-#     "TCGA-YL-A8HK-01",
-#     "TCGA-HC-A48F-01",
-#     "TCGA-ZG-A9LM-01",
-#     "TCGA-V1-A9ZR-01",
-#     "TCGA-XJ-A9DX-01",
-# ]
-# for patient in patients_id:
-#     compute_phenotype_table(
-#         folder_save_results,
-#         folder_models,
-#         patient,
-#         inputs_list,
-#         phenotypes_interest,
-#         tissue="Prostate",
-#     )
+
+
+
+
+
 
 
 def compute_phenotype_mean_group_validation(
@@ -180,6 +141,7 @@ def combine_groups_values(folder_to_group, base_path):
                         data_combined[key][group_label].append(float(value))
 
     return data_combined
+
 
 
 def compute_phenotype_mean(group, folder_groups_means, results_mean_folder):

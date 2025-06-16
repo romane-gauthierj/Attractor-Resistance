@@ -30,6 +30,36 @@ def compute_kruskal_test_means_validation(data_groups):
     return significant_results
 
 
+
+
+def compute_kruskal(inputs_list, phenotype_interest, df_res_combined, df_sens_combined):
+
+    kruskal_results = pd.DataFrame(index=inputs_list, columns=phenotype_interest)
+
+    for input_name in inputs_list:
+        for phenotype in phenotype_interest:
+            group1 = df_res_combined.at[input_name, phenotype]
+            group2 = df_sens_combined.at[input_name, phenotype]
+            group1 = ast.literal_eval(group1)
+            group2 = ast.literal_eval(group2)
+
+            if group1 and group2:
+                stat, pvalue = kruskal(group1, group2)
+                kruskal_results.at[input_name, phenotype] = pvalue
+            else:
+                kruskal_results.at[input_name, phenotype] = None
+
+
+
+    significant_kruskal_results = kruskal_results.applymap(lambda x: x if (x is not None and float(x) < 0.05) else np.nan)
+    return significant_kruskal_results
+
+
+
+
+
+
+
 # compute normality (Shapiro-Wilk test p-value ≤ 0.05 → Reject H₀ → Data is not normally distributed.)
 def compute_mannwhitneyu_test_means(
     folder, patient_res_stats_values, patient_sens_stats_values, drug_interest
