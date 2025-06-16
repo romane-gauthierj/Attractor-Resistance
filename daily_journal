@@ -803,7 +803,6 @@ questions:
 
 
 to do:
-- power stats when create resistant and sensitive groups 
 - create boolean network with both genes and proteins (changes proteins names to genes)
 - what happens if we block some of the genes target ?? -> can we reduce proliferation??
 - compute ratio of each tissue and gender
