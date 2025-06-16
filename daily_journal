@@ -762,24 +762,10 @@ to do: debug pipeline pers with gene enrichment, start writing the abstract
 
 
 Jun 16:
-finished: computed variance of gene enrichment, 
 
 
-
-
-
-
-when we create the groups to then do gene enrichment, what value should we use here (0.1 is enough)? 
-
- group_phenotype_resistant = data_phenotype_patients[
-        (data_phenotype_patients["Drug status"] == "Resistant")
-        & (data_phenotype_patients[f"{condition}_{phenotype}"] >= 0.1)
-    ]
-
-
-
-
-
+finished: computed variance of gene enrichment, checked gene enrichment not gender or tissue-related,compute power calculation for each condition-phenotype pairs for the resistant and sens patients
+and start for gene enriched as well, wrote the function pers_interventions
 
 
 catch up Graeme 
@@ -802,12 +788,35 @@ questions:
 
 
 
+
+when we create the groups to then do gene enrichment, what value should we use here (0.1 is enough)? 
+ group_phenotype_resistant = data_phenotype_patients[
+        (data_phenotype_patients["Drug status"] == "Resistant")
+        & (data_phenotype_patients[f"{condition}_{phenotype}"] >= 0.1)
+    ]
+
+
+
 to do:
 - create boolean network with both genes and proteins (changes proteins names to genes)
 - what happens if we block some of the genes target ?? -> can we reduce proliferation??
 - compute ratio of each tissue and gender
 - gene enrichment in the validation pipeline?
-
+TO DO: later- changes EGF and TGF initial states according to expression
 
 
 AR_ERG in the person models and not only in the validation??
+
+
+
+
+
+
+-> to do: create boolean network with both genes and proteins data 
+-> block some genes highly expressed and if we can reduce the proliferation level
+
+
+intervention on all the personalized networks or only on the resistant ??
+should we only change the bnd files or also the cfg ?
+
+Results:

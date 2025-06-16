@@ -2,6 +2,7 @@ import maboss
 import pandas as pd
 import os
 
+
 # loop over max time to identify the one for which the algo converges
 def compute_phenotype_table(
     folder_save_results,
@@ -65,14 +66,6 @@ def compute_phenotype_table(
     return results
 
 
-
-
-
-
-
-
-
-
 def compute_phenotype_mean_group_validation(
     stages_groups,
     folder_groups_means,
@@ -115,60 +108,59 @@ def compute_phenotype_mean_group_validation(
     return mean_df
 
 
-def combine_groups_values(folder_to_group, base_path):
-    # Folder and grouping setup
-    all_folders = list(folder_to_group.keys())
-    groups = list(set(folder_to_group.values()))
+# def combine_groups_values(folder_to_group, base_path):
+#     # Folder and grouping setup
+#     all_folders = list(folder_to_group.keys())
+#     groups = list(set(folder_to_group.values()))
 
-    # Storage
-    data_combined = {}
+#     # Storage
+#     data_combined = {}
 
-    # Load data
-    for folder in all_folders:
-        group_label = folder_to_group[folder]
-        folder_path = os.path.join(base_path, folder)
+#     # Load data
+#     for folder in all_folders:
+#         group_label = folder_to_group[folder]
+#         folder_path = os.path.join(base_path, folder)
 
-        for file in os.listdir(folder_path):
-            if file.endswith(".csv"):
-                df = pd.read_csv(os.path.join(folder_path, file), index_col=0)
-                for input_name in df.index:
-                    for phenotype in df.columns:
-                        key = (input_name, phenotype)
-                        if key not in data_combined:
-                            data_combined[key] = {g: [] for g in groups}
-                        value = df.at[input_name, phenotype]
+#         for file in os.listdir(folder_path):
+#             if file.endswith(".csv"):
+#                 df = pd.read_csv(os.path.join(folder_path, file), index_col=0)
+#                 for input_name in df.index:
+#                     for phenotype in df.columns:
+#                         key = (input_name, phenotype)
+#                         if key not in data_combined:
+#                             data_combined[key] = {g: [] for g in groups}
+#                         value = df.at[input_name, phenotype]
 
-                        data_combined[key][group_label].append(float(value))
+#                         data_combined[key][group_label].append(float(value))
 
-    return data_combined
+#     return data_combined
 
 
+# def compute_phenotype_mean(group, folder_groups_means, results_mean_folder):
+#     # compute mean
 
-def compute_phenotype_mean(group, folder_groups_means, results_mean_folder):
-    # compute mean
+#     folder_path = f"{folder_groups_means}"
+#     os.makedirs(folder_path, exist_ok=True)
+#     files = [f for f in os.listdir(folder_path) if f.endswith(".csv")]
 
-    folder_path = f"{folder_groups_means}"
-    os.makedirs(folder_path, exist_ok=True)
-    files = [f for f in os.listdir(folder_path) if f.endswith(".csv")]
+#     dfs = []
 
-    dfs = []
+#     for file in files:
+#         file_path = os.path.join(folder_path, file)
+#         df = pd.read_csv(file_path, index_col=0)  # Assuming first column is input IDs
+#         dfs.append(df)
 
-    for file in files:
-        file_path = os.path.join(folder_path, file)
-        df = pd.read_csv(file_path, index_col=0)  # Assuming first column is input IDs
-        dfs.append(df)
+#     if dfs:
+#         # Now concatenate all dataframes along a new axis to create a 3D structure (like a panel)
+#         # Then compute mean across that new axis (axis=0 means across files)
+#         mean_df = pd.concat(dfs, axis=0).groupby(level=0).mean()
+#         mean_row = mean_df.mean(axis=0)
+#         mean_row.name = "Overall_Mean"
+#         mean_df = pd.concat([mean_df, mean_row.to_frame().T])
+#         print(mean_df)
 
-    if dfs:
-        # Now concatenate all dataframes along a new axis to create a 3D structure (like a panel)
-        # Then compute mean across that new axis (axis=0 means across files)
-        mean_df = pd.concat(dfs, axis=0).groupby(level=0).mean()
-        mean_row = mean_df.mean(axis=0)
-        mean_row.name = "Overall_Mean"
-        mean_df = pd.concat([mean_df, mean_row.to_frame().T])
-        print(mean_df)
+#         mean_df.to_csv(f"{results_mean_folder}/{group}_mean_phenotype_values.csv")
 
-        mean_df.to_csv(f"{results_mean_folder}/{group}_mean_phenotype_values.csv")
-
-    else:
-        print(f"No CSV files found in {folder_path}")
-    return mean_df
+#     else:
+#         print(f"No CSV files found in {folder_path}")
+#     return mean_df
