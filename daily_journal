@@ -920,3 +920,13 @@ to do:
 - check if some genes significant we know are dysregulated and cause resistance
 - then check if mutations of these genes or check some known proteins that cause resistance (even if not diff expressed, such as PI3K)
 - finish pipeline by identifying a gene that when we block it will change the phenotype distribution 
+
+
+ask thomas how he thinks i should create my folder -> give all paths at the beggining and create all directories? or along the code? 
+personalize with mutations or just mutations enrichment?
+
+
+should we compute the mean of all phenotypes?
+
+
+loop over many drugs?

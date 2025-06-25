@@ -1,7 +1,7 @@
 import maboss
 import pandas as pd
 import os
-
+import ast 
 
 
 def compute_phenotype_table_generic(generic_model_bnd,generic_model_cfg,input_nodes,phenotypes_interest, drug, tissue, results_dir):
@@ -159,6 +159,42 @@ def compute_phenotype_mean_group_validation(
     return mean_df
 
 
+
+
+
+def compute_mean_phenotype_values(df_patients_combined):
+    # compute mean for each patient in the resistant group
+    conditions = df_patients_combined.index
+    phenotypes = df_patients_combined.columns
+    patient_mean = pd.DataFrame(index=conditions, columns=phenotypes)
+
+
+    for condition, values in df_patients_combined.iterrows():
+        for phenotype in df_patients_combined.columns:
+
+            df_patients_values = df_patients_combined.loc[condition][phenotype]
+            df_patients_values = ast.literal_eval(df_patients_values)
+            mean = sum(df_patients_values)/ len(df_patients_values)
+            patient_mean.loc[condition][phenotype] = mean
+    return patient_mean
+
+
+
+
+# compute mean for each patient in the sensitive group
+# conditions = df_sens_combined.index
+# phenotypes = df_sens_combined.columns
+# patient_sensitive_mean = pd.DataFrame(index=conditions, columns=phenotypes)
+
+
+# for condition, values in df_sens_combined.iterrows():
+#     for phenotype in df_sens_combined.columns:
+
+#         df_res_values = df_sens_combined.loc[condition][phenotype]
+#         df_res_values = ast.literal_eval(df_res_values)
+#         mean = sum(df_res_values)/ len(df_res_values)
+#         patient_sensitive_mean.loc[condition][phenotype] = mean
+# print(patient_sensitive_mean)
 # def combine_groups_values(folder_to_group, base_path):
 #     # Folder and grouping setup
 #     all_folders = list(folder_to_group.keys())

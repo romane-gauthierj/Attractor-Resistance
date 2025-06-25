@@ -16,8 +16,11 @@ def compute_genes_mean_signature(
     top_sensitive_ids,
 ):
     # identify the differently genes (higher expressed) in the resistant group compared to the sensitive group upon a specific phenotype- condition
-    data_phenotype_patients["Model_ID"] = (
-        data_phenotype_patients["Unnamed: 0"].astype(str).str.split("_").str[0]
+    # data_phenotype_patients["Model_ID"] = (
+    #     data_phenotype_patients.index
+    # )
+    data_phenotype_patients = data_phenotype_patients.reset_index().rename(
+        columns={"index": "Model_ID"}
     )
 
     conditions = [
@@ -119,3 +122,35 @@ def compute_genes_mean_signature(
         index=True,
     )
     return significant_genes, resistant_group_ids, sensitive_group_ids
+
+
+# save every gene enrichment dataframe in a dictionary of index condtion_phenotype
+def create_results_gene_enrichment(
+    rna_seq_data_filtered,
+    patients_phenot_table,
+    top_resistant_ids,
+    top_sensitive_ids,
+    conditions_phenotypes_df,
+    folder_result,
+):
+    indexes_list = []
+    for condition, phenotype in conditions_phenotypes_df.values:
+        indexes_list.append(f"{condition}_{phenotype}")
+    results_genes_enrich = {key: None for key in indexes_list}
+
+    for condition, phenotype in conditions_phenotypes_df.values:
+        genes_stats_results, resistant_group_ids, sensitive_group_ids = (
+            compute_genes_mean_signature(
+                rna_seq_data_filtered,
+                folder_result,
+                phenotype,
+                condition,
+                patients_phenot_table,
+                top_resistant_ids,
+                top_sensitive_ids,
+            )
+        )
+        if isinstance(genes_stats_results, pd.DataFrame):
+            results_genes_enrich[f"{condition}_{phenotype}"] = genes_stats_results
+
+    return results_genes_enrich
