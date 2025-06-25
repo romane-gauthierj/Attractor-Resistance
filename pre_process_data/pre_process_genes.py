@@ -5,6 +5,41 @@ import pandas as pd
 import os
 
 
+
+def identify_genes_synonyms(data_synonyms, uniprot_data, montagud_nodes):
+
+    data_synonyms = data_synonyms[
+        ~(data_synonyms["Gene name"].isna() & data_synonyms["Gene Synonym"].isna())
+    ]
+
+    data_synonyms["Gene name"] = data_synonyms["Gene name"].str.upper()
+    data_synonyms["Gene Synonym"] = data_synonyms["Gene Synonym"].str.upper()
+
+    data_synonyms = data_synonyms[
+        data_synonyms["Gene name"].isin(montagud_nodes)
+        | data_synonyms["Gene Synonym"].isin(montagud_nodes)
+    ]
+
+    def match_montagud_node(row, montagud_genes):
+        if row["Gene name"] in montagud_genes:
+            return row["Gene name"]
+        elif row["Gene Synonym"] in montagud_genes:
+            return row["Gene Synonym"]
+        else:
+            return None
+
+    # Apply the function to each row
+    data_synonyms["montagud_node"] = data_synonyms.apply(lambda row: match_montagud_node(row, montagud_nodes), axis=1)
+
+    merged_df = pd.merge(data_synonyms, uniprot_data, on='Gene stable ID')
+    merged_df['Gene Synonym'] = merged_df['Gene Synonym'].str.replace(r'[_-]', '', regex=True)
+    merged_df = merged_df[['Gene name_x','Gene Synonym', 'montagud_node']]
+
+    return merged_df
+
+
+
+
 def classify_expression(z):
     if z > 1:
         return "high"
@@ -51,36 +86,3 @@ def create_table_rna_seq_patients(rna_seq_data):
     )
 
     return table_rna_seq_patients
-
-
-def create_table_proteins_patients(proteins_data):
-    # filter only data with patient id and the nodes of the montagud_data
-
-    proteins_data["z_score"] = proteins_data.groupby("protein_symbol")[
-        "rsem_tpm"
-    ].transform(lambda x: (x - x.mean()) / x.std())
-
-    proteins_data["protein_expression_level"] = proteins_data["z_score"].apply(
-        classify_expression
-    )
-
-    proteins_data = proteins_data[
-        ["model_id", "protein_symbol", "protein_expression_level"]
-    ]
-    proteins_data.rename(columns={"protein_symbol": "protein_name"}, inplace=True)
-    proteins_data = proteins_data[
-        proteins_data["protein_expression_level"].isin(["low", "high"])
-    ]
-
-    table_proteins_patients = proteins_data.pivot_table(
-        index="model_id",
-        columns="protein_expression_level",
-        values="protein_name",
-        aggfunc=lambda x: ", ".join(sorted(set(x))),
-    ).fillna("-")
-
-    table_proteins_patients = table_proteins_patients.rename(
-        columns={"low": "Low Protein Abundance", "high": "High Protein Abundance"}
-    )
-
-    return table_proteins_patients

@@ -115,6 +115,8 @@ def personalized_patients_proteins_cfgs(
 
     # Loop through each file in the directory
     for filename in os.listdir(original_data_dir):
+        if not filename.endswith(".cfg"):
+            continue
         file_path = os.path.join(original_data_dir, filename)
         if os.path.isfile(file_path):  # Make sure it's a file, not a subdirectory
             # model_id_in_file = os.path.splitext(filename)[0]  # remove .cfg extension
@@ -149,16 +151,19 @@ def personalized_patients_proteins_cfgs(
                                 protein_data_max["protein_symbol"] == protein,
                                 "protein_max",
                             ].iloc[0]
+
                             prot_expr = df_melted_proteins.loc[
                                 (df_melted_proteins["protein_symbol"] == protein)
                                 & (df_melted_proteins["model_id"] == model_id_in_file),
                                 "rsem_tpm",
                             ].iloc[0]
+
                             prob_1 = min(max(prot_expr / expr_max, 0), 1)
 
                             u_pattern = re.compile(
                                 rf"\$u_{protein}\s*=\s*(0|1);", re.DOTALL
                             )
+
                             d_pattern = re.compile(
                                 rf"\$d_{protein}\s*=\s*(0|1);", re.DOTALL
                             )
@@ -166,6 +171,35 @@ def personalized_patients_proteins_cfgs(
                             d_line = f"$d_{protein} = {1 - prob_1:.4f};"
                             content = re.sub(u_pattern, u_line, content)
                             content = re.sub(d_pattern, d_line, content)
+
+                            if protein == "CASPASE3":
+                                print("Processing CASPASE3...")
+
+                                u_pattern = re.compile(
+                                    rf"\$u_{protein}\s*=\s*\d+\.?\d*;", re.DOTALL
+                                )
+                                d_pattern = re.compile(
+                                    rf"\$d_{protein}\s*=\s*\d+\.?\d*;", re.DOTALL
+                                )
+
+                                u_line = f"$u_{protein} = {prob_1:.4f};"
+                                d_line = f"$d_{protein} = {1 - prob_1:.4f};"
+
+                                content, num_u = re.subn(u_pattern, u_line, content)
+                                content, num_d = re.subn(d_pattern, d_line, content)
+
+                                print(f"Replaced $u: {num_u} times, $d: {num_d} times")
+                                print("Final content snippet:")
+                                print(
+                                    "\n".join(
+                                        [
+                                            line
+                                            for line in content.splitlines()
+                                            if "CASPASE3" in line
+                                        ]
+                                    )
+                                )
+
                 # modified_file_path = os.path.join(modified_output_dir, f'{filename}_{drug_name}')
                 modified_file_path = os.path.join(results_dir, filename)
 

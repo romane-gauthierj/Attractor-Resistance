@@ -3,6 +3,57 @@ import pandas as pd
 import os
 
 
+
+def compute_phenotype_table_generic(generic_model_bnd,generic_model_cfg,input_nodes,phenotypes_interest, drug, tissue, results_dir):
+    model_pers_lung = maboss.load(generic_model_bnd, generic_model_cfg)
+
+    results = pd.DataFrame(index=input_nodes, columns=phenotypes_interest)
+
+    threshold_diff = 0.01
+    initial_max_time = 5
+    max_time_limit = 30
+
+    for active_node in input_nodes:
+        model_pers_lung.network.set_istate(active_node, [0, 1])
+        for inactive_node in input_nodes:
+            if inactive_node != active_node:
+                model_pers_lung.network.set_istate(inactive_node, [1, 0])
+        converged = False
+        current_max_time = initial_max_time
+        while not converged and current_max_time < max_time_limit:
+            model_pers_lung.update_parameters(
+                time_tick=0.1, max_time=current_max_time, sample_count=500
+            )
+            res_lung_pers = model_pers_lung.run()
+            last_state = res_lung_pers.get_nodes_probtraj()
+            if len(last_state) < 10:
+                print(
+                    f"[{active_node}] Warning: Not enough data for convergence check."
+                )
+                break
+            diff = last_state.diff().abs()
+            max_change_recent = diff.tail(10).max()
+            # print(f"Max change over last 10 time steps for {active_node}:\n{max_change_recent}\n")
+            if (max_change_recent > threshold_diff).any():
+                current_max_time += 1
+            else:
+                converged = True
+        if not converged:
+            print(
+                f"[{active_node}] Did not fully converge by max_time = {max_time_limit}."
+            )
+        final_probs = last_state.iloc[-1]
+        # print(f"[{active_node}] Final probabilities:\n{final_probs}\n")
+        for phenotype in phenotypes_interest:
+            if phenotype in final_probs.index:
+                results.loc[active_node, phenotype] = final_probs[phenotype]
+        
+        results.loc['Overal Mean'] = results.mean()
+    os.makedirs(results_dir, exist_ok=True)
+    results.to_csv(f'{results_dir}/phenotype_distribution_generic.csv')
+    return results
+
+
 # loop over max time to identify the one for which the algo converges
 def compute_phenotype_table(
     folder_save_results,
