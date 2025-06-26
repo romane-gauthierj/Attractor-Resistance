@@ -1,17 +1,9 @@
 import os
 import re
-# import sys
-# from pathlib import Path
-
-# Add the parent directory of 'identification_patients' to sys.path
-# parent_path = Path.cwd().parent  # Go up one level
-# sys.path.append(str(parent_path))
-
-# # Now you can import your function
-# from identification_patients.get_patients_sens_res import get_patients
-
 
 def tailor_bnd_genes_intervention(list_genes_interv, res_patients, bnd_dir, tissue):
+    if isinstance(list_genes_interv, str):
+        list_genes_interv = [list_genes_interv]
     for patient in res_patients:
         bnd_file = [
             file
@@ -59,19 +51,3 @@ def tailor_bnd_genes_intervention(list_genes_interv, res_patients, bnd_dir, tiss
                 file.write(content)
         else:
             print(f"{patient_id}: CNV — no nodes modified")
-
-
-# tissue_remove = 'Haematopoietic and Lymphoid'
-# drug_interest = 'Refametinib'
-# tissue_interest = 'PAN_CANCER'
-
-# drug_data = pd.read_csv('../data/drug_sensitivity.csv')
-# annotations_models = pd.read_csv('../data/model_list_20250407.csv')
-# bnd_dir = '../models/personalized_boolean_Refametinib_PAN_CANCER_intervention/resistant_patient/personalized_boolean_modified/models_gene_expression'
-
-# top_resistant_ids, top_sensitive_ids, drug_tissue_data= get_patients(20, drug_data, annotations_models, drug_interest, tissue_interest = None, tissue_remove = tissue_remove)
-
-
-# list_genes_interv = ["FOXA1", "BCL2", "BIRC5"]
-
-# tailor_bnd_genes_intervention(list_genes_interv, top_resistant_ids, bnd_dir, tissue_interest)

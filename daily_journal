@@ -879,12 +879,14 @@ also check how i can create nicer figures
 
 
 June 25
-to do: identify a case with targeted drug and some resistant genes, clean my code - keep only the functions needed for the pipeline, and create a nice folders with all the models/ results 
-is my architecture good ? 
-analysis with genes and survival -> i don't think there is these data in cell model passport 
 
--> validation and clean code, create nice pdf and then downstream analysis 
-see if no validation > try using only one tissue 
+finished: did some research on resistance mechanisms, cleaned my pers and generic pipeline by creating functions, change the downstream analysis file and run on each gene and identify automatically the one that induce a decrease of proliferation. 
+
+
+
+
+and create a nice folders with all the models/ results -> is my architecture good ? should i have one folder with the model and results for each drug, or should i have a folder with all the models, and another one with all the results ? 
+
 
 website 
 - Refametinib can induce drug resistance through various mechanisms, including activation of bypass pathways and feedback loops 
@@ -905,28 +907,18 @@ genes related to cell cycle (Cycline ? CDK ? ) and apoptosis (CASP ?)
 -> RPPA analysis: resistant cells to refametinib have higher baseline P levels of EGFR Y1068 relative to the sensitive 
 and this phosphorylation induce activation of EGFR -> increase downstream signalling of MEK/MAPK signaling 
 
-
-
-
-
-other drug: 
-
-Erlotinib 
--> targets EGFR
+other drug: Erlotinib -> targets EGFR
 
 
 
 to do: 
-- check if some genes significant we know are dysregulated and cause resistance
 - then check if mutations of these genes or check some known proteins that cause resistance (even if not diff expressed, such as PI3K)
-- finish pipeline by identifying a gene that when we block it will change the phenotype distribution 
+
 
 
 ask thomas how he thinks i should create my folder -> give all paths at the beggining and create all directories? or along the code? 
 personalize with mutations or just mutations enrichment?
 
 
-should we compute the mean of all phenotypes?
 
-
-loop over many drugs?
+to do: try to understand why loop over the letter of gene name and not the gene name

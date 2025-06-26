@@ -17,3 +17,18 @@ Run MaBoSS simulation on generic model (no personalization)
 
 Pipeline_pers:
 Create personalized Boolean Netorks with Cell Model Passport data of PAN CANCER (Except Hematopoietic tissue)
+
+
+
+
+
+
+
+
+
+
+
+
+
+Run the Pipeline pers to create the personalized models (by modifying the models and results folder with 'interventions')-> until step 6 (included)
+Run downstream analysis gene intervention 
