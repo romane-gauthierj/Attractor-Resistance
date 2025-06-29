@@ -921,4 +921,31 @@ personalize with mutations or just mutations enrichment?
 
 
 
-to do: try to understand why loop over the letter of gene name and not the gene name
+
+
+
+to do:
+check why new resistant folder created, check why not same results at all (very low prolif in res), downstream analysis with the bool if intervention true 
+
+
+June 27
+to do- understand why wrong results 
+
+
+1) jupyter to compute the results then if not same results as before -> go back to pipeline 1
+
+
+
+
+
+
+Jun 28 
+finished: pipeline 1, pipeline 2, code of pipeline 3
+to do: check code of pipeline 3 okay and think about should we just look at all proliferation phenotype or one specific?? 
+
+Jun 29 
+to do: try creating fct to simulate many inputs ON (like the one of the paper)
+why boxplot shows two same input  ? why egf not sign anymore?
+in my pipeline include test not related to gender or tissue; and include gene or protein option to create the boolean networks
+why identified earlier E2F1 when block no prolif anymore?
+check gene parameter in the compute_mannwhitneyu_test_means

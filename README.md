@@ -32,3 +32,9 @@ Create personalized Boolean Netorks with Cell Model Passport data of PAN CANCER 
 
 Run the Pipeline pers to create the personalized models (by modifying the models and results folder with 'interventions')-> until step 6 (included)
 Run downstream analysis gene intervention 
+
+
+check how to create the prolif_egf enrichment file and then analyze it (should i have three pipelines ?- one for creating the models, one for computing the gene enrichment and one for identify genes to block?)
+
+
+

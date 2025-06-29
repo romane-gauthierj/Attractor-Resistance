@@ -1,0 +1,137 @@
+import os
+
+from functions.generate_utils.identification_patients.get_patients_sens_res import (
+    get_patients,
+)
+from functions.generate_utils.pre_process_data.pre_process_cnv import preprocess_cnv
+from functions.generate_utils.pre_process_data.pre_process_genes import (
+    process_genes,
+    create_table_rna_seq_patients,
+)
+from functions.generate_utils.pre_process_data.pre_process_montagud_nodes import (
+    process_montagud_nodes,
+)
+from functions.generate_utils.create_generic_models.update_phenotypes_generic_models import (
+    generic_models_update_phenotypes,
+)
+from functions.generate_utils.create_generic_models.create_generic_patients_cfgs import (
+    create_generic_patients_cfgs_bnds,
+)
+from functions.generate_utils.create_person_models.tailor_cfgs_patients import (
+    personalized_patients_genes_cfgs,
+)
+from functions.generate_utils.pre_process_data.pre_process_genes import (
+    create_table_rna_seq_patients,
+    process_genes,
+)
+from functions.generate_utils.create_person_models.tailor_bnd_cnv import (
+    tailor_bnd_cnv_cm,
+)
+
+
+def pre_process_re(
+    montagud_data,
+    rna_seq_data,
+    cnv_data,
+    number_patients,
+    drug_data,
+    annotations_models,
+    drug_interest,
+    tissue_interest=None,
+    tissue_remove=None,
+    node_to_remove=None,
+):
+    top_resistant_ids, top_sensitive_ids, drug_tissue_data = get_patients(
+        number_patients,
+        drug_data,
+        annotations_models,
+        drug_interest,
+        tissue_interest=None,
+        tissue_remove=tissue_remove,
+    )
+
+    patients_ids = top_resistant_ids + top_sensitive_ids
+    # preprocess montagud nodes
+    montagud_nodes = process_montagud_nodes(
+        montagud_data, node_to_remove=node_to_remove
+    )
+
+    # preprocess rna seq data
+    rna_seq_data_filtered = process_genes(patients_ids, montagud_nodes, rna_seq_data)
+    table_rna_seq_patients = create_table_rna_seq_patients(rna_seq_data_filtered)
+
+    top_resistant_ids = list(set(table_rna_seq_patients.index) & set(top_resistant_ids))
+    top_sensitive_ids = list(set(table_rna_seq_patients.index) & set(top_sensitive_ids))
+
+    patients_ids = top_resistant_ids + top_sensitive_ids
+
+    # Save IDs to txt files
+    with open("analysis/{}/top_resistant_ids.txt".format(drug_interest), "w") as f:
+        for pid in top_resistant_ids:
+            f.write(f"{pid}\n")
+    with open("analysis/{}/top_sensitive_ids.txt".format(drug_interest), "w") as f:
+        for pid in top_sensitive_ids:
+            f.write(f"{pid}\n")
+
+    # preprocess cnv data
+    cnv_data_filtered = preprocess_cnv(cnv_data, montagud_nodes, patients_ids)
+
+    return (
+        top_resistant_ids,
+        top_sensitive_ids,
+        montagud_nodes,
+        rna_seq_data_filtered,
+        cnv_data_filtered,
+        table_rna_seq_patients,
+    )
+
+
+def generate_models_re(
+    folder_generic_models,
+    folder_models,
+    top_resistant_ids,
+    top_sensitive_ids,
+    drug_interest,
+    phenotype_interest,
+    rna_seq_data,
+    montagud_nodes,
+    table_rna_seq_patients,
+    cnv_data_filtered,
+):
+    # create generic models cfgs and bnds
+    create_generic_patients_cfgs_bnds(
+        folder_generic_models,
+        folder_models,
+        top_resistant_ids,
+        top_sensitive_ids,
+        drug_interest,
+    )
+
+    patients_categ = ["resistant", "sensitive"]
+
+    for patient_categ in patients_categ:
+        folder_models_pheno = (
+            f"analysis/{drug_interest}/models/{patient_categ}/pers_models"
+        )
+        generic_models_update_phenotypes(phenotype_interest, folder_models_pheno)
+
+        folder_models_categ = f"{folder_models}/{patient_categ}/pers_models"
+        patients_ids_categ = (
+            top_sensitive_ids if patient_categ == "sensitive" else top_resistant_ids
+        )
+
+        # create personalized models (genes expression)
+        personalized_patients_genes_cfgs(
+            rna_seq_data,
+            montagud_nodes,
+            folder_models_categ,
+            patients_ids_categ,
+            table_rna_seq_patients,
+            drug_interest,
+        )
+
+        # create personalized models (CNV expression)
+        folder_models_cnv = f"{folder_models}/{patient_categ}/pers_models"
+        tailor_bnd_cnv_cm(
+            cnv_data_filtered, folder_models_cnv, drug_interest=drug_interest
+        )
