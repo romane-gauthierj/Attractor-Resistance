@@ -25,6 +25,12 @@ def get_patients(
         annotations_models = annotations_models[
             annotations_models["tissue"] != tissue_remove
         ]
+    # remove models with unknown or healthy tissue status
+    annotations_models = annotations_models[
+        ~annotations_models["tissue_status"].isin(
+            ["Unknown", "Normal", "Precancerous", "Papiloma"]
+        )
+    ]
 
     annotations_models_filtered = annotations_models[["tissue", "model_id"]]
     models_id = annotations_models["model_id"].tolist()

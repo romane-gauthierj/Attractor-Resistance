@@ -1,5 +1,0 @@
-Condition,Phenotype,Mannwhitneyu_P_value_Resistant,Star_significant
-TGFB,Proliferation,0.005543526760755702,**
-Hypoxia,Proliferation,0.021981807409924017,*
-Acidosis,Proliferation,0.04659650739716939,*
-TNF,Proliferation,0.031857364200614594,*

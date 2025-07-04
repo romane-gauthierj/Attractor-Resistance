@@ -6,3 +6,6 @@ __pycache__
 *.bnd
 results
 papers
+*.csv
+*.txt
+analysis

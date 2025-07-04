@@ -33,7 +33,7 @@ import os
 # cnv_data = pd.read_csv('../data/cellmodel_data/cnv_summary_20250207.csv')
 
 
-def preprocess_cnv(cnv_data, montagud_nodes, patients_ids):
+def preprocess_cnv(cnv_data, montagud_nodes, patients_ids, synonyms_maps):
     # filter out Neural Category
     cnv_data_filtered = cnv_data[cnv_data["cn_category"] != "Neutral"]
 
@@ -52,4 +52,10 @@ def preprocess_cnv(cnv_data, montagud_nodes, patients_ids):
     cnv_data_filtered = cnv_data_filtered[
         ~cnv_data_filtered["total_copy_number"].isna()
     ]
+
+    # remplace the cnv gene symbol column names by its synonyms in the proteins_synonyms_maps dictionary
+    cnv_data_filtered["gene_symbol"] = cnv_data_filtered["gene_symbol"].apply(
+        lambda x: synonyms_maps.get(x, x)
+    )
+
     return cnv_data_filtered

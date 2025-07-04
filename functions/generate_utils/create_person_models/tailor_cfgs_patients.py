@@ -12,7 +12,7 @@ def personalized_patients_genes_cfgs(
     folder_models,
     patients_ids,
     rna_seq_data_filtered,
-    drug_name,
+    context_label,
 ):
     rna_seq_data = rna_seq_data[rna_seq_data["model_id"].isin(patients_ids)]
 
@@ -30,7 +30,7 @@ def personalized_patients_genes_cfgs(
             # model_id_in_file = os.path.splitext(filename)[0]  # remove .cfg extension
             # model_id_in_file = os.path.splitext(filename)[0].replace('_AZD8931', '')
             model_id_in_file = os.path.splitext(filename)[0].replace(
-                f"_{drug_name}", ""
+                f"_{context_label}", ""
             )
             # Only proceed if model_id is in table_genes_patients
             if model_id_in_file in rna_seq_data_filtered.index:
@@ -83,11 +83,10 @@ def personalized_patients_genes_cfgs(
 def personalized_patients_proteins_cfgs(
     df_melted_proteins,
     montagud_nodes,
-    original_data_dir,
-    results_dir,
+    folder_models,
     patients_ids,
     table_proteins_patients,
-    drug_name,
+    drug_interest,
 ):
     df_melted_proteins = df_melted_proteins[
         df_melted_proteins["model_id"].isin(patients_ids)
@@ -107,15 +106,15 @@ def personalized_patients_proteins_cfgs(
     ].transform("max")
 
     # Loop through each file in the directory
-    for filename in os.listdir(original_data_dir):
+    for filename in os.listdir(folder_models):
         if not filename.endswith(".cfg"):
             continue
-        file_path = os.path.join(original_data_dir, filename)
+        file_path = os.path.join(folder_models, filename)
         if os.path.isfile(file_path):  # Make sure it's a file, not a subdirectory
             # model_id_in_file = os.path.splitext(filename)[0]  # remove .cfg extension
             # model_id_in_file = os.path.splitext(filename)[0].replace('_AZD8931', '')
             model_id_in_file = os.path.splitext(filename)[0].replace(
-                f"_{drug_name}", ""
+                f"_{drug_interest}", ""
             )
             # Only proceed if model_id is in table_proteins_patients
             if model_id_in_file in table_proteins_patients.index:
@@ -165,36 +164,22 @@ def personalized_patients_proteins_cfgs(
                             content = re.sub(u_pattern, u_line, content)
                             content = re.sub(d_pattern, d_line, content)
 
-                            if protein == "CASPASE3":
-                                print("Processing CASPASE3...")
+                    
+                            u_pattern = re.compile(
+                                rf"\$u_{protein}\s*=\s*\d+\.?\d*;", re.DOTALL
+                            )
+                            d_pattern = re.compile(
+                                rf"\$d_{protein}\s*=\s*\d+\.?\d*;", re.DOTALL
+                            )
 
-                                u_pattern = re.compile(
-                                    rf"\$u_{protein}\s*=\s*\d+\.?\d*;", re.DOTALL
-                                )
-                                d_pattern = re.compile(
-                                    rf"\$d_{protein}\s*=\s*\d+\.?\d*;", re.DOTALL
-                                )
+                            u_line = f"$u_{protein} = {prob_1:.4f};"
+                            d_line = f"$d_{protein} = {1 - prob_1:.4f};"
 
-                                u_line = f"$u_{protein} = {prob_1:.4f};"
-                                d_line = f"$d_{protein} = {1 - prob_1:.4f};"
-
-                                content, num_u = re.subn(u_pattern, u_line, content)
-                                content, num_d = re.subn(d_pattern, d_line, content)
-
-                                print(f"Replaced $u: {num_u} times, $d: {num_d} times")
-                                print("Final content snippet:")
-                                print(
-                                    "\n".join(
-                                        [
-                                            line
-                                            for line in content.splitlines()
-                                            if "CASPASE3" in line
-                                        ]
-                                    )
-                                )
+                            content, num_u = re.subn(u_pattern, u_line, content)
+                            content, num_d = re.subn(d_pattern, d_line, content)
 
                 # modified_file_path = os.path.join(modified_output_dir, f'{filename}_{drug_name}')
-                modified_file_path = os.path.join(results_dir, filename)
+                modified_file_path = os.path.join(folder_models, filename)
 
                 with open(modified_file_path, "w") as file:
                     file.write(content)

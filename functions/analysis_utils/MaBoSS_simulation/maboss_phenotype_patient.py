@@ -79,13 +79,15 @@ def compute_phenotype_table(
     patient_id,
     input_nodes,
     phenotypes_interest,
-    drug_interest,
+    context_label,
 ):
-    model_pers_bnd = f"{folder_models}/pers_models/{patient_id}_{drug_interest}.bnd"
-    model_pers_cfg = f"{folder_models}/pers_models/{patient_id}_{drug_interest}.cfg"
+    # context_label: can be either the tissue name or the drug name
 
-    print("model_pers_bnd", model_pers_bnd)
-    print("model_pers_cfg", model_pers_cfg)
+    # model_pers_bnd = f"{folder_models}/pers_models/{patient_id}_{context_label}.bnd"
+    # model_pers_cfg = f"{folder_models}/pers_models/{patient_id}_{context_label}.cfg"
+
+    model_pers_bnd = f"{folder_models}/{patient_id}_{context_label}.bnd"
+    model_pers_cfg = f"{folder_models}/{patient_id}_{context_label}.cfg"
 
     if not os.path.exists(model_pers_bnd) or not os.path.exists(model_pers_cfg):
         print(f"Missing model files for {patient_id}")
@@ -139,19 +141,88 @@ def compute_phenotype_table(
     return results
 
 
+def compute_phenotype_table_custom_inputs(
+    folder_save_results,
+    folder_models,
+    patient_id,
+    input_nodes,
+    phenotypes_interest,
+    context_label,
+    active_inputs,
+):
+    # function to run MaBoSS with more than one Input ON
+    model_pers_bnd = f"{folder_models}/pers_models/{patient_id}_{context_label}.bnd"
+    model_pers_cfg = f"{folder_models}/pers_models/{patient_id}_{context_label}.cfg"
+    print("model_pers_bnd", model_pers_bnd)
+    print("model_pers_cfg", model_pers_cfg)
+
+    if not os.path.exists(model_pers_bnd) or not os.path.exists(model_pers_cfg):
+        print(f"Missing model files for {patient_id}")
+        return None
+
+    model_pers_lung = maboss.load(model_pers_bnd, model_pers_cfg)
+    results = pd.DataFrame(columns=phenotypes_interest)
+
+    threshold_diff = 0.01
+    initial_max_time = 5
+    max_time_limit = 30
+
+    # Ensure active_inputs is a list of lists
+    if isinstance(active_inputs[0], str):
+        active_inputs = [active_inputs]
+
+    for inputs_on in active_inputs:
+        row_key = ",".join(sorted(inputs_on))
+
+        # Set ON/OFF states
+        for node in input_nodes:
+            if node in inputs_on:
+                model_pers_lung.network.set_istate(node, [0, 1])
+            else:
+                model_pers_lung.network.set_istate(node, [1, 0])
+
+        converged = False
+        current_max_time = initial_max_time
+        while not converged and current_max_time < max_time_limit:
+            model_pers_lung.update_parameters(
+                time_tick=0.1, max_time=current_max_time, sample_count=500
+            )
+            res_lung_pers = model_pers_lung.run()
+            last_state = res_lung_pers.get_nodes_probtraj()
+            if len(last_state) < 10:
+                print(
+                    f"[{active_inputs}] Warning: Not enough data for convergence check."
+                )
+                break
+            diff = last_state.diff().abs()
+            max_change_recent = diff.tail(10).max()
+            # print(f"Max change over last 10 time steps for {active_node}:\n{max_change_recent}\n")
+            if (max_change_recent > threshold_diff).any():
+                current_max_time += 1
+            else:
+                converged = True
+        if not converged:
+            print(
+                f"[{active_inputs}] Did not fully converge by max_time = {max_time_limit}."
+            )
+        final_probs = last_state.iloc[-1]
+        results.loc[row_key] = [final_probs.get(ph, None) for ph in phenotypes_interest]
+
+    results.to_csv(f"{folder_save_results}/{patient_id}.csv")
+    return results
+
+
 def compute_phenotype_mean_group_validation(
     stages_groups,
     folder_groups_means,
 ):
-    # compute mean
-
     for group in stages_groups:
         folder_path = f"{folder_groups_means}/{group}"
         os.makedirs(folder_path, exist_ok=True)
         files = [
             f
             for f in os.listdir(folder_path)
-            if f.startswith("_TCGA") and f.endswith(".csv")
+            if f.startswith("TCGA") and f.endswith(".csv")
         ]
 
         dfs = []
@@ -170,7 +241,6 @@ def compute_phenotype_mean_group_validation(
             mean_row = mean_df.mean(axis=0)
             mean_row.name = "Overall_Mean"
             mean_df = pd.concat([mean_df, mean_row.to_frame().T])
-            print(mean_df)
 
             mean_df.to_csv(
                 f"{folder_groups_means}/{group}/{group}_mean_phenotype_values.csv"
@@ -178,7 +248,6 @@ def compute_phenotype_mean_group_validation(
 
         else:
             print(f"No CSV files found in {folder_path}")
-    return mean_df
 
 
 def compute_mean_phenotype_values(df_patients_combined):
@@ -196,7 +265,7 @@ def compute_mean_phenotype_values(df_patients_combined):
     return patient_mean
 
 
-def collect_group_data(group_folder_path):
+def collect_group_data(group_folder_path, patients_id):
     # Aggregates all patient CSVs in a group folder (e.g., resistant or sensitive).
     # For each input/phenotype pair, collects all values across patients into a list.
     # this is run separately for each group (resistant and sensitive)
@@ -206,8 +275,12 @@ def collect_group_data(group_folder_path):
     # List all files and print for debugging
     all_files = os.listdir(group_folder_path)
 
+    prefix = patients_id[0][:3]
+
     # Adjust file filter if needed
-    patient_files = [f for f in all_files if f.endswith(".csv") and f.startswith("SID")]
+    patient_files = [
+        f for f in all_files if f.endswith(".csv") and f.startswith(prefix)
+    ]
 
     for file in patient_files:
         file_path = os.path.join(group_folder_path, file)
@@ -229,73 +302,3 @@ def collect_group_data(group_folder_path):
     )
     output_path = os.path.join(group_folder_path, "combined_results.csv")
     combined_results_serialized.to_csv(output_path)
-    return combined_results
-
-
-# patient_sensitive_mean = pd.DataFrame(index=conditions, columns=phenotypes)
-
-
-# for condition, values in df_sens_combined.iterrows():
-#     for phenotype in df_sens_combined.columns:
-
-#         df_res_values = df_sens_combined.loc[condition][phenotype]
-#         df_res_values = ast.literal_eval(df_res_values)
-#         mean = sum(df_res_values)/ len(df_res_values)
-#         patient_sensitive_mean.loc[condition][phenotype] = mean
-# print(patient_sensitive_mean)
-# def combine_groups_values(folder_to_group, base_path):
-#     # Folder and grouping setup
-#     all_folders = list(folder_to_group.keys())
-#     groups = list(set(folder_to_group.values()))
-
-#     # Storage
-#     data_combined = {}
-
-#     # Load data
-#     for folder in all_folders:
-#         group_label = folder_to_group[folder]
-#         folder_path = os.path.join(base_path, folder)
-
-#         for file in os.listdir(folder_path):
-#             if file.endswith(".csv"):
-#                 df = pd.read_csv(os.path.join(folder_path, file), index_col=0)
-#                 for input_name in df.index:
-#                     for phenotype in df.columns:
-#                         key = (input_name, phenotype)
-#                         if key not in data_combined:
-#                             data_combined[key] = {g: [] for g in groups}
-#                         value = df.at[input_name, phenotype]
-
-#                         data_combined[key][group_label].append(float(value))
-
-#     return data_combined
-
-
-# def compute_phenotype_mean(group, folder_groups_means, results_mean_folder):
-#     # compute mean
-
-#     folder_path = f"{folder_groups_means}"
-#     os.makedirs(folder_path, exist_ok=True)
-#     files = [f for f in os.listdir(folder_path) if f.endswith(".csv")]
-
-#     dfs = []
-
-#     for file in files:
-#         file_path = os.path.join(folder_path, file)
-#         df = pd.read_csv(file_path, index_col=0)  # Assuming first column is input IDs
-#         dfs.append(df)
-
-#     if dfs:
-#         # Now concatenate all dataframes along a new axis to create a 3D structure (like a panel)
-#         # Then compute mean across that new axis (axis=0 means across files)
-#         mean_df = pd.concat(dfs, axis=0).groupby(level=0).mean()
-#         mean_row = mean_df.mean(axis=0)
-#         mean_row.name = "Overall_Mean"
-#         mean_df = pd.concat([mean_df, mean_row.to_frame().T])
-#         print(mean_df)
-
-#         mean_df.to_csv(f"{results_mean_folder}/{group}_mean_phenotype_values.csv")
-
-#     else:
-#         print(f"No CSV files found in {folder_path}")
-#     return mean_df

@@ -3,11 +3,17 @@ import os
 import re
 
 
-import os
+from .update_nodes_names import replace_node_names_in_file
 
 
 def create_generic_patients_cfg_bnd_validation(
-    cfg_template_path, bnd_template_path, folder_pers_models, patients_ids, tissue
+    cfg_template_path,
+    bnd_template_path,
+    folder_pers_models,
+    patients_ids,
+    patients_groups,
+    tissue,
+    name_maps,
 ):
     """
     Create personalized .cfg and .bnd files for a list of patient IDs based on generic templates.
@@ -18,7 +24,13 @@ def create_generic_patients_cfg_bnd_validation(
     - folder_pers_models: str, output folder where personalized files will be saved
     - patients_ids: list of str, patient identifiers
     - tissue: str, tissue type to include in the output filenames
+    - type_model: gene/ proteins model
     """
+
+    # --- Pre process the generic model ---
+    replace_node_names_in_file(cfg_template_path, name_maps)
+    replace_node_names_in_file(bnd_template_path, name_maps)
+
     # Ensure output directory exists
     os.makedirs(folder_pers_models, exist_ok=True)
 
@@ -29,13 +41,19 @@ def create_generic_patients_cfg_bnd_validation(
     with open(bnd_template_path, "r") as file:
         bnd_template_content = file.read()
 
-    # Create personalized .cfg and .bnd for each patient
+    # Create personalized .cfg and .bnd for each patient and saved them in their group folders
     for patient_id in patients_ids:
+        group = patients_groups[patients_groups["sampleID"] == patient_id][
+            "Gleason_group"
+        ].iloc[0]
+        group_folder = os.path.join(folder_pers_models, group)
+        os.makedirs(group_folder, exist_ok=True)
+
         patient_cfg = cfg_template_content.replace("{PATIENT_ID}", patient_id)
         patient_bnd = bnd_template_content.replace("{PATIENT_ID}", patient_id)
 
-        cfg_output_path = os.path.join(folder_pers_models, f"{patient_id}_{tissue}.cfg")
-        bnd_output_path = os.path.join(folder_pers_models, f"{patient_id}_{tissue}.bnd")
+        cfg_output_path = os.path.join(group_folder, f"{patient_id}_{tissue}.cfg")
+        bnd_output_path = os.path.join(group_folder, f"{patient_id}_{tissue}.bnd")
 
         with open(cfg_output_path, "w") as file:
             file.write(patient_cfg)
@@ -54,10 +72,20 @@ def create_generic_patients_cfgs_bnds(
     resistant_patients_ids,
     sensitive_patients_ids,
     drug_interest,
+    name_maps,
+    type_models,
 ):
     # --- Templates ---
-    cfg_template_path = folder_generic_models + "Montagud2022_Prostate_Cancer.cfg"
-    bnd_template_path = folder_generic_models + "Montagud2022_Prostate_Cancer.bnd"
+    cfg_template_path = (
+        folder_generic_models + "Montagud2022_Prostate_Cancer_original.cfg"
+    )
+    bnd_template_path = (
+        folder_generic_models + "Montagud2022_Prostate_Cancer_original.bnd"
+    )
+
+    # --- Pre process the generic model (proteins or genes names) ---
+    replace_node_names_in_file(cfg_template_path, name_maps)
+    replace_node_names_in_file(bnd_template_path, name_maps)
 
     # --- Sensitive Patients ---
 
@@ -95,29 +123,3 @@ def create_generic_patients_cfgs_bnds(
             with open(bnd_output_path, "w") as file:
                 file.write(patient_bnd)
     print("All .cfg and .bnd files created for sensitive and resistant patients.")
-
-    # # --- Resistant Patients ---
-    # resistant_cfg_output_dir = f"{folder_pers_models}/resistant_patient/generic_models"
-    # resistant_bnd_output_dir = f"{folder_pers_models}/resistant_patient/generic_models"
-    # os.makedirs(resistant_cfg_output_dir, exist_ok=True)
-    # os.makedirs(resistant_bnd_output_dir, exist_ok=True)
-
-    # # Read templates again if needed (same ones reused here)
-    # # You can skip this if using same content as above
-
-    # # Create personalized .cfg and .bnd for resistant patients
-    # for patient_id in resistant_patients_ids:
-    #     patient_cfg = cfg_template_content.replace("{PATIENT_ID}", patient_id)
-    #     patient_bnd = bnd_template_content.replace("{PATIENT_ID}", patient_id)
-
-    #     cfg_output_path = os.path.join(
-    #         resistant_cfg_output_dir, f"{patient_id}_{drug_interest}.cfg"
-    #     )
-    #     bnd_output_path = os.path.join(
-    #         resistant_bnd_output_dir, f"{patient_id}_{drug_interest}.bnd"
-    #     )
-
-    #     with open(cfg_output_path, "w") as file:
-    #         file.write(patient_cfg)
-    #     with open(bnd_output_path, "w") as file:
-    #         file.write(patient_bnd)

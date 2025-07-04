@@ -96,6 +96,31 @@ def vizualise_table_phenotype_condition(
 
 def plot_side_by_side_heatmaps(resistant_mean, sensitive_mean, folder_results):
     fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+
+    resistant_mean = resistant_mean.astype(float)
+    sensitive_mean = sensitive_mean.astype(float)
+
+    if (
+        resistant_mean.index.duplicated().any()
+        or resistant_mean.columns.duplicated().any()
+    ):
+        raise ValueError(
+            "Duplicated indices or columns found in resistant_mean DataFrame."
+        )
+    if (
+        sensitive_mean.index.duplicated().any()
+        or sensitive_mean.columns.duplicated().any()
+    ):
+        raise ValueError(
+            "Duplicated indices or columns found in sensitive_mean DataFrame."
+        )
+
+    # align the indices and columns before plotting them to be able to compare them
+    common_idx = resistant_mean.index.intersection(sensitive_mean.index)
+    common_cols = resistant_mean.columns.intersection(sensitive_mean.columns)
+    resistant_mean = resistant_mean.loc[common_idx, common_cols]
+    sensitive_mean = sensitive_mean.loc[common_idx, common_cols]
+
     sns.heatmap(
         resistant_mean.astype(float),
         annot=False,
@@ -137,3 +162,44 @@ def plot_side_by_side_heatmaps(resistant_mean, sensitive_mean, folder_results):
         dpi=300,
     )
     plt.show()
+
+
+def plot_three_side_by_side_heatmaps(mean1, mean2, mean3, folder_results, labels=None):
+    if labels is None:
+        labels = ["Group 1", "Group 2", "Group 3"]
+
+    fig, axes = plt.subplots(1, 3, figsize=(24, 6))
+
+    # Ensure all DataFrames are float and aligned
+    common_idx = mean1.index.intersection(mean2.index).intersection(mean3.index)
+    common_cols = mean1.columns.intersection(mean2.columns).intersection(mean3.columns)
+    mean1 = mean1.loc[common_idx, common_cols].astype(float)
+    mean2 = mean2.loc[common_idx, common_cols].astype(float)
+    mean3 = mean3.loc[common_idx, common_cols].astype(float)
+
+    for ax, data, label in zip(axes, [mean1, mean2, mean3], labels):
+        sns.heatmap(
+            data,
+            annot=False,
+            fmt=".2f",
+            cmap="RdYlGn_r",
+            linewidths=0.5,
+            linecolor="white",
+            cbar_kws={"label": "Mean Value"},
+            ax=ax,
+        )
+        ax.set_title(f"{label} Mean Phenotypes", fontsize=14)
+        ax.set_ylabel("Condition", fontsize=12)
+        ax.set_xlabel("Phenotype", fontsize=12)
+        ax.tick_params(axis="x", rotation=45)
+        ax.tick_params(axis="y", labelsize=10)
+
+    plt.tight_layout()
+    output_path = f"{folder_results}/output"
+    os.makedirs(output_path, exist_ok=True)
+    plt.savefig(
+        f"{output_path}/heatmap_three_groups.png",
+        dpi=300,
+    )
+    plt.show()
+

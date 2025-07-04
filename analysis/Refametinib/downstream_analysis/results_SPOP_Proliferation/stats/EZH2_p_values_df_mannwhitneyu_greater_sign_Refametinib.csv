@@ -1,9 +1,0 @@
-Condition,Phenotype,Mannwhitneyu_P_value_Resistant,Star_significant
-EGF,Proliferation,0.035142131004717574,*
-FGF,Proliferation,0.048046164727836654,*
-TGFB,Proliferation,0.015370422089145581,*
-Androgen,Proliferation,0.035142131004717574,*
-Hypoxia,Proliferation,0.017775683267622674,*
-Carcinogen,Proliferation,0.037466062812499694,*
-Acidosis,Proliferation,0.04249038886004233,*
-TNF,Proliferation,0.008324647097535678,**

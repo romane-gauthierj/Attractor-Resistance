@@ -949,3 +949,185 @@ why boxplot shows two same input  ? why egf not sign anymore?
 in my pipeline include test not related to gender or tissue; and include gene or protein option to create the boolean networks
 why identified earlier E2F1 when block no prolif anymore?
 check gene parameter in the compute_mannwhitneyu_test_means
+
+create validation fct for gene and for protein as parameter
+check the patients id, always the same???
+
+
+
+
+
+
+
+
+
+week of 30 june 
+
+finished: tried with other drug (no better results...), tried to reduce to 15 patients
+- try cb of inputs (all gf ON) 
+- try with other drug 
+- try to be even more selective with the drug (more than 1.8)
+- try to also simulate the drug effect by inhibiting its target
+- include check not related to tissue or gender 
+- maybe res and sens id are not the same?
+- remove the 'pers_models' folder
+- maybe identify a drug target per patient? 
+- add some mutations to personalize and other data (proteins?)
+
+
+-> maybe really patient dependent ? can we find target for each patient?
+
+
+reduce nb of patients did not help and changing to another drug is worse
+
+
+
+
+
+June 30:
+finished: added the drug target knock out function, added the get cell lines function, changed the downstream analysis to include the case when there are more than one input 
+
+
+to do
+- simulate drug effect (inhibit MEK in the two groups) and check if diff of results
+-  be more restrictive with the patients and the drug (above 2 and below -2)
+
+
+
+- compare between before the drug and after the drug for the resistant and sensitive ? 
+- check we only keep the patient id for which we have info about their gene expression, cnv, mutations,... ?
+
+
+
+1. simulate MEK knock out in the two groups and check the results
+2. add fct with cell lines related to patients ids 
+2.2. maybe add the function to simulate drug effect when we create the networks ?
+3. try with other drugs and compare results 
+
+4. worse case - include mutations, replace gene by proteins data 
+
+
+
+
+-> run with many inputs ON
+-> output the cell lines distribution
+-> run for other drugs and check which one behave like Refametinib (based on what part of signaling pathway?)
+
+-> include option of having proteins models instead of genes 
+
+
+but refametinib not very significant but more than the sensitive for sure (maybe > 1.5 but not > 2)
+
+
+
+in the model of the paper- EGF always ON ??
+
+
+make sure we only use p adjusted values
+
+
+should i look at sample site or tissue? cause very different...
+
+
+
+to do: debug and try to plot histogram if this new condition, the p value is correctly calculated?
+
+to do: run with the other carcinogen condition -> boxplot, white U
+
+check why EGF is always ON in the models ??
+
+
+
+
+
+
+
+
+assumption with chk1 and chk2 ??
+
+try with proteins instead, try gene as discrete variable and cnv as continuous variable -> what gives best results ? 
+review the validation pipeline 
+
+
+also specify type_models for the personalization and if gene -> personalize with genes, and if proteins -> personalize with proteins
+
+
+check after for proteins how to deal with the '_' in the nodes names 
+
+-> finish 
+
+
+July 2
+to do: finish genes/ proteins modulation (import genes pers if gene type), finish clean validation function and pipeline, check again why E2F1 reduced significantly the proliferation?
+
+NKX3_1 how to handle it ??
+
+
+
+
+check why always the same p adjusted values, also power calculation
+why in the validation, some patients have exactly the same results outputs ??
+maybe should i do only two groups ? low/ middle vs high ?
+
+check the validation also works with proteins data -> add if type models is protein then do protein function
+
+
+
+
+June 4
+to do: try to simulate KO of the Pictilisib drug, and rerun for every drug 
+check for the power calculation (as missing a braket)
+check the apoptosis node and its targets
+
+check stats tests (kruskal and mannwhiteU)
+remove all the 'pers_models' and change all drug name by context_models
+get cell lines maybe call it when create the models?
+what does 1 mean in the attractors distribution? is 100% ?
+
+what if all the other variables are:
+$u_CASP3 = 1;
+$d_CASP3 = 1;
+-> does this really make sense or would it be better to have them random or fixed to another value ? cause apoptosis is really high 
+
+to do 
+- check if use proteins do we get better validation results ? 
+
+
+
+
+1. understand gleason score 
+2. Try with proteins instead of genes and repeat for refametinib
+
+
+
+
+July 4
+finished: added synonyms of proteins, genes, cnv; removed healthy samples, 
+
+
+
+
+look at annotation data for interpretation -> why apoptosis higher ? can it be induced by cancer cells? do we only have a sample with cancer cells or mixed??
+
+check each phenotype what does they mean 
+
+
+
+
+
+
+
+
+
+to do: try to get the phenotype distribution for healthy samples (normal solid tissue samples) 
+read paper and check again what data they used for the other nodes when no data available
+
+check not related to tissue status but really to resistance (check distribution of tumour and metastasis in each group)
+
+what to do with NKX3_1 ??
+
+
+
+
+
+check not just related to metastasis samples ?

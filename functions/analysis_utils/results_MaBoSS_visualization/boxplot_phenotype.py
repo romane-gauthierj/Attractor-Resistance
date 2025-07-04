@@ -47,9 +47,12 @@ import os
 def create_boxplot(folder_result, res_data, sens_data, significant_df):
     # res_data.rename(columns={"Unnamed: 0": "Condition"}, inplace=True)
     # sens_data.rename(columns={"Unnamed: 0": "Condition"}, inplace=True)
+    if significant_df is None or significant_df.empty:
+        print("No significant results to plot. Skipping boxplot creation.")
+        return
 
     phenotypes = significant_df["Phenotype"].unique()
-    conditions = significant_df.index.values
+    conditions = pd.unique(significant_df.index.values)
 
     # phenotypes = list(res_data.columns[1:])
     # conditions = list(res_data.index)
@@ -74,13 +77,23 @@ def create_boxplot(folder_result, res_data, sens_data, significant_df):
 
         for condition in conditions:
             res_value = res_data.loc[condition, phenotype]
-
             res_value_list = ast.literal_eval(res_value)
+            # ensure each value is a list
+            if not isinstance(res_value_list, list):
+                print(
+                    f"Warning: Resistant value for {condition}, {phenotype} is not a list: {res_value_list}"
+                )
+
             resistant_data.append(res_value_list)
             resistant_positions.append(tick - 0.2)
 
             sens_value = sens_data.loc[condition, phenotype]
             sens_value_list = ast.literal_eval(sens_value)
+            if not isinstance(sens_value_list, list):
+                print(
+                    f"Warning: Sensitive value for {condition}, {phenotype} is not a list: {sens_value_list}"
+                )
+
             sensitive_data.append(sens_value_list)
             sensitive_positions.append(tick + 0.2)
 

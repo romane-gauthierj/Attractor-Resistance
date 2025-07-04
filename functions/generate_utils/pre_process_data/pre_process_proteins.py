@@ -1,7 +1,9 @@
 # Pre-process proteins data (only id in the patients id list  and proteins in montagud list)
 
 
-def process_proteins(proteins_data, montagud_nodes, patients_id):
+def process_proteins_validation(
+    proteins_data, montagud_nodes, synonyms_maps, patients_id
+):
     proteins_data["sample"] = proteins_data["sample"].str.rsplit("-", n=2).str[0]
     proteins_data["sample"] = proteins_data["sample"].str.upper()
     proteins_data["sample"] = proteins_data["sample"].str.replace("_", "", regex=False)
@@ -19,6 +21,11 @@ def process_proteins(proteins_data, montagud_nodes, patients_id):
     proteins_data = proteins_data[
         ~proteins_data["sample"].apply(lambda p: any(mod in p for mod in mods))
     ]
+
+    # remplace the protein symbol column names by its synonyms in the proteins_synonyms_maps dictionary
+    proteins_data["sample"] = proteins_data["sample"].apply(
+        lambda x: synonyms_maps.get(x, x)
+    )
 
     # Keep only the proteins present in the montagud list
 
@@ -64,9 +71,9 @@ def process_proteins(proteins_data, montagud_nodes, patients_id):
         "protein_symbol"
     ].str.replace("_", "", regex=False)
     df_melted_protein = df_melted_protein[df_melted_protein["rsem_tpm"].notna()]
-    df_melted_protein.to_csv(
-        "data/TCGA_data/prostate/filtered_data/proteins_samples_table.csv"
-    )
+    # df_melted_protein.to_csv(
+    #     "data/TCGA_data/prostate/filtered_data/proteins_samples_table.csv"
+    # )
     return df_melted_protein
 
 
@@ -110,3 +117,49 @@ def create_table_proteins_patients(proteins_data):
     )
 
     return table_proteins_patients
+
+
+def process_proteins(
+    proteins_data, montagud_nodes, synonyms_maps, patients_id
+):
+    # explode the 'symbol' column if it contains multiple values separated by commas or semicolons
+    proteins_data["symbol"] = proteins_data["symbol"].str.split(r"[;,]")
+    proteins_data = proteins_data.explode("symbol")
+    proteins_data["symbol"] = proteins_data["symbol"].str.strip()
+
+    proteins_data_patient_id = list(set(proteins_data["model_id"]))
+
+    common_col = list(set(proteins_data_patient_id) & set(patients_id))
+    col_keep = ["symbol"] + common_col
+
+    proteins_data_patient_id_filtered = proteins_data[
+        proteins_data["model_id"].isin(col_keep)
+    ]
+
+    # remplace the protein symbol column names by its synonyms in the proteins_synonyms_maps dictionary
+    proteins_data_patient_id_filtered["symbol"] = proteins_data_patient_id_filtered[
+        "symbol"
+    ].apply(lambda x: synonyms_maps.get(x, x))
+
+    proteins_names_list = list(set(proteins_data_patient_id_filtered["symbol"]))
+
+    common_proteins = list(set(proteins_names_list) & set(montagud_nodes))
+
+    proteins_data_patient_id_filtered = proteins_data_patient_id_filtered[
+        proteins_data_patient_id_filtered["symbol"].isin(common_proteins)
+    ]
+
+    #  uniprot_id	model_id	model_name	protein_intensity	zscore	symbol
+    proteins_data_patient_id_filtered = proteins_data_patient_id_filtered[
+        ["model_id", "protein_intensity", "zscore", "symbol"]
+    ]
+
+    proteins_data_patient_id_filtered = proteins_data_patient_id_filtered.rename(
+        columns={
+            "symbol": "protein_symbol",
+            "protein_intensity": "rsem_tpm",
+            "zscore": "z_score",
+        }
+    )
+
+    return proteins_data_patient_id_filtered
