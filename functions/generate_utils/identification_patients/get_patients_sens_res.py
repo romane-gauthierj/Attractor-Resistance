@@ -25,7 +25,18 @@ def get_patients(
         annotations_models = annotations_models[
             annotations_models["tissue"] != tissue_remove
         ]
+
+    # control patients
+    healthy_ids = list(
+        set(
+            annotations_models[annotations_models["tissue_status"] == "Normal"][
+                "model_id"
+            ]
+        )
+    )
+
     # remove models with unknown or healthy tissue status
+
     annotations_models = annotations_models[
         ~annotations_models["tissue_status"].isin(
             ["Unknown", "Normal", "Precancerous", "Papiloma"]
@@ -75,4 +86,6 @@ def get_patients(
     top_resistant_ids = list(set(top_resistant_ids))
     top_sensitive_ids = list(set(top_sensitive_ids))
 
-    return top_resistant_ids, top_sensitive_ids, drug_data_filtered
+    top_healthy_ids = healthy_ids[:number_patients]
+
+    return top_resistant_ids, top_sensitive_ids, top_healthy_ids, drug_data_filtered

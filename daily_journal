@@ -1130,4 +1130,22 @@ what to do with NKX3_1 ??
 
 
 
-check not just related to metastasis samples ?
+check that the phenotypes distribution not just related to metastasis samples ?-> compute nb of metastasis and tumor samples in each category
+
+
+do a metastasis differential expression analyis in the differential expressed genes
+
+mechanisms of resistance of akt inhibitor through egfr pathway ??
+
+
+-> more strict for the gene diff analysis (maybe about 0.6 of expression?) -> used 0.6 instead of 0.1
+
+
+
+
+
+
+
+July 5 
+finished: check the distribution of samples tumor vs metastasis related to the attractors
+to do : plot the attractor distribution of the control samples, check what is the migration phenotype

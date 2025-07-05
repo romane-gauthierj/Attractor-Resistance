@@ -15,6 +15,7 @@ def compute_genes_mean_signature(
     data_phenotype_patients,
     top_resistant_ids,
     top_sensitive_ids,
+    annotations_models,
 ):
     # identify the differently genes (higher expressed) in the resistant group compared to the sensitive group upon a specific phenotype- condition
     # data_phenotype_patients["Model_ID"] = (
@@ -38,7 +39,7 @@ def compute_genes_mean_signature(
 
     group_phenotype_resistant = data_phenotype_patients[
         (data_phenotype_patients["Drug status"] == "Resistant")
-        & (data_phenotype_patients[f"{condition}_{phenotype}"] >= 0.1)
+        & (data_phenotype_patients[f"{condition}_{phenotype}"] >= 0.6)
     ]
 
     # 2 groups: resistant_proliferating_group and sensitive_group_ids
@@ -48,8 +49,26 @@ def compute_genes_mean_signature(
     ]
     sensitive_group_ids = sensitive_group["Model_ID"].tolist()
 
-    # len_resistant_group_ids = len(resistant_group_ids)
-    # len_sensitive_group_ids = len(sensitive_group_ids)
+    # annotations
+    tissue_status_distribution = annotations_models[
+        annotations_models["model_id"].isin(resistant_group_ids)
+    ]["tissue_status"].value_counts()
+
+    gender_distribution = annotations_models[
+        annotations_models["model_id"].isin(resistant_group_ids)
+    ]["gender"].value_counts()
+
+    total_counts_gender = annotations_models["gender"].value_counts()
+    ratio_gender = gender_distribution / total_counts_gender
+    ratio_gender = ratio_gender.dropna()
+
+    tissue_distribution = annotations_models[
+        annotations_models["model_id"].isin(resistant_group_ids)
+    ]["sample_site"].value_counts()
+
+    total_counts_tissue = annotations_models["tissue"].value_counts()
+    ratio_tissue = tissue_distribution / total_counts_tissue
+    ratio_tissue = ratio_tissue.dropna()
 
     # extract gene expression data
     rna_seq_data = rna_seq_data[["model_id", "gene_symbol", "rsem_tpm"]]
@@ -125,7 +144,21 @@ def compute_genes_mean_signature(
         f"{output_dir}/significant_genes_{condition}_ON_{phenotype}.csv",
         index=True,
     )
-    return significant_genes, resistant_group_ids, sensitive_group_ids
+
+    # Save tissue_status_distribution as extra rows in the same CSV
+    # Append tissue_status_distribution and group sizes
+
+    # gender and sample_site
+
+    with open(
+        f"{output_dir}/significant_genes_{condition}_ON_{phenotype}.csv", "a"
+    ) as f:
+        f.write("\nTissue Status Distribution\n")
+        tissue_status_distribution.to_csv(f, header=True)
+        f.write(f"\nResistant group size,{len(resistant_group_ids)}\n")
+        f.write(f"Sensitive group size,{len(sensitive_group_ids)}\n")
+        f.write(f"\nGender ratio\n, {ratio_gender}\n")
+        f.write(f"\nTissue ratio\n, {ratio_tissue}\n")
 
 
 def create_results_gene_enrichment(
@@ -135,6 +168,7 @@ def create_results_gene_enrichment(
     top_sensitive_ids,
     conditions_phenotypes_df,
     folder_result,
+    annotations_models,
 ):
     # save every gene enrichment dataframe in a dictionary of index condtion_phenotype
 
@@ -144,16 +178,15 @@ def create_results_gene_enrichment(
     # results_genes_enrich = {key: None for key in indexes_list}
 
     for condition, phenotype in conditions_phenotypes_df.values:
-        genes_stats_results, resistant_group_ids, sensitive_group_ids = (
-            compute_genes_mean_signature(
-                rna_seq_data_filtered,
-                folder_result,
-                phenotype,
-                condition,
-                patients_phenot_table,
-                top_resistant_ids,
-                top_sensitive_ids,
-            )
+        compute_genes_mean_signature(
+            rna_seq_data_filtered,
+            folder_result,
+            phenotype,
+            condition,
+            patients_phenot_table,
+            top_resistant_ids,
+            top_sensitive_ids,
+            annotations_models,
         )
         # if isinstance(genes_stats_results, pd.DataFrame):
         #     results_genes_enrich[f"{condition}_{phenotype}"] = genes_stats_results

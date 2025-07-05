@@ -70,27 +70,27 @@ def downstream_analysis(
         )
 
         # # compute phenotype table for each patient (attractor distribution)
-        for patient in top_patients_ids:
-            if list_active_inputs is None:
-                # run for only one input ON at a time
-                compute_phenotype_table(
-                    folder_results_temp,
-                    folder_models_temp_single_input,
-                    patient,
-                    inputs_list,
-                    phenotype_interest,
-                    drug_interest,
-                )
-            else:
-                compute_phenotype_table_custom_inputs(
-                    folder_results_temp,
-                    folder_models_temp,
-                    patient,
-                    inputs_list,
-                    phenotype_interest,
-                    drug_interest,
-                    list_active_inputs,
-                )
+        # for patient in top_patients_ids:
+        #     if list_active_inputs is None:
+        #         # run for only one input ON at a time
+        #         compute_phenotype_table(
+        #             folder_results_temp,
+        #             folder_models_temp_single_input,
+        #             patient,
+        #             inputs_list,
+        #             phenotype_interest,
+        #             drug_interest,
+        #         )
+        #     else:
+        #         compute_phenotype_table_custom_inputs(
+        #             folder_results_temp,
+        #             folder_models_temp,
+        #             patient,
+        #             inputs_list,
+        #             phenotype_interest,
+        #             drug_interest,
+        #             list_active_inputs,
+        #         )
 
         # # Group data together for each group of patient
         # top_patients_ids only to have the prefix
@@ -195,6 +195,7 @@ def downstream_analysis(
         top_sensitive_ids,
         conditions_phenotypes_df,
         folder_results_temp,
+        annotations_models,
     )
 
     return nb_patients_required

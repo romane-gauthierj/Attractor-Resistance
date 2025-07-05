@@ -56,41 +56,36 @@ def pre_process_re(
     tissue_remove=None,
     node_to_remove=None,
 ):
-    top_resistant_ids, top_sensitive_ids, drug_tissue_data = get_patients(
-        number_patients,
-        drug_data,
-        annotations_models,
-        drug_interest,
-        tissue_interest=None,
-        tissue_remove=tissue_remove,
+    top_resistant_ids, top_sensitive_ids, top_healthy_ids, drug_data_filtered = (
+        get_patients(
+            number_patients,
+            drug_data,
+            annotations_models,
+            drug_interest,
+            tissue_interest=None,
+            tissue_remove=tissue_remove,
+        )
     )
 
     patients_ids = top_resistant_ids + top_sensitive_ids
-    # preprocess montagud nodes
 
+    # preprocess montagud nodes
     montagud_nodes = process_montagud_nodes(
         montagud_data, name_montagud_maps, nodes_to_add
     )
 
     # preprocess rna seq data
-
     rna_seq_data_filtered = process_genes(
         patients_ids, montagud_nodes, rna_seq_data, synonyms_maps
     )
-    print("genes part 1 has been processed")
     table_rna_seq_patients = create_table_rna_seq_patients(rna_seq_data_filtered)
-    print("genes part 2 has been processed")
 
     # pre process proteins data
-
     df_melted_protein = process_proteins(
         proteins_data, montagud_nodes, synonyms_maps, patients_ids
     )
-    print("proteins 1 has been processed")
 
     table_proteins_patients = create_table_proteins_patients(df_melted_protein)
-
-    print("proteins 2 has been processed")
 
     if type_models == "genes_models":
         top_resistant_ids = list(
@@ -122,11 +117,11 @@ def pre_process_re(
     cnv_data_filtered = preprocess_cnv(
         cnv_data, montagud_nodes, patients_ids, synonyms_maps
     )
-    print("cnv has been processed")
 
     return (
         top_resistant_ids,
         top_sensitive_ids,
+        top_healthy_ids,
         montagud_nodes,
         rna_seq_data_filtered,
         cnv_data_filtered,
