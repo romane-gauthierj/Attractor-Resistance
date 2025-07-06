@@ -52,38 +52,27 @@ def compute_kruskal_test_means(group_files, folder_results, group_categories):
                 adjusted_df.at[i, j] = pvals_adj[idx]
                 idx += 1
     # Save to CSV
-    folder_results_adj_df = os.path.join(folder_results, "output")
-    os.makedirs(folder_results_adj_df, exist_ok=True)
-
     # adjusted_df.to_csv(
     #     os.path.join(folder_results_adj_df, "kruskal_pvalues_adjusted.csv")
     # )
 
-    return adjusted_df
+    # Create a long-format DataFrame with only significant p-values
+    significant_df = (
+        adjusted_df.stack()
+        .reset_index()
+        .rename(
+            columns={
+                "level_0": "Condition",
+                "level_1": "Phenotype",
+                0: "Adjusted_P_Value",
+            }
+        )
+    )
 
+    significant_df = significant_df[significant_df["Adjusted_P_Value"] <= 0.05]
+    significant_df = significant_df.dropna()
 
-# def compute_kruskal_test_means_validation(data_groups):
-#     results = []
-
-#     for (input_name, phenotype), group_vals in data_groups.items():
-#         groupA = group_vals["GroupA"]
-#         groupB = group_vals["GroupB"]
-
-#         if len(groupA) > 0 and len(groupB) > 0:
-#             stat, p = kruskal(groupA, groupB)
-#             results.append(
-#                 {
-#                     "Input": input_name,
-#                     "Phenotype": phenotype,
-#                     "Kruskal_Stat": stat,
-#                     "p_value": p,
-#                     "Significant": p <= 0.05,
-#                 }
-#             )
-
-#         df_results = pd.DataFrame(results)
-#         significant_results = df_results[df_results["Significant"] == True]
-#     return significant_results
+    return adjusted_df, significant_df
 
 
 # compute normality (Shapiro-Wilk test p-value ≤ 0.05 → Reject H₀ → Data is not normally distributed.)
@@ -230,14 +219,14 @@ def compute_mannwhitneyu_test_means(
         conditions, choices, default=""
     )
 
-    # p_values_df_mannwhitneyu_two_sides.to_csv(
-    #     f"{folder}/p_values_df_mannwhitneyu_two_sides_{drug_interest}.csv",
-    #     index=True,
-    # )
-    # p_values_df_mannwhitneyu_less_sign.to_csv(
-    #     f"{folder}/p_values_df_mannwhitneyu_less_sign_{drug_interest}.csv",
-    #     index=True,
-    # )
+    p_values_df_mannwhitneyu_two_sides.to_csv(
+        f"{folder}/p_values_df_mannwhitneyu_two_sides_{drug_interest}.csv",
+        index=True,
+    )
+    p_values_df_mannwhitneyu_less_sign.to_csv(
+        f"{folder}/p_values_df_mannwhitneyu_less_sign_{drug_interest}.csv",
+        index=True,
+    )
 
     filename = f"{folder}/p_values_df_mannwhitneyu_greater_sign_{drug_interest}.csv"
     if gene is not None:

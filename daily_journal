@@ -1164,11 +1164,24 @@ check why with proteins the healthy patients get more invasion, should we also s
 
 
 July 6
-finished: stats test on the three plots (healthy vs sensitive; healthy vs resistant)
-to do: 
-        check the third pipeline - simulate gene knockout 
-        collect the results and start comparing them, check stats test work as expected
-        try to see if there are some genes that make sense to be highly expressed in the resistant group
-    
-        
-        keep writing 
+finished: stats test on the three plots (healthy vs sensitive; healthy vs resistant), added the protein and genes together personalization
+
+
+
+
+
+July 7 
+
+to do:
+- try to increase the max time to see if we can get migration phenotype
+- check the third pipeline - simulate gene knockout 
+-  try to see if there are some genes that make sense to be highly expressed in the resistant group
+
+
+
+
+try these following combinations to induce migration 
+1. EGF + FGF + TGFB + TNF
+2. EGF + HYPOXIA + TGFB
+try to also include the one with significant bw res and healthy 
+check all stats p value are adjusted

@@ -17,6 +17,7 @@ from functions.analysis_utils.stats.stats_proba import (
 
 from functions.analysis_utils.results_MaBoSS_visualization.boxplot_phenotype import (
     create_boxplot,
+    create_boxplot_three_groups,
 )
 
 from functions.analysis_utils.results_MaBoSS_visualization.create_phenotypes_patients_table import (
@@ -123,7 +124,7 @@ def downstream_analysis(
         f"{folder_result_healthy}/combined_results.csv", index_col=0
     )
 
-    # Compute statistics for each condition-phenotype pair
+    #  STATISTICS TESTS
     folder_result_temp_stats = f"{folder_results_temp}/statistics"
     if not os.path.exists(folder_result_temp_stats):
         os.makedirs(folder_result_temp_stats)
@@ -136,94 +137,19 @@ def downstream_analysis(
         gene=None,
     )
 
-    data_less_sign = pd.read_csv(
-        f"{folder_result_temp_stats}/p_values_df_mannwhitneyu_less_sign_{drug_interest}.csv",
-        index_col=0,
-    )
+    # compute kruskal test for healthy, resistant and sensitive patients
+    group_files = {
+        patients_categ[0]: os.path.join(
+            folder_result_resistant, "combined_results.csv"
+        ),
+        patients_categ[1]: os.path.join(
+            folder_result_sensitive, "combined_results.csv"
+        ),
+        patients_categ[2]: os.path.join(folder_result_healthy, "combined_results.csv"),
+    }
 
-    data_greater_sign = pd.read_csv(
-        f"{folder_result_temp_stats}/p_values_df_mannwhitneyu_greater_sign_{drug_interest}.csv",
-        index_col=0,
-    )
-
-    data_two_sides_sign = pd.read_csv(
-        f"{folder_result_temp_stats}/p_values_df_mannwhitneyu_two_sides_{drug_interest}.csv",
-        index_col=0,
-    )
-
-    combined_df = pd.concat(
-        [data_less_sign, data_greater_sign, data_two_sides_sign], axis=0
-    )
-
-    # Create boxplot for each phenotype
-    create_boxplot(folder_results_temp, df_res_combined, df_sens_combined, combined_df)
-
-    folder_result_resistant = f"{folder_results_temp}/resistant"
-    folder_result_sensitive = f"{folder_results_temp}/sensitive"
-    folder_result_healthy = f"{folder_results_temp}/healthy"
-
-    df_res_combined = pd.read_csv(
-        f"{folder_result_resistant}/combined_results.csv", index_col=0
-    )  # index: inputs, columns: phenotypes
-    df_sens_combined = pd.read_csv(
-        f"{folder_result_sensitive}/combined_results.csv", index_col=0
-    )
-    df_healthy_combined = pd.read_csv(
-        f"{folder_result_healthy}/combined_results.csv", index_col=0
-    )
-
-    patient_resistant_mean = compute_mean_phenotype_values(df_res_combined)
-    patient_sensitive_mean = compute_mean_phenotype_values(df_sens_combined)
-    patient_healthy_mean = compute_mean_phenotype_values(df_healthy_combined)
-
-    # Create a heatmap of phenotype distribution under diff growth condition between resistant and sensitive
-
-    # resistant and sensitive patients
-    # plot_side_by_side_heatmaps(
-    #     patient_resistant_mean, patient_sensitive_mean, folder_results_temp
-    # )
-
-    # resistant, sensitive and healthy patients
-    plot_three_side_by_side_heatmaps(
-        patient_resistant_mean,
-        patient_sensitive_mean,
-        patient_healthy_mean,
-        folder_results_temp,
-        labels=patients_categ,
-    )
-
-    rna_seq_data_filtered = pd.read_csv(
-        f"analysis/{drug_interest}/data_filtered/rna_seq_data_filtered.csv"
-    )
-
-    res_tables_path = f"{folder_result_resistant}"
-    sens_tables_path = f"{folder_result_sensitive}"
-
-    greater_sign_results = pd.read_csv(
-        f"{folder_results_temp}/statistics/p_values_df_mannwhitneyu_greater_sign_{drug_interest}.csv"
-    )
-    conditions_phenotypes_df = greater_sign_results[["Condition", "Phenotype"]]
-
-    # combine all the patients together (resistant and sensitive)
-    patients_phenot_table = create_combined_table_patients(
-        res_tables_path, sens_tables_path, folder_results_temp
-    )
-
-    patients_phenot_table.to_csv(f"{folder_results_temp}/outputs")
-
-    # do power calculation (assess the required size of each condition-phenotype pair)
-    nb_patients_required = compute_power_calculation(df_res_combined, df_sens_combined)
-    nb_patients_required.to_csv(f"{folder_results_temp}/outputs")
-
-    # gene differential expression analysis
-    create_results_gene_enrichment(
-        rna_seq_data_filtered,
-        patients_phenot_table,
-        top_resistant_ids,
-        top_sensitive_ids,
-        conditions_phenotypes_df,
-        folder_results_temp,
-        annotations_models,
+    kruskal_adjusted_df, significant_df = compute_kruskal_test_means(
+        group_files, folder_result_temp_stats, patients_categ
     )
 
     # stats test for healthy vs resistant and sensitive patients
@@ -252,38 +178,129 @@ def downstream_analysis(
         gene=None,
     )
 
+    #   # Save the results to CSV files
     p_values_df_mannwhitneyu_greater_res_sens.to_csv(
         f"{folder_result_temp_stats}/p_values_df_mannwhitneyu_greater_sign_res_sens_{drug_interest}.csv",
         index=True,
     )
-
     p_values_df_mannwhitneyu_greater_sens_healthy.to_csv(
         f"{folder_result_temp_stats}/p_values_df_mannwhitneyu_greater_sign_sens_healthy_{drug_interest}.csv",
         index=True,
     )
-
     p_values_df_mannwhitneyu_greater_res_healthy.to_csv(
         f"{folder_result_temp_stats}/p_values_df_mannwhitneyu_greater_sign_res_healthy_{drug_interest}.csv",
         index=True,
     )
-
-    # compute kruskal test for healthy, resistant and sensitive patients
-    group_files = {
-        patients_categ[0]: os.path.join(
-            folder_result_resistant, "combined_results.csv"
-        ),
-        patients_categ[1]: os.path.join(
-            folder_result_sensitive, "combined_results.csv"
-        ),
-        patients_categ[2]: os.path.join(folder_result_healthy, "combined_results.csv"),
-    }
-
-    kruskal_adjusted_df = compute_kruskal_test_means(
-        group_files, folder_result_temp_stats, patients_categ
-    )
     kruskal_adjusted_df.to_csv(
         f"{folder_result_temp_stats}/kruskal_stats_healthy_res_sens_{drug_interest}.csv",
         index=True,
+    )
+    significant_df.to_csv(
+        f"{folder_result_temp_stats}/kruskal_significant_{drug_interest}.csv",
+        index=True,
+    )
+
+    data_less_sign = pd.read_csv(
+        f"{folder_result_temp_stats}/p_values_df_mannwhitneyu_less_sign_{drug_interest}.csv",
+        index_col=0,
+    )
+
+    data_greater_sign = pd.read_csv(
+        f"{folder_result_temp_stats}/p_values_df_mannwhitneyu_greater_sign_res_sens_{drug_interest}.csv",
+        index_col=0,
+    )
+
+    data_two_sides_sign = pd.read_csv(
+        f"{folder_result_temp_stats}/p_values_df_mannwhitneyu_two_sides_{drug_interest}.csv",
+        index_col=0,
+    )
+    data_kruskal_significant = pd.read_csv(
+        f"{folder_result_temp_stats}/kruskal_significant_{drug_interest}.csv",
+        index_col=0,
+    )
+
+    combined_df = pd.concat(
+        [data_less_sign, data_greater_sign, data_two_sides_sign], axis=0
+    )
+
+    # Create boxplot for each phenotype
+    create_boxplot(folder_results_temp, df_res_combined, df_sens_combined, combined_df)
+
+    # test
+    create_boxplot_three_groups(
+        folder_results_temp,
+        df_res_combined,
+        df_sens_combined,
+        df_healthy_combined,
+        data_kruskal_significant,
+    )
+
+    # Create a heatmap of phenotype distribution under diff growth condition between resistant and sensitive
+
+    folder_result_resistant = f"{folder_results_temp}/resistant"
+    folder_result_sensitive = f"{folder_results_temp}/sensitive"
+    folder_result_healthy = f"{folder_results_temp}/healthy"
+
+    df_res_combined = pd.read_csv(
+        f"{folder_result_resistant}/combined_results.csv", index_col=0
+    )  # index: inputs, columns: phenotypes
+    df_sens_combined = pd.read_csv(
+        f"{folder_result_sensitive}/combined_results.csv", index_col=0
+    )
+    df_healthy_combined = pd.read_csv(
+        f"{folder_result_healthy}/combined_results.csv", index_col=0
+    )
+
+    patient_resistant_mean = compute_mean_phenotype_values(df_res_combined)
+    patient_sensitive_mean = compute_mean_phenotype_values(df_sens_combined)
+    patient_healthy_mean = compute_mean_phenotype_values(df_healthy_combined)
+
+    # resistant and sensitive patients
+    # plot_side_by_side_heatmaps(
+    #     patient_resistant_mean, patient_sensitive_mean, folder_results_temp
+    # )
+
+    # resistant, sensitive and healthy patients
+    plot_three_side_by_side_heatmaps(
+        patient_resistant_mean,
+        patient_sensitive_mean,
+        patient_healthy_mean,
+        folder_results_temp,
+        labels=patients_categ,
+    )
+
+    rna_seq_data_filtered = pd.read_csv(
+        f"analysis/{drug_interest}/data_filtered/rna_seq_data_filtered.csv"
+    )
+
+    res_tables_path = f"{folder_result_resistant}"
+    sens_tables_path = f"{folder_result_sensitive}"
+
+    greater_sign_results = pd.read_csv(
+        f"{folder_results_temp}/statistics/p_values_df_mannwhitneyu_greater_sign_res_sens_{drug_interest}.csv"
+    )
+    conditions_phenotypes_df = greater_sign_results[["Condition", "Phenotype"]]
+
+    # combine all the patients together (resistant and sensitive)
+    patients_phenot_table = create_combined_table_patients(
+        res_tables_path, sens_tables_path, folder_results_temp
+    )
+
+    patients_phenot_table.to_csv(f"{folder_results_temp}/outputs")
+
+    # do power calculation (assess the required size of each condition-phenotype pair)
+    nb_patients_required = compute_power_calculation(df_res_combined, df_sens_combined)
+    nb_patients_required.to_csv(f"{folder_results_temp}/outputs")
+
+    # gene differential expression analysis
+    create_results_gene_enrichment(
+        rna_seq_data_filtered,
+        patients_phenot_table,
+        top_resistant_ids,
+        top_sensitive_ids,
+        conditions_phenotypes_df,
+        folder_results_temp,
+        annotations_models,
     )
 
     return (
@@ -292,4 +309,5 @@ def downstream_analysis(
         p_values_df_mannwhitneyu_greater_res_healthy,
         p_values_df_mannwhitneyu_greater_res_sens,
         kruskal_adjusted_df,
+        significant_df,
     )

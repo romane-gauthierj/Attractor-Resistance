@@ -153,8 +153,6 @@ def compute_phenotype_table_custom_inputs(
     # function to run MaBoSS with more than one Input ON
     model_pers_bnd = f"{folder_models}/pers_models/{patient_id}_{context_label}.bnd"
     model_pers_cfg = f"{folder_models}/pers_models/{patient_id}_{context_label}.cfg"
-    print("model_pers_bnd", model_pers_bnd)
-    print("model_pers_cfg", model_pers_cfg)
 
     if not os.path.exists(model_pers_bnd) or not os.path.exists(model_pers_cfg):
         print(f"Missing model files for {patient_id}")

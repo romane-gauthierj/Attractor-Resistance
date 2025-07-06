@@ -94,7 +94,7 @@ def pre_process_re(
         )
         top_healthy_ids = list(set(table_rna_seq_patients.index) & set(healthy_ids))
 
-    else:
+    elif type_models == "proteins_models":
         # if proteins models
         top_resistant_ids = list(
             set(table_proteins_patients.index) & set(top_resistant_ids)
@@ -103,6 +103,27 @@ def pre_process_re(
             set(table_proteins_patients.index) & set(top_sensitive_ids)
         )
         top_healthy_ids = list(set(table_proteins_patients.index) & set(healthy_ids))
+
+    elif type_models == "genes_proteins_models":
+        top_resistant_ids = list(
+            set(table_proteins_patients.index)
+            & set(table_rna_seq_patients.index)
+            & set(top_resistant_ids)
+        )
+        top_sensitive_ids = list(
+            set(table_proteins_patients.index)
+            & set(table_rna_seq_patients.index)
+            & set(top_sensitive_ids)
+        )
+        top_healthy_ids = list(
+            set(table_proteins_patients.index)
+            & set(table_rna_seq_patients.index)
+            & set(healthy_ids)
+        )
+    else:
+        raise ValueError(
+            "Type of models not recognized. Please choose from 'genes_models', 'proteins_models', or 'genes_proteins_models'."
+        )
 
     patients_ids = top_resistant_ids + top_sensitive_ids + top_healthy_ids
 
@@ -209,7 +230,7 @@ def generate_models_re(
                 table_rna_seq_patients,
                 drug_interest,
             )
-        else:
+        elif type_models == "proteins_models":
             personalized_patients_proteins_cfgs(
                 df_melted_proteins,
                 montagud_nodes,
@@ -217,6 +238,28 @@ def generate_models_re(
                 patients_ids_categ,
                 table_proteins_patients,
                 drug_interest,
+            )
+        elif type_models == "genes_proteins_models":
+            # proteins will overwrite genes
+            personalized_patients_genes_cfgs(
+                rna_seq_data,
+                montagud_nodes,
+                folder_models_categ,
+                patients_ids_categ,
+                table_rna_seq_patients,
+                drug_interest,
+            )
+            personalized_patients_proteins_cfgs(
+                df_melted_proteins,
+                montagud_nodes,
+                folder_models_categ,
+                patients_ids_categ,
+                table_proteins_patients,
+                drug_interest,
+            )
+        else:
+            raise ValueError(
+                "Type of models not recognized. Please choose from 'genes_models', 'proteins_models', or 'genes_proteins_models'."
             )
 
         # create personalized models (CNV expression)

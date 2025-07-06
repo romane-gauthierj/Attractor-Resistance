@@ -168,6 +168,251 @@ def create_boxplot(folder_result, res_data, sens_data, significant_df):
     plt.show()
 
 
+def create_boxplot_three_groups(
+    folder_result, res_data, sens_data, healthy_data, data_kruskal_significant
+):
+    # Ensure all input dataframes have the same structure
+
+    if data_kruskal_significant.empty:
+        print("⚠️ No significant phenotypes found for plotting.")
+        return
+    phenotypes = list(set(data_kruskal_significant["Phenotype"].unique()))
+    conditions = list(set(data_kruskal_significant["Condition"].unique()))
+
+    n_phenotypes = len(phenotypes)
+    fig, axes = plt.subplots(
+        1, n_phenotypes, figsize=(10 * n_phenotypes, 8), sharey=True
+    )
+
+    if n_phenotypes == 1:
+        axes = [axes]
+
+    for i, phenotype in enumerate(phenotypes):
+        if data_kruskal_significant is not None and not data_kruskal_significant.empty:
+            significant_conditions = data_kruskal_significant[
+                data_kruskal_significant["Phenotype"] == phenotype
+            ]["Condition"].unique()
+        else:
+            continue  # Skip phenotype if no significant data
+
+        if len(significant_conditions) == 0:
+            continue
+
+        group_positions = []
+        group_labels = []
+
+        resistant_data = []
+        sensitive_data = []
+        healthy_data_list = []
+
+        resistant_positions = []
+        sensitive_positions = []
+        healthy_positions = []
+
+        tick = 1  # x-axis position tracker
+
+        for condition in significant_conditions:
+            # --- Resistant ---
+            res_value = res_data.loc[condition, phenotype]
+            res_value_list = ast.literal_eval(res_value)
+            resistant_data.append(res_value_list)
+            resistant_positions.append(tick - 0.3)
+
+            # --- Sensitive ---
+            sens_value = sens_data.loc[condition, phenotype]
+            sens_value_list = ast.literal_eval(sens_value)
+            sensitive_data.append(sens_value_list)
+            sensitive_positions.append(tick)
+
+            # --- Healthy ---
+            healthy_value = healthy_data.loc[condition, phenotype]
+            healthy_value_list = ast.literal_eval(healthy_value)
+            healthy_data_list.append(healthy_value_list)
+            healthy_positions.append(tick + 0.3)
+
+            group_positions.append(tick)
+            group_labels.append(condition)
+            tick += 1
+
+        ax = axes[i]
+
+        # Plot all three categories
+        box1 = ax.boxplot(
+            resistant_data, positions=resistant_positions, patch_artist=True
+        )
+        box2 = ax.boxplot(
+            sensitive_data, positions=sensitive_positions, patch_artist=True
+        )
+        box3 = ax.boxplot(
+            healthy_data_list, positions=healthy_positions, patch_artist=True
+        )
+
+        # Color the boxes
+        for patch in box1["boxes"]:
+            patch.set_facecolor("#FF7F0E")  # Orange = Resistant
+        for patch in box2["boxes"]:
+            patch.set_facecolor("#008000")  # Green = Sensitive
+        for patch in box3["boxes"]:
+            patch.set_facecolor("#1f77b4")  # Blue = Healthy
+
+        # Set x-ticks and labels
+        ax.set_xticks(group_positions)
+        ax.set_xticklabels(group_labels, rotation=45, ha="right")
+        ax.set_xlabel("Condition")
+        ax.set_title(phenotype)
+        if i == 0:
+            ax.set_ylabel("Expression Values")
+
+        # ---------- ADD SIGNIFICANCE STARS ----------
+        if data_kruskal_significant is not None and not data_kruskal_significant.empty:
+            for j, condition in enumerate(significant_conditions):
+                row = data_kruskal_significant[
+                    (data_kruskal_significant["Condition"] == condition)
+                    & (data_kruskal_significant["Phenotype"] == phenotype)
+                ]
+                if not row.empty:
+                    p_val = row["Adjusted_P_Value"].values[0]
+                    if p_val < 0.001:
+                        star = "***"
+                    elif p_val < 0.01:
+                        star = "**"
+                    elif p_val < 0.05:
+                        star = "*"
+                    else:
+                        star = ""
+
+                    if star:
+                        max_y = max(
+                            max(resistant_data[j]),
+                            max(sensitive_data[j]),
+                            max(healthy_data_list[j]),
+                        )
+                        ax.text(
+                            group_positions[j],
+                            max_y + 0.05 * max_y,
+                            star,
+                            ha="center",
+                            va="bottom",
+                            fontsize=16,
+                            color="red",
+                        )
+
+    # Add legend
+    resistant_patch = mpatches.Patch(color="#FF7F0E", label="Resistant")
+    sensitive_patch = mpatches.Patch(color="#008000", label="Sensitive")
+    healthy_patch = mpatches.Patch(color="#1f77b4", label="Healthy")
+    fig.legend(
+        handles=[resistant_patch, sensitive_patch, healthy_patch],
+        loc="upper right",
+        fontsize=12,
+        title="Group",
+    )
+
+    output_path = f"{folder_result}/output"
+    os.makedirs(output_path, exist_ok=True)
+    plt.savefig(
+        f"{output_path}/boxplot_expression_per_phenotype_three_groups.png",
+        dpi=300,
+        bbox_inches="tight",
+    )
+
+    plt.tight_layout()
+    plt.show()
+
+
+# def create_boxplot_three_groups(folder_result, res_data, sens_data, healthy_data, data_kruskal_significant):
+#     # Ensure all input dataframes have the same structure
+#     phenotypes = res_data.columns
+#     conditions = res_data.index
+
+#     n_phenotypes = len(phenotypes)
+#     fig, axes = plt.subplots(
+#         1, n_phenotypes, figsize=(10 * n_phenotypes, 8), sharey=True
+#     )
+
+#     for i, phenotype in enumerate(phenotypes):
+#         group_positions = []
+#         group_labels = []
+
+#         resistant_data = []
+#         sensitive_data = []
+#         healthy_data_list = []
+
+#         resistant_positions = []
+#         sensitive_positions = []
+#         healthy_positions = []
+
+#         tick = 1  # x-axis position tracker
+
+#         for condition in conditions:
+#             # --- Resistant ---
+#             res_value = res_data.loc[condition, phenotype]
+#             res_value_list = ast.literal_eval(res_value)
+#             resistant_data.append(res_value_list)
+#             resistant_positions.append(tick - 0.3)
+
+#             # --- Sensitive ---
+#             sens_value = sens_data.loc[condition, phenotype]
+#             sens_value_list = ast.literal_eval(sens_value)
+#             sensitive_data.append(sens_value_list)
+#             sensitive_positions.append(tick)
+
+#             # --- Healthy ---
+#             healthy_value = healthy_data.loc[condition, phenotype]
+#             healthy_value_list = ast.literal_eval(healthy_value)
+#             healthy_data_list.append(healthy_value_list)
+#             healthy_positions.append(tick + 0.3)
+
+#             group_positions.append(tick)
+#             group_labels.append(condition)
+#             tick += 1
+
+#         ax = axes[i] if n_phenotypes > 1 else axes
+
+#         # Plot all three categories
+#         box1 = ax.boxplot(resistant_data, positions=resistant_positions, patch_artist=True)
+#         box2 = ax.boxplot(sensitive_data, positions=sensitive_positions, patch_artist=True)
+#         box3 = ax.boxplot(healthy_data_list, positions=healthy_positions, patch_artist=True)
+
+#         # Color the boxes
+#         for patch in box1["boxes"]:
+#             patch.set_facecolor("#FF7F0E")  # Orange = Resistant
+#         for patch in box2["boxes"]:
+#             patch.set_facecolor("#008000")  # Green = Sensitive
+#         for patch in box3["boxes"]:
+#             patch.set_facecolor("#1f77b4")  # Blue = Healthy
+
+#         # Set x-ticks and labels
+#         ax.set_xticks(group_positions)
+#         ax.set_xticklabels(group_labels, rotation=45, ha="right")
+#         ax.set_xlabel("Condition")
+#         ax.set_title(phenotype)
+#         if i == 0:
+#             ax.set_ylabel("Expression Values")
+
+#     # Add legend
+#     resistant_patch = mpatches.Patch(color="#FF7F0E", label="Resistant")
+#     sensitive_patch = mpatches.Patch(color="#008000", label="Sensitive")
+#     healthy_patch = mpatches.Patch(color="#1f77b4", label="Healthy")
+#     fig.legend(
+#         handles=[resistant_patch, sensitive_patch, healthy_patch],
+#         loc="upper right",
+#         fontsize=12,
+#         title="Group",
+#     )
+
+#     output_path = f"{folder_result}/output"
+#     os.makedirs(output_path, exist_ok=True)
+#     plt.savefig(
+#         f"{output_path}/boxplot_expression_per_phenotype.png",
+#         dpi=300,
+#         bbox_inches="tight",
+#     )
+
+#     plt.tight_layout()
+#     plt.show()
+
+
 # patient_res_values = pd.read_csv(
 #     "../results/Refametinib_PAN_CANCER/resistant_results/only_gene_expression/single_input_on/phenotype_distribution_patients/combined_results.csv"
 # )
