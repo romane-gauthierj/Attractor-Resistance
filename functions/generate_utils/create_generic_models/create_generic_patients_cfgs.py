@@ -71,6 +71,7 @@ def create_generic_patients_cfgs_bnds(
     folder_models,
     resistant_patients_ids,
     sensitive_patients_ids,
+    top_healthy_ids,
     drug_interest,
     name_maps,
     type_models,
@@ -89,7 +90,7 @@ def create_generic_patients_cfgs_bnds(
 
     # --- Sensitive Patients ---
 
-    patients_categs = ["sensitive", "resistant"]
+    patients_categs = ["sensitive", "resistant", "healthy"]
     for patient_categ in patients_categs:
         cfg_output_dir = f"{folder_models}/{patient_categ}/pers_models"
         bnd_output_dir = f"{folder_models}/{patient_categ}/pers_models"
@@ -104,7 +105,9 @@ def create_generic_patients_cfgs_bnds(
 
         if patient_categ == "sensitive":
             patients_ids = sensitive_patients_ids
-        else:
+        elif patient_categ == "healthy":
+            patients_ids = top_healthy_ids
+        else:  # resistant patients
             patients_ids = resistant_patients_ids
 
         for patient_id in patients_ids:
@@ -122,4 +125,6 @@ def create_generic_patients_cfgs_bnds(
                 file.write(patient_cfg)
             with open(bnd_output_path, "w") as file:
                 file.write(patient_bnd)
-    print("All .cfg and .bnd files created for sensitive and resistant patients.")
+    print(
+        "All .cfg and .bnd files created for sensitive, resistant and healthy patients."
+    )

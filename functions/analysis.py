@@ -21,6 +21,7 @@ from functions.analysis_utils.results_MaBoSS_visualization.boxplot_phenotype imp
 
 from functions.analysis_utils.results_MaBoSS_visualization.create_phenotypes_patients_table import (
     plot_side_by_side_heatmaps,
+    plot_three_side_by_side_heatmaps,
 )
 
 from functions.analysis_utils.genes_intervention.pers_interventions import (
@@ -42,12 +43,13 @@ def downstream_analysis(
     drug_interest,
     top_resistant_ids,
     top_sensitive_ids,
+    top_healthy_ids,
     inputs_list,
     phenotype_interest,
     annotations_models,
     list_active_inputs=None,
 ):
-    patients_categ = ["resistant", "sensitive"]
+    patients_categ = ["healthy", "resistant", "sensitive"]
 
     for patient_categ in patients_categ:
         folder_models_temp = f"{folder_models}/{patient_categ}"
@@ -60,9 +62,12 @@ def downstream_analysis(
 
         os.makedirs(folder_results_temp, exist_ok=True)
 
-        top_patients_ids = (
-            top_resistant_ids if patient_categ == "resistant" else top_sensitive_ids
-        )
+        if patient_categ == "resistant":
+            top_patients_ids = top_resistant_ids
+        elif patient_categ == "sensitive":
+            top_patients_ids = top_sensitive_ids
+        elif patient_categ == "healthy":
+            top_patients_ids = top_healthy_ids
 
         # get cell line distribution for each group of patients
         get_cell_lines(
@@ -70,27 +75,27 @@ def downstream_analysis(
         )
 
         # # compute phenotype table for each patient (attractor distribution)
-        # for patient in top_patients_ids:
-        #     if list_active_inputs is None:
-        #         # run for only one input ON at a time
-        #         compute_phenotype_table(
-        #             folder_results_temp,
-        #             folder_models_temp_single_input,
-        #             patient,
-        #             inputs_list,
-        #             phenotype_interest,
-        #             drug_interest,
-        #         )
-        #     else:
-        #         compute_phenotype_table_custom_inputs(
-        #             folder_results_temp,
-        #             folder_models_temp,
-        #             patient,
-        #             inputs_list,
-        #             phenotype_interest,
-        #             drug_interest,
-        #             list_active_inputs,
-        #         )
+        for patient in top_patients_ids:
+            if list_active_inputs is None:
+                # run for only one input ON at a time
+                compute_phenotype_table(
+                    folder_results_temp,
+                    folder_models_temp_single_input,
+                    patient,
+                    inputs_list,
+                    phenotype_interest,
+                    drug_interest,
+                )
+            else:
+                compute_phenotype_table_custom_inputs(
+                    folder_results_temp,
+                    folder_models_temp,
+                    patient,
+                    inputs_list,
+                    phenotype_interest,
+                    drug_interest,
+                    list_active_inputs,
+                )
 
         # # Group data together for each group of patient
         # top_patients_ids only to have the prefix
@@ -103,6 +108,7 @@ def downstream_analysis(
 
     folder_result_resistant = f"{folder_results_temp}/resistant"
     folder_result_sensitive = f"{folder_results_temp}/sensitive"
+    # folder_result_healthy = f"{folder_results_temp}/healthy"
 
     df_res_combined = pd.read_csv(
         f"{folder_result_resistant}/combined_results.csv", index_col=0
@@ -148,6 +154,7 @@ def downstream_analysis(
 
     folder_result_resistant = f"{folder_results_temp}/resistant"
     folder_result_sensitive = f"{folder_results_temp}/sensitive"
+    folder_result_healthy = f"{folder_results_temp}/healthy"
 
     df_res_combined = pd.read_csv(
         f"{folder_result_resistant}/combined_results.csv", index_col=0
@@ -155,13 +162,28 @@ def downstream_analysis(
     df_sens_combined = pd.read_csv(
         f"{folder_result_sensitive}/combined_results.csv", index_col=0
     )
+    df_healthy_combined = pd.read_csv(
+        f"{folder_result_healthy}/combined_results.csv", index_col=0
+    )
 
     patient_resistant_mean = compute_mean_phenotype_values(df_res_combined)
     patient_sensitive_mean = compute_mean_phenotype_values(df_sens_combined)
+    patient_healthy_mean = compute_mean_phenotype_values(df_healthy_combined)
 
     # Create a heatmap of phenotype distribution under diff growth condition between resistant and sensitive
-    plot_side_by_side_heatmaps(
-        patient_resistant_mean, patient_sensitive_mean, folder_results_temp
+
+    # resistant and sensitive patients
+    # plot_side_by_side_heatmaps(
+    #     patient_resistant_mean, patient_sensitive_mean, folder_results_temp
+    # )
+
+    # resistant, sensitive and healthy patients
+    plot_three_side_by_side_heatmaps(
+        patient_resistant_mean,
+        patient_sensitive_mean,
+        patient_healthy_mean,
+        folder_results_temp,
+        labels=["Resistant", "Sensitive", "Healthy"],
     )
 
     rna_seq_data_filtered = pd.read_csv(
@@ -199,3 +221,5 @@ def downstream_analysis(
     )
 
     return nb_patients_required
+
+    # TODO - add kruskal test for healthy, resistant and sensitive patients

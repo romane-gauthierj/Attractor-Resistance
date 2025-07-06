@@ -1147,5 +1147,23 @@ mechanisms of resistance of akt inhibitor through egfr pathway ??
 
 
 July 5 
-finished: check the distribution of samples tumor vs metastasis related to the attractors
-to do : plot the attractor distribution of the control samples, check what is the migration phenotype
+finished: added the distribution of samples tumor vs metastasis related to the attractors, added models of healthy samples 
+
+
+
+
+TO DO: 
+do the stats test (kruskal test?) bw the three resistant sensitive and healthy-> do a boxplot ??  
+check proteins healthy models
+check what is the migration phenotype 
+also simulate target knock out of healthy patients??
+
+check why with proteins the healthy patients get more invasion, should we also simulate ko of the drug target in healthy patients?
+-> write and collect all the outputs/ results
+
+
+July 6
+to do: do stats test on the three plots (healthy vs sensitive; healthy vs resistant)
+        check the third pipeline - simulate gene knockout 
+        collect the results and start comparing them, check stats test work as expected
+        keep writing 

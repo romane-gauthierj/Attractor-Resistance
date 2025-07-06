@@ -56,18 +56,16 @@ def pre_process_re(
     tissue_remove=None,
     node_to_remove=None,
 ):
-    top_resistant_ids, top_sensitive_ids, top_healthy_ids, drug_data_filtered = (
-        get_patients(
-            number_patients,
-            drug_data,
-            annotations_models,
-            drug_interest,
-            tissue_interest=None,
-            tissue_remove=tissue_remove,
-        )
+    top_resistant_ids, top_sensitive_ids, healthy_ids = get_patients(
+        number_patients,
+        drug_data,
+        annotations_models,
+        drug_interest,
+        tissue_interest=None,
+        tissue_remove=tissue_remove,
     )
 
-    patients_ids = top_resistant_ids + top_sensitive_ids
+    patients_ids = top_resistant_ids + top_sensitive_ids + healthy_ids
 
     # preprocess montagud nodes
     montagud_nodes = process_montagud_nodes(
@@ -94,6 +92,8 @@ def pre_process_re(
         top_sensitive_ids = list(
             set(table_rna_seq_patients.index) & set(top_sensitive_ids)
         )
+        top_healthy_ids = list(set(table_rna_seq_patients.index) & set(healthy_ids))
+
     else:
         # if proteins models
         top_resistant_ids = list(
@@ -102,8 +102,11 @@ def pre_process_re(
         top_sensitive_ids = list(
             set(table_proteins_patients.index) & set(top_sensitive_ids)
         )
+        top_healthy_ids = list(set(table_proteins_patients.index) & set(healthy_ids))
 
-    patients_ids = top_resistant_ids + top_sensitive_ids
+    patients_ids = top_resistant_ids + top_sensitive_ids + top_healthy_ids
+
+    os.makedirs(f"analysis/{drug_interest}", exist_ok=True)
 
     # Save IDs to txt files
     with open("analysis/{}/top_resistant_ids.txt".format(drug_interest), "w") as f:
@@ -111,6 +114,9 @@ def pre_process_re(
             f.write(f"{pid}\n")
     with open("analysis/{}/top_sensitive_ids.txt".format(drug_interest), "w") as f:
         for pid in top_sensitive_ids:
+            f.write(f"{pid}\n")
+    with open("analysis/{}/top_healthy_ids.txt".format(drug_interest), "w") as f:
+        for pid in top_healthy_ids:
             f.write(f"{pid}\n")
 
     # preprocess cnv data
@@ -136,6 +142,7 @@ def generate_models_re(
     folder_models,
     top_resistant_ids,
     top_sensitive_ids,
+    top_healthy_ids,
     drug_interest,
     drug_targets,
     phenotype_interest,
@@ -148,8 +155,8 @@ def generate_models_re(
     df_melted_proteins,
     table_proteins_patients,
 ):
-    patients_categ = ["resistant", "sensitive"]
-    patients_ids = top_resistant_ids + top_sensitive_ids
+    patients_categ = ["resistant", "sensitive", "healthy"]
+    patients_ids = top_resistant_ids + top_sensitive_ids + top_healthy_ids
 
     # create generic models cfgs and bnds
     create_generic_patients_cfgs_bnds(
@@ -157,6 +164,7 @@ def generate_models_re(
         folder_models,
         top_resistant_ids,
         top_sensitive_ids,
+        top_healthy_ids,
         drug_interest,
         name_maps,
         type_models,
@@ -164,6 +172,7 @@ def generate_models_re(
 
     models_folder_res = f"{folder_models}/resistant/pers_models"
     models_folder_sens = f"{folder_models}/sensitive/pers_models"
+    models_folder_healthy = f"{folder_models}/healthy/pers_models"
 
     # simulate drug target
     tailor_bnd_genes_intervention(
@@ -173,15 +182,22 @@ def generate_models_re(
     tailor_bnd_genes_intervention(
         drug_targets, top_sensitive_ids, models_folder_sens, drug_interest
     )
+    tailor_bnd_genes_intervention(
+        drug_targets, top_healthy_ids, models_folder_healthy, drug_interest
+    )
 
     for patient_categ in patients_categ:
         folder_models_pheno = f"{folder_models}/{patient_categ}/pers_models"
         generic_models_update_phenotypes(phenotype_interest, folder_models_pheno)
 
         folder_models_categ = f"{folder_models}/{patient_categ}/pers_models"
-        patients_ids_categ = (
-            top_sensitive_ids if patient_categ == "sensitive" else top_resistant_ids
-        )
+
+        if patient_categ == "sensitive":
+            patients_ids_categ = top_sensitive_ids
+        elif patient_categ == "resistant":
+            patients_ids_categ = top_resistant_ids
+        else:  # "healthy"
+            patients_ids_categ = top_healthy_ids
 
         # personalization of the patients models according to the type of models
         if type_models == "genes_models":
@@ -198,7 +214,7 @@ def generate_models_re(
                 df_melted_proteins,
                 montagud_nodes,
                 folder_models_categ,
-                patients_ids,
+                patients_ids_categ,
                 table_proteins_patients,
                 drug_interest,
             )
