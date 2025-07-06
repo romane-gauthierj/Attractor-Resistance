@@ -4,70 +4,103 @@ import numpy as np
 from scipy.stats import shapiro, ttest_ind, mannwhitneyu, kruskal
 import ast
 import os
+from statsmodels.stats.multitest import multipletests
 from statsmodels.stats.power import TTestIndPower
 
 
-def compute_kruskal_test_means_validation(data_groups):
-    results = []
+def compute_kruskal_test_means(group_files, folder_results, group_categories):
+    # Load all groups into dict of DataFrames
+    group_dfs = {}
+    for group, path in group_files.items():
+        df = pd.read_csv(path, index_col=0)
+        df = df.applymap(ast.literal_eval)
+        group_dfs[group] = df
 
-    for (input_name, phenotype), group_vals in data_groups.items():
-        groupA = group_vals["GroupA"]
-        groupB = group_vals["GroupB"]
+    # Get all inputs and phenotypes from one dataframe (assuming all share the same shape)
+    inputs = group_dfs[group_categories[0]].index
+    phenotypes = group_dfs[group_categories[0]].columns
+    # Prepare result storage
+    kruskal_results = pd.DataFrame(index=inputs, columns=phenotypes)
 
-        if len(groupA) > 0 and len(groupB) > 0:
-            stat, p = kruskal(groupA, groupB)
-            results.append(
-                {
-                    "Input": input_name,
-                    "Phenotype": phenotype,
-                    "Kruskal_Stat": stat,
-                    "p_value": p,
-                    "Significant": p <= 0.05,
-                }
-            )
+    # Run Kruskal-Wallis test for each (input, phenotype)
+    for input_name in inputs:
+        for phenotype in phenotypes:
+            data_low = group_dfs[group_categories[0]].at[input_name, phenotype]
+            data_medium = group_dfs[group_categories[1]].at[input_name, phenotype]
+            data_high = group_dfs[group_categories[2]].at[input_name, phenotype]
 
-        df_results = pd.DataFrame(results)
-        significant_results = df_results[df_results["Significant"] == True]
-    return significant_results
-
-
-def compute_kruskal(inputs_list, phenotype_interest, df_res_combined, df_sens_combined):
-    kruskal_results = pd.DataFrame(index=inputs_list, columns=phenotype_interest)
-
-    for input_name in inputs_list:
-        for phenotype in phenotype_interest:
-            group1 = df_res_combined.at[input_name, phenotype]
-            group2 = df_sens_combined.at[input_name, phenotype]
-            group1 = ast.literal_eval(group1)
-            group2 = ast.literal_eval(group2)
-
-            if group1 and group2:
-                stat, pvalue = kruskal(group1, group2)
+            # Run the Kruskal-Wallis test only if all groups have data
+            if data_low and data_medium and data_high:
+                stat, pvalue = kruskal(data_low, data_medium, data_high)
                 kruskal_results.at[input_name, phenotype] = pvalue
             else:
                 kruskal_results.at[input_name, phenotype] = None
 
-    significant_kruskal_results = kruskal_results.apply(
-        lambda x: x if (x is not None and float(x) < 0.05) else np.nan
-    )
-    return significant_kruskal_results
+    pvals = kruskal_results.values.flatten()
+    pvals = [p for p in pvals if p is not None]
+
+    # Adjust using BH method
+    _, pvals_adj, _, _ = multipletests(pvals, alpha=0.05, method="fdr_bh")
+
+    adjusted_df = kruskal_results.copy()
+
+    # Fill adjusted p-values sequentially where there was a non-None p-value
+    idx = 0
+    for i in adjusted_df.index:
+        for j in adjusted_df.columns:
+            if adjusted_df.at[i, j] is not None:
+                adjusted_df.at[i, j] = pvals_adj[idx]
+                idx += 1
+    # Save to CSV
+    folder_results_adj_df = os.path.join(folder_results, "output")
+    os.makedirs(folder_results_adj_df, exist_ok=True)
+
+    # adjusted_df.to_csv(
+    #     os.path.join(folder_results_adj_df, "kruskal_pvalues_adjusted.csv")
+    # )
+
+    return adjusted_df
+
+
+# def compute_kruskal_test_means_validation(data_groups):
+#     results = []
+
+#     for (input_name, phenotype), group_vals in data_groups.items():
+#         groupA = group_vals["GroupA"]
+#         groupB = group_vals["GroupB"]
+
+#         if len(groupA) > 0 and len(groupB) > 0:
+#             stat, p = kruskal(groupA, groupB)
+#             results.append(
+#                 {
+#                     "Input": input_name,
+#                     "Phenotype": phenotype,
+#                     "Kruskal_Stat": stat,
+#                     "p_value": p,
+#                     "Significant": p <= 0.05,
+#                 }
+#             )
+
+#         df_results = pd.DataFrame(results)
+#         significant_results = df_results[df_results["Significant"] == True]
+#     return significant_results
 
 
 # compute normality (Shapiro-Wilk test p-value ≤ 0.05 → Reject H₀ → Data is not normally distributed.)
 def compute_mannwhitneyu_test_means(
     folder,
-    patient_res_stats_values,
-    patient_sens_stats_values,
+    group_1_stats_values,
+    group_2_stats_values,
     drug_interest,
     gene=None,
 ):
-    patient_res_stats_values.index.name = "Condition"
-    patient_sens_stats_values.index.name = "Condition"
+    group_1_stats_values.index.name = "Condition"
+    group_2_stats_values.index.name = "Condition"
 
-    phenotypes_list_res = patient_res_stats_values.columns
-    conditions_list_res = patient_res_stats_values.index
-    phenotypes_list_sens = patient_sens_stats_values.columns
-    conditions_list_sens = patient_sens_stats_values.index
+    phenotypes_list_res = group_1_stats_values.columns
+    conditions_list_res = group_1_stats_values.index
+    phenotypes_list_sens = group_2_stats_values.columns
+    conditions_list_sens = group_2_stats_values.index
 
     p_values_records_mannwhitneyu_two_sides = []
     p_values_records_mannwhitneyu_less = []
@@ -77,10 +110,8 @@ def compute_mannwhitneyu_test_means(
         if phenotype in phenotypes_list_sens:
             for condition in conditions_list_res:
                 if condition in conditions_list_sens:
-                    stats_data_res = patient_res_stats_values.loc[condition, phenotype]
-                    stats_data_sens = patient_sens_stats_values.loc[
-                        condition, phenotype
-                    ]
+                    stats_data_res = group_1_stats_values.loc[condition, phenotype]
+                    stats_data_sens = group_2_stats_values.loc[condition, phenotype]
 
                     stats_data_res = ast.literal_eval(stats_data_res)
                     stats_data_sens = ast.literal_eval(stats_data_sens)
@@ -199,22 +230,21 @@ def compute_mannwhitneyu_test_means(
         conditions, choices, default=""
     )
 
-    p_values_df_mannwhitneyu_two_sides.to_csv(
-        f"{folder}/p_values_df_mannwhitneyu_two_sides_{drug_interest}.csv",
-        index=True,
-    )
-    p_values_df_mannwhitneyu_less_sign.to_csv(
-        f"{folder}/p_values_df_mannwhitneyu_less_sign_{drug_interest}.csv",
-        index=True,
-    )
+    # p_values_df_mannwhitneyu_two_sides.to_csv(
+    #     f"{folder}/p_values_df_mannwhitneyu_two_sides_{drug_interest}.csv",
+    #     index=True,
+    # )
+    # p_values_df_mannwhitneyu_less_sign.to_csv(
+    #     f"{folder}/p_values_df_mannwhitneyu_less_sign_{drug_interest}.csv",
+    #     index=True,
+    # )
 
     filename = f"{folder}/p_values_df_mannwhitneyu_greater_sign_{drug_interest}.csv"
     if gene is not None:
         filename = (
             f"{folder}/{gene}_p_values_df_mannwhitneyu_greater_sign_{drug_interest}.csv"
         )
-
-    p_values_df_mannwhitneyu_greater_sign.to_csv(filename, index=True)
+    return p_values_df_mannwhitneyu_greater_sign
 
 
 def compute_power_calculation(df_res_combined, df_sens_combined):

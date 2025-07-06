@@ -36,6 +36,8 @@ from functions.analysis_utils.gene_enrichment.genes_signature import (
 )
 from functions.analysis_utils.identify_cell_lines import get_cell_lines
 
+from functions.analysis_utils.stats.stats_proba import compute_kruskal_test_means
+
 
 def downstream_analysis(
     folder_result,
@@ -44,12 +46,13 @@ def downstream_analysis(
     top_resistant_ids,
     top_sensitive_ids,
     top_healthy_ids,
+    patients_categ,
     inputs_list,
     phenotype_interest,
     annotations_models,
     list_active_inputs=None,
 ):
-    patients_categ = ["healthy", "resistant", "sensitive"]
+    # patients_categ = ["resistant", "sensitive", "healthy"]
 
     for patient_categ in patients_categ:
         folder_models_temp = f"{folder_models}/{patient_categ}"
@@ -75,27 +78,27 @@ def downstream_analysis(
         )
 
         # # compute phenotype table for each patient (attractor distribution)
-        for patient in top_patients_ids:
-            if list_active_inputs is None:
-                # run for only one input ON at a time
-                compute_phenotype_table(
-                    folder_results_temp,
-                    folder_models_temp_single_input,
-                    patient,
-                    inputs_list,
-                    phenotype_interest,
-                    drug_interest,
-                )
-            else:
-                compute_phenotype_table_custom_inputs(
-                    folder_results_temp,
-                    folder_models_temp,
-                    patient,
-                    inputs_list,
-                    phenotype_interest,
-                    drug_interest,
-                    list_active_inputs,
-                )
+        # for patient in top_patients_ids:
+        #     if list_active_inputs is None:
+        #         # run for only one input ON at a time
+        #         compute_phenotype_table(
+        #             folder_results_temp,
+        #             folder_models_temp_single_input,
+        #             patient,
+        #             inputs_list,
+        #             phenotype_interest,
+        #             drug_interest,
+        #         )
+        #     else:
+        #         compute_phenotype_table_custom_inputs(
+        #             folder_results_temp,
+        #             folder_models_temp,
+        #             patient,
+        #             inputs_list,
+        #             phenotype_interest,
+        #             drug_interest,
+        #             list_active_inputs,
+        #         )
 
         # # Group data together for each group of patient
         # top_patients_ids only to have the prefix
@@ -108,13 +111,16 @@ def downstream_analysis(
 
     folder_result_resistant = f"{folder_results_temp}/resistant"
     folder_result_sensitive = f"{folder_results_temp}/sensitive"
-    # folder_result_healthy = f"{folder_results_temp}/healthy"
+    folder_result_healthy = f"{folder_results_temp}/healthy"
 
     df_res_combined = pd.read_csv(
         f"{folder_result_resistant}/combined_results.csv", index_col=0
     )  # index: inputs, columns: phenotypes
     df_sens_combined = pd.read_csv(
         f"{folder_result_sensitive}/combined_results.csv", index_col=0
+    )
+    df_healthy_combined = pd.read_csv(
+        f"{folder_result_healthy}/combined_results.csv", index_col=0
     )
 
     # Compute statistics for each condition-phenotype pair
@@ -183,7 +189,7 @@ def downstream_analysis(
         patient_sensitive_mean,
         patient_healthy_mean,
         folder_results_temp,
-        labels=["Resistant", "Sensitive", "Healthy"],
+        labels=patients_categ,
     )
 
     rna_seq_data_filtered = pd.read_csv(
@@ -220,6 +226,70 @@ def downstream_analysis(
         annotations_models,
     )
 
-    return nb_patients_required
+    # stats test for healthy vs resistant and sensitive patients
+    p_values_df_mannwhitneyu_greater_res_sens = compute_mannwhitneyu_test_means(
+        folder_result_temp_stats,
+        df_res_combined,
+        df_sens_combined,
+        drug_interest,
+        gene=None,
+    )
 
-    # TODO - add kruskal test for healthy, resistant and sensitive patients
+    # stats test for healthy vs resistant and sensitive patients
+    p_values_df_mannwhitneyu_greater_sens_healthy = compute_mannwhitneyu_test_means(
+        folder_result_temp_stats,
+        df_sens_combined,
+        df_healthy_combined,
+        drug_interest,
+        gene=None,
+    )
+
+    p_values_df_mannwhitneyu_greater_res_healthy = compute_mannwhitneyu_test_means(
+        folder_result_temp_stats,
+        df_res_combined,
+        df_healthy_combined,
+        drug_interest,
+        gene=None,
+    )
+
+    p_values_df_mannwhitneyu_greater_res_sens.to_csv(
+        f"{folder_result_temp_stats}/p_values_df_mannwhitneyu_greater_sign_res_sens_{drug_interest}.csv",
+        index=True,
+    )
+
+    p_values_df_mannwhitneyu_greater_sens_healthy.to_csv(
+        f"{folder_result_temp_stats}/p_values_df_mannwhitneyu_greater_sign_sens_healthy_{drug_interest}.csv",
+        index=True,
+    )
+
+    p_values_df_mannwhitneyu_greater_res_healthy.to_csv(
+        f"{folder_result_temp_stats}/p_values_df_mannwhitneyu_greater_sign_res_healthy_{drug_interest}.csv",
+        index=True,
+    )
+
+    # compute kruskal test for healthy, resistant and sensitive patients
+    group_files = {
+        patients_categ[0]: os.path.join(
+            folder_result_resistant, "combined_results.csv"
+        ),
+        patients_categ[1]: os.path.join(
+            folder_result_sensitive, "combined_results.csv"
+        ),
+        patients_categ[2]: os.path.join(folder_result_healthy, "combined_results.csv"),
+    }
+
+    kruskal_adjusted_df = compute_kruskal_test_means(
+        group_files, folder_result_temp_stats, patients_categ
+    )
+    kruskal_adjusted_df.to_csv(
+        f"{folder_result_temp_stats}/kruskal_stats_healthy_res_sens_{drug_interest}.csv",
+        index=True,
+    )
+
+    return (
+        nb_patients_required,
+        p_values_df_mannwhitneyu_greater_sens_healthy,
+        p_values_df_mannwhitneyu_greater_res_healthy,
+        p_values_df_mannwhitneyu_greater_res_sens,
+        kruskal_adjusted_df,
+    )

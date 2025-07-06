@@ -33,7 +33,6 @@ def tailor_bnd_genes_intervention(
         patient_id = os.path.splitext(os.path.basename(bnd_file))[0].replace(
             f"_{drug_interest}", ""
         )
-        print("patient_id:", patient_id)
 
         with open(bnd_file, "r") as file:
             content = file.read()

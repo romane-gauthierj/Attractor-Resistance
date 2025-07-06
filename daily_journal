@@ -1162,8 +1162,13 @@ check why with proteins the healthy patients get more invasion, should we also s
 -> write and collect all the outputs/ results
 
 
+
 July 6
-to do: do stats test on the three plots (healthy vs sensitive; healthy vs resistant)
+finished: stats test on the three plots (healthy vs sensitive; healthy vs resistant)
+to do: 
         check the third pipeline - simulate gene knockout 
         collect the results and start comparing them, check stats test work as expected
+        try to see if there are some genes that make sense to be highly expressed in the resistant group
+    
+        
         keep writing 
