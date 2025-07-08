@@ -1164,7 +1164,12 @@ check why with proteins the healthy patients get more invasion, should we also s
 
 
 July 6
-finished: stats test on the three plots (healthy vs sensitive; healthy vs resistant), added the protein and genes together personalization
+finished: stats test on the three plots (healthy vs sensitive; healthy vs resistant), added the protein and genes together personalization, - check the third pipeline - simulate gene knockout, check if there are some genes that make sense to be highly expressed in the resistant group
+
+
+what brings the blood tissue as other data??
+look at models but maybe some share diff tissues??
+
 
 
 
@@ -1174,8 +1179,6 @@ July 7
 
 to do:
 - try to increase the max time to see if we can get migration phenotype
-- check the third pipeline - simulate gene knockout 
--  try to see if there are some genes that make sense to be highly expressed in the resistant group
 
 
 
@@ -1185,3 +1188,87 @@ try these following combinations to induce migration
 2. EGF + HYPOXIA + TGFB
 try to also include the one with significant bw res and healthy 
 check all stats p value are adjusted
+
+check that if remove node to remove -> does not change anything
+same as tissue to remove....
+
+
+
+
+TODO !!!
+drug_interest = 'AZD7762'
+drug_targets = ['CHK1', 'CHK2']
+-> try to run the models and results by removing the not interested tissue and nodes
+
+
+to do: pipeline 3 -> check why does not work the results, due to blood tissue???
+
+check what happens if include the node to remove
+check if get same results if keep blood tissue but with the gene intervention
+
+why not same results if remove blood tissue???
+
+
+check why including blood tissue to block egfr
+or only include blood tissue?
+
+
+
+
+
+try to rerun with blood tissue and if get the old results
+and try to increase to 35 patients or more ?
+
+
+
+
+
+maybe also depends on nb of patients to have significatif results??
+
+
+
+
+
+
+-> make sure not biaised to tissue distribution
+
+
+
+try running again with the drugs by excluding the blood tissue 
+
+then try to block EGFR as started yesterday
+
+and re run when included blood and check not related to tissues -> 
+
+
+
+
+
+
+
+
+worse case -> just look at one tissue
+try remove prostate nodes specific from the boolean networks
+
+
+
+
+try only with blood tissue
+
+
+
+
+
+
+observations: in the initial groups a lot of blood tissue in the sensitive group
+
+
+in the big loop -> save the stats test and nb of patients required; and change the ratio of each tissue (correct but do it for both categories)
+compute the nb of each tissue in each group 
+
+simulate E2F1 KO for refametinib
+
+
+
+
+146 min to run models. and results

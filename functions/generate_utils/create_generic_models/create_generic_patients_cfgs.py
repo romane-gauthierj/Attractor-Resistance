@@ -14,6 +14,7 @@ def create_generic_patients_cfg_bnd_validation(
     patients_groups,
     tissue,
     name_maps,
+    nodes_to_remove,
 ):
     """
     Create personalized .cfg and .bnd files for a list of patient IDs based on generic templates.
@@ -28,8 +29,8 @@ def create_generic_patients_cfg_bnd_validation(
     """
 
     # --- Pre process the generic model ---
-    replace_node_names_in_file(cfg_template_path, name_maps)
-    replace_node_names_in_file(bnd_template_path, name_maps)
+    replace_node_names_in_file(cfg_template_path, name_maps, nodes_to_remove)
+    replace_node_names_in_file(bnd_template_path, name_maps, nodes_to_remove)
 
     # Ensure output directory exists
     os.makedirs(folder_pers_models, exist_ok=True)
@@ -75,6 +76,7 @@ def create_generic_patients_cfgs_bnds(
     drug_interest,
     name_maps,
     type_models,
+    nodes_to_remove,
 ):
     # --- Templates ---
     cfg_template_path = (
@@ -85,8 +87,8 @@ def create_generic_patients_cfgs_bnds(
     )
 
     # --- Pre process the generic model (proteins or genes names) ---
-    replace_node_names_in_file(cfg_template_path, name_maps)
-    replace_node_names_in_file(bnd_template_path, name_maps)
+    replace_node_names_in_file(cfg_template_path, name_maps, nodes_to_remove)
+    replace_node_names_in_file(bnd_template_path, name_maps, nodes_to_remove)
 
     # --- Sensitive Patients ---
 

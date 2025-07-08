@@ -54,14 +54,14 @@ def pre_process_re(
     synonyms_maps,
     tissue_interest=None,
     tissue_remove=None,
-    node_to_remove=None,
+    nodes_to_remove=None,
 ):
     top_resistant_ids, top_sensitive_ids, healthy_ids = get_patients(
         number_patients,
         drug_data,
         annotations_models,
         drug_interest,
-        tissue_interest=None,
+        tissue_interest=tissue_interest,
         tissue_remove=tissue_remove,
     )
 
@@ -69,7 +69,7 @@ def pre_process_re(
 
     # preprocess montagud nodes
     montagud_nodes = process_montagud_nodes(
-        montagud_data, name_montagud_maps, nodes_to_add
+        montagud_data, name_montagud_maps, nodes_to_add, nodes_to_remove
     )
 
     # preprocess rna seq data
@@ -84,6 +84,8 @@ def pre_process_re(
     )
 
     table_proteins_patients = create_table_proteins_patients(df_melted_protein)
+
+    print("preprocessed  proteins")
 
     if type_models == "genes_models":
         top_resistant_ids = list(
@@ -175,6 +177,8 @@ def generate_models_re(
     type_models,
     df_melted_proteins,
     table_proteins_patients,
+    nodes_to_remove,
+    intervention_gene=None,
 ):
     patients_categ = ["resistant", "sensitive", "healthy"]
     patients_ids = top_resistant_ids + top_sensitive_ids + top_healthy_ids
@@ -189,6 +193,7 @@ def generate_models_re(
         drug_interest,
         name_maps,
         type_models,
+        nodes_to_remove,
     )
 
     models_folder_res = f"{folder_models}/resistant/pers_models"
@@ -206,6 +211,27 @@ def generate_models_re(
     tailor_bnd_genes_intervention(
         drug_targets, top_healthy_ids, models_folder_healthy, drug_interest
     )
+
+    # simulate gene intervention if provided
+    if intervention_gene is not None:
+        tailor_bnd_genes_intervention(
+            intervention_gene,
+            top_resistant_ids,
+            models_folder_res,
+            drug_interest,
+        )
+        tailor_bnd_genes_intervention(
+            intervention_gene,
+            top_sensitive_ids,
+            models_folder_sens,
+            drug_interest,
+        )
+        tailor_bnd_genes_intervention(
+            intervention_gene,
+            top_healthy_ids,
+            models_folder_healthy,
+            drug_interest,
+        )
 
     for patient_categ in patients_categ:
         folder_models_pheno = f"{folder_models}/{patient_categ}/pers_models"

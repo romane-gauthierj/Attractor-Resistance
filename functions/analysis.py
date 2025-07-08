@@ -51,6 +51,7 @@ def downstream_analysis(
     inputs_list,
     phenotype_interest,
     annotations_models,
+    intervention_gene=None,
     list_active_inputs=None,
 ):
     # patients_categ = ["resistant", "sensitive", "healthy"]
@@ -79,27 +80,27 @@ def downstream_analysis(
         )
 
         # # compute phenotype table for each patient (attractor distribution)
-        # for patient in top_patients_ids:
-        #     if list_active_inputs is None:
-        #         # run for only one input ON at a time
-        #         compute_phenotype_table(
-        #             folder_results_temp,
-        #             folder_models_temp_single_input,
-        #             patient,
-        #             inputs_list,
-        #             phenotype_interest,
-        #             drug_interest,
-        #         )
-        #     else:
-        #         compute_phenotype_table_custom_inputs(
-        #             folder_results_temp,
-        #             folder_models_temp,
-        #             patient,
-        #             inputs_list,
-        #             phenotype_interest,
-        #             drug_interest,
-        #             list_active_inputs,
-        #         )
+        for patient in top_patients_ids:
+            if list_active_inputs is None:
+                # run for only one input ON at a time
+                compute_phenotype_table(
+                    folder_results_temp,
+                    folder_models_temp_single_input,
+                    patient,
+                    inputs_list,
+                    phenotype_interest,
+                    drug_interest,
+                )
+            else:
+                compute_phenotype_table_custom_inputs(
+                    folder_results_temp,
+                    folder_models_temp,
+                    patient,
+                    inputs_list,
+                    phenotype_interest,
+                    drug_interest,
+                    list_active_inputs,
+                )
 
         # # Group data together for each group of patient
         # top_patients_ids only to have the prefix
@@ -129,7 +130,8 @@ def downstream_analysis(
     if not os.path.exists(folder_result_temp_stats):
         os.makedirs(folder_result_temp_stats)
 
-    compute_mannwhitneyu_test_means(
+    # # two sides
+    p_values_df_res_sens = compute_mannwhitneyu_test_means(
         folder_result_temp_stats,
         df_res_combined,
         df_sens_combined,
@@ -137,40 +139,7 @@ def downstream_analysis(
         gene=None,
     )
 
-    # compute kruskal test for healthy, resistant and sensitive patients
-    group_files = {
-        patients_categ[0]: os.path.join(
-            folder_result_resistant, "combined_results.csv"
-        ),
-        patients_categ[1]: os.path.join(
-            folder_result_sensitive, "combined_results.csv"
-        ),
-        patients_categ[2]: os.path.join(folder_result_healthy, "combined_results.csv"),
-    }
-
-    kruskal_adjusted_df, significant_df = compute_kruskal_test_means(
-        group_files, folder_result_temp_stats, patients_categ
-    )
-
-    # stats test for healthy vs resistant and sensitive patients
-    p_values_df_mannwhitneyu_greater_res_sens = compute_mannwhitneyu_test_means(
-        folder_result_temp_stats,
-        df_res_combined,
-        df_sens_combined,
-        drug_interest,
-        gene=None,
-    )
-
-    # stats test for healthy vs resistant and sensitive patients
-    p_values_df_mannwhitneyu_greater_sens_healthy = compute_mannwhitneyu_test_means(
-        folder_result_temp_stats,
-        df_sens_combined,
-        df_healthy_combined,
-        drug_interest,
-        gene=None,
-    )
-
-    p_values_df_mannwhitneyu_greater_res_healthy = compute_mannwhitneyu_test_means(
+    p_values_df_res_healthy = compute_mannwhitneyu_test_means(
         folder_result_temp_stats,
         df_res_combined,
         df_healthy_combined,
@@ -178,62 +147,44 @@ def downstream_analysis(
         gene=None,
     )
 
-    #   # Save the results to CSV files
-    p_values_df_mannwhitneyu_greater_res_sens.to_csv(
-        f"{folder_result_temp_stats}/p_values_df_mannwhitneyu_greater_sign_res_sens_{drug_interest}.csv",
-        index=True,
-    )
-    p_values_df_mannwhitneyu_greater_sens_healthy.to_csv(
-        f"{folder_result_temp_stats}/p_values_df_mannwhitneyu_greater_sign_sens_healthy_{drug_interest}.csv",
-        index=True,
-    )
-    p_values_df_mannwhitneyu_greater_res_healthy.to_csv(
-        f"{folder_result_temp_stats}/p_values_df_mannwhitneyu_greater_sign_res_healthy_{drug_interest}.csv",
-        index=True,
-    )
-    kruskal_adjusted_df.to_csv(
-        f"{folder_result_temp_stats}/kruskal_stats_healthy_res_sens_{drug_interest}.csv",
-        index=True,
-    )
-    significant_df.to_csv(
-        f"{folder_result_temp_stats}/kruskal_significant_{drug_interest}.csv",
-        index=True,
-    )
+    # # two sides p test
+    if p_values_df_res_sens is not None:
+        p_values_df_res_sens.to_csv(
+            f"{folder_result_temp_stats}/p_values_df_mannwhitneyu_res_sens_{drug_interest}.csv",
+            index=True,
+        )
+        data_res_sens_stats_sign = pd.read_csv(
+            f"{folder_result_temp_stats}/p_values_df_mannwhitneyu_res_sens_{drug_interest}.csv",
+            index_col=0,
+        )
+        create_boxplot(
+            folder_results_temp,
+            df_res_combined,
+            df_sens_combined,
+            data_res_sens_stats_sign,
+        )
 
-    data_less_sign = pd.read_csv(
-        f"{folder_result_temp_stats}/p_values_df_mannwhitneyu_less_sign_{drug_interest}.csv",
-        index_col=0,
-    )
+    else:
+        print("Skipping boxplot for res_sensitive due to no p-values.")
 
-    data_greater_sign = pd.read_csv(
-        f"{folder_result_temp_stats}/p_values_df_mannwhitneyu_greater_sign_res_sens_{drug_interest}.csv",
-        index_col=0,
-    )
-
-    data_two_sides_sign = pd.read_csv(
-        f"{folder_result_temp_stats}/p_values_df_mannwhitneyu_two_sides_{drug_interest}.csv",
-        index_col=0,
-    )
-    data_kruskal_significant = pd.read_csv(
-        f"{folder_result_temp_stats}/kruskal_significant_{drug_interest}.csv",
-        index_col=0,
-    )
-
-    combined_df = pd.concat(
-        [data_less_sign, data_greater_sign, data_two_sides_sign], axis=0
-    )
-
-    # Create boxplot for each phenotype
-    create_boxplot(folder_results_temp, df_res_combined, df_sens_combined, combined_df)
-
-    # test
-    create_boxplot_three_groups(
-        folder_results_temp,
-        df_res_combined,
-        df_sens_combined,
-        df_healthy_combined,
-        data_kruskal_significant,
-    )
+    if p_values_df_res_healthy is not None:
+        p_values_df_res_healthy.to_csv(
+            f"{folder_result_temp_stats}/p_values_df_mannwhitneyu_res_healthy_{drug_interest}.csv",
+            index=True,
+        )
+        data_res_healthy = pd.read_csv(
+            f"{folder_result_temp_stats}/p_values_df_mannwhitneyu_res_healthy_{drug_interest}.csv",
+            index_col=0,
+        )
+        create_boxplot_three_groups(
+            folder_results_temp,
+            df_res_combined,
+            df_sens_combined,
+            df_healthy_combined,
+            data_res_healthy,
+        )
+    else:
+        print("Skipping boxplot for res_healthy due to no p-values.")
 
     # Create a heatmap of phenotype distribution under diff growth condition between resistant and sensitive
 
@@ -256,9 +207,9 @@ def downstream_analysis(
     patient_healthy_mean = compute_mean_phenotype_values(df_healthy_combined)
 
     # resistant and sensitive patients
-    # plot_side_by_side_heatmaps(
-    #     patient_resistant_mean, patient_sensitive_mean, folder_results_temp
-    # )
+    plot_side_by_side_heatmaps(
+        patient_resistant_mean, patient_sensitive_mean, folder_results_temp
+    )
 
     # resistant, sensitive and healthy patients
     plot_three_side_by_side_heatmaps(
@@ -277,8 +228,9 @@ def downstream_analysis(
     sens_tables_path = f"{folder_result_sensitive}"
 
     greater_sign_results = pd.read_csv(
-        f"{folder_results_temp}/statistics/p_values_df_mannwhitneyu_greater_sign_res_sens_{drug_interest}.csv"
+        f"{folder_results_temp}/statistics/p_values_df_mannwhitneyu_res_sens_{drug_interest}.csv"
     )
+
     conditions_phenotypes_df = greater_sign_results[["Condition", "Phenotype"]]
 
     # combine all the patients together (resistant and sensitive)
@@ -303,11 +255,32 @@ def downstream_analysis(
         annotations_models,
     )
 
-    return (
-        nb_patients_required,
-        p_values_df_mannwhitneyu_greater_sens_healthy,
-        p_values_df_mannwhitneyu_greater_res_healthy,
-        p_values_df_mannwhitneyu_greater_res_sens,
-        kruskal_adjusted_df,
-        significant_df,
-    )
+    return nb_patients_required
+
+
+
+
+
+
+    # compute kruskal test for healthy, resistant and sensitive patients
+    # group_files = {
+    #     patients_categ[0]: os.path.join(
+    #         folder_result_resistant, "combined_results.csv"
+    #     ),
+    #     patients_categ[1]: os.path.join(
+    #         folder_result_sensitive, "combined_results.csv"
+    #     ),
+    #     patients_categ[2]: os.path.join(folder_result_healthy, "combined_results.csv"),
+    # }
+
+    # kruskal_adjusted_df, significant_df = compute_kruskal_test_means(
+    #     group_files, folder_result_temp_stats, patients_categ
+    # )
+    # kruskal_adjusted_df.to_csv(
+    #     f"{folder_result_temp_stats}/kruskal_stats_healthy_res_sens_{drug_interest}.csv",
+    #     index=True,
+    # )
+    # significant_df.to_csv(
+    #     f"{folder_result_temp_stats}/kruskal_significant_{drug_interest}.csv",
+    #     index=True,
+    # )

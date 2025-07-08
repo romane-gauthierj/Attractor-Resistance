@@ -12,9 +12,13 @@ def process_proteins_validation(
     pattern = "|".join(montagud_nodes)
 
     # Filter rows where 'sample' contains any name from the list
+    # check??
+    proteins_data["sample"] = proteins_data["sample"].astype(str)
+
     proteins_data = proteins_data[
         proteins_data["sample"].str.contains(pattern, case=False, na=False)
     ]
+
     proteins_data = proteins_data.dropna(how="all", subset=proteins_data.columns[1:])
 
     mods = ["_PS", "_PT", "_PY"]
@@ -119,12 +123,13 @@ def create_table_proteins_patients(proteins_data):
     return table_proteins_patients
 
 
-def process_proteins(
-    proteins_data, montagud_nodes, synonyms_maps, patients_id
-):
+def process_proteins(proteins_data, montagud_nodes, synonyms_maps, patients_id):
     # explode the 'symbol' column if it contains multiple values separated by commas or semicolons
+
+    proteins_data["symbol"] = proteins_data["symbol"].astype(str)
     proteins_data["symbol"] = proteins_data["symbol"].str.split(r"[;,]")
     proteins_data = proteins_data.explode("symbol")
+
     proteins_data["symbol"] = proteins_data["symbol"].str.strip()
 
     proteins_data_patient_id = list(set(proteins_data["model_id"]))

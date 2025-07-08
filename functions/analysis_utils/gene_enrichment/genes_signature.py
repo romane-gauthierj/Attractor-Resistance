@@ -39,7 +39,7 @@ def compute_genes_mean_signature(
 
     group_phenotype_resistant = data_phenotype_patients[
         (data_phenotype_patients["Drug status"] == "Resistant")
-        & (data_phenotype_patients[f"{condition}_{phenotype}"] >= 0.6)
+        & (data_phenotype_patients[f"{condition}_{phenotype}"] >= 0.7)
     ]
 
     # 2 groups: resistant_proliferating_group and sensitive_group_ids
@@ -50,25 +50,40 @@ def compute_genes_mean_signature(
     sensitive_group_ids = sensitive_group["Model_ID"].tolist()
 
     # annotations
-    tissue_status_distribution = annotations_models[
+    tissue_status_distribution_res = annotations_models[
         annotations_models["model_id"].isin(resistant_group_ids)
     ]["tissue_status"].value_counts()
 
-    gender_distribution = annotations_models[
+    tissue_status_distribution_sens = annotations_models[
+        annotations_models["model_id"].isin(sensitive_group_ids)
+    ]["tissue_status"].value_counts()
+
+    gender_distribution_res = annotations_models[
         annotations_models["model_id"].isin(resistant_group_ids)
     ]["gender"].value_counts()
 
-    total_counts_gender = annotations_models["gender"].value_counts()
-    ratio_gender = gender_distribution / total_counts_gender
-    ratio_gender = ratio_gender.dropna()
+    gender_distribution_sens = annotations_models[
+        annotations_models["model_id"].isin(sensitive_group_ids)
+    ]["gender"].value_counts()
 
-    tissue_distribution = annotations_models[
+    tissue_distribution_res = annotations_models[
         annotations_models["model_id"].isin(resistant_group_ids)
-    ]["sample_site"].value_counts()
+    ]["tissue"].value_counts()
 
-    total_counts_tissue = annotations_models["tissue"].value_counts()
-    ratio_tissue = tissue_distribution / total_counts_tissue
-    ratio_tissue = ratio_tissue.dropna()
+    tissue_distribution_sens = annotations_models[
+        annotations_models["model_id"].isin(sensitive_group_ids)
+    ]["tissue"].value_counts()
+
+    ratio_gender_res = gender_distribution_res / len(resistant_group_ids)
+    ratio_gender_sens = gender_distribution_sens / len(sensitive_group_ids)
+
+    ratio_tissue_status_res = tissue_status_distribution_res / len(resistant_group_ids)
+    ratio_tissue_status_sens = tissue_status_distribution_sens / len(
+        sensitive_group_ids
+    )
+
+    ratio_tissue_res = tissue_distribution_res / len(resistant_group_ids)
+    ratio_tissue_sens = tissue_distribution_sens / len(sensitive_group_ids)
 
     # extract gene expression data
     rna_seq_data = rna_seq_data[["model_id", "gene_symbol", "rsem_tpm"]]
@@ -139,26 +154,69 @@ def compute_genes_mean_signature(
     significant_genes = genes_stats_results[genes_stats_results["P-value"] <= 0.05]
     output_dir = f"{folder}/genes_diff_expressed"
     os.makedirs(output_dir, exist_ok=True)
+    file_path = f"{output_dir}/significant_genes_{condition}_ON_{phenotype}.csv"
 
-    significant_genes.to_csv(
-        f"{output_dir}/significant_genes_{condition}_ON_{phenotype}.csv",
-        index=True,
-    )
+    # Save the main DataFrame of significant genes
+    significant_genes.to_csv(file_path, index=True)
 
-    # Save tissue_status_distribution as extra rows in the same CSV
-    # Append tissue_status_distribution and group sizes
+    # Append additional information
+    with open(file_path, "a") as f:
+        f.write("\n\n--- Summary Annotations for Resistant Group ---\n")
 
-    # gender and sample_site
+        f.write("\nTissue Status Distribution:\n")
+        ratio_tissue_status_res.to_csv(f, header=False)
 
-    with open(
-        f"{output_dir}/significant_genes_{condition}_ON_{phenotype}.csv", "a"
-    ) as f:
-        f.write("\nTissue Status Distribution\n")
-        tissue_status_distribution.to_csv(f, header=True)
-        f.write(f"\nResistant group size,{len(resistant_group_ids)}\n")
-        f.write(f"Sensitive group size,{len(sensitive_group_ids)}\n")
-        f.write(f"\nGender ratio\n, {ratio_gender}\n")
-        f.write(f"\nTissue ratio\n, {ratio_tissue}\n")
+        f.write(f"\nResistant Group Size,{len(resistant_group_ids)}\n")
+        f.write("\nGender Ratio (Resistant Group / Total):\n")
+        ratio_gender_res.to_csv(f, header=False)
+
+        f.write("\nTissue Ratio (Resistant Group / Total):\n")
+        ratio_tissue_res.to_csv(f, header=False)
+
+        # Sensitive Group Annotations
+        f.write("\n\n--- Summary Annotations for Sensitive Group ---\n")
+
+        f.write(f"Sensitive Group Size,{len(sensitive_group_ids)}\n")
+
+        f.write("\nTissue Status Distribution:\n")
+        ratio_tissue_status_sens.to_csv(f, header=False)
+
+        f.write(f"\nSensitive Group Size,{len(sensitive_group_ids)}\n")
+
+        f.write("\nGender Ratio (Sensitive Group / Total):\n")
+        ratio_gender_sens.to_csv(f, header=False)
+
+        f.write("\nTissue Ratio (Sensitive Group / Total):\n")
+        ratio_tissue_sens.to_csv(f, header=False)
+
+    # output_dir = f"{folder}/genes_diff_expressed"
+    # os.makedirs(output_dir, exist_ok=True)
+
+    # # test
+    # # significant_genes.to_csv(
+    # #     f"{output_dir}/significant_genes_{condition}_ON_{phenotype}.csv",
+    # #     index=True,
+    # # )
+
+    # genes_stats_results.to_csv(
+    #     f"{output_dir}/_genes_{condition}_ON_{phenotype}.csv",
+    #     index=True,
+    # )
+
+    # # Save tissue_status_distribution as extra rows in the same CSV
+    # # Append tissue_status_distribution and group sizes
+
+    # # gender and sample_site
+
+    # with open(
+    #     f"{output_dir}/significant_genes_{condition}_ON_{phenotype}.csv", "a"
+    # ) as f:
+    #     f.write("\nTissue Status Distribution\n")
+    #     tissue_status_distribution.to_csv(f, header=True)
+    #     f.write(f"\nResistant group size,{len(resistant_group_ids)}\n")
+    #     f.write(f"Sensitive group size,{len(sensitive_group_ids)}\n")
+    #     f.write(f"\nGender ratio\n, {ratio_gender}\n")
+    #     f.write(f"\nTissue ratio\n, {ratio_tissue}\n")
 
 
 def create_results_gene_enrichment(

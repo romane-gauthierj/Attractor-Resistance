@@ -10,6 +10,11 @@ def identify_genes_synonyms(data_synonyms, uniprot_data, montagud_nodes):
         ~(data_synonyms["Gene name"].isna() & data_synonyms["Gene Synonym"].isna())
     ]
 
+    # added - check ??
+    data_synonyms["Gene name"] = data_synonyms["Gene name"].astype(str)
+    data_synonyms["Gene Synonym"] = data_synonyms["Gene Synonym"].astype(str)
+
+
     data_synonyms["Gene name"] = data_synonyms["Gene name"].str.upper()
     data_synonyms["Gene Synonym"] = data_synonyms["Gene Synonym"].str.upper()
 

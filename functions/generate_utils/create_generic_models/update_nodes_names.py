@@ -141,8 +141,84 @@ def add_new_node_to_logic(file_path, original_node, new_node):
         f.write(content)
 
 
+def remove_cfg_node(file_path, node_to_remove):
+    with open(file_path, "r") as f:
+        lines = f.readlines()
+
+    new_lines = []
+
+    patterns_to_remove = [
+        rf"\$u_{node_to_remove}\b",
+        rf"\$d_{node_to_remove}\b",
+        rf"\b{node_to_remove}\.is_internal\b",
+        rf"^\s*//\s*\[{node_to_remove}\]\.istate=\s*(?:\d+\s*\[\d+\](?:\s*,\s*\d+\s*\[\d+\])*)?\s*;?\s*$",
+    ]
+
+    for line in lines:
+        # Check if the line contains any of the patterns related to the node to remove.
+        # If it does, we skip adding this line to new_lines, effectively removing it.
+        if not any(re.search(pat, line) for pat in patterns_to_remove):
+            cleaned_line = line
+
+            cleaned_line = re.sub(rf"\s*\$u_{node_to_remove}\b", "", cleaned_line)
+            cleaned_line = re.sub(rf"\s*\$d_{node_to_remove}\b", "", cleaned_line)
+
+            new_lines.append(cleaned_line)
+
+    with open(file_path, "w") as f:
+        f.writelines(new_lines)
+
+
+def remove_bnd_node(file_path, node_to_remove):
+    with open(file_path, "r") as f:
+        content = f.read()
+
+    node_block_pattern = re.compile(
+        rf"Node\s+{re.escape(node_to_remove)}\s*\{{.*?^\s*\}}\s*$",
+        re.DOTALL | re.MULTILINE | re.IGNORECASE,
+    )
+
+    new_content = node_block_pattern.sub("", content)
+
+    if new_content == content:
+        print(
+            f"Warning: Node block '{node_to_remove}' not found in the file. "
+            "Proceeding to remove other references if any."
+        )
+    logical_interaction_patterns = [
+        rf"^\s*.*\b\$[ud]_{re.escape(node_to_remove)}\b.*$",
+        rf"^\s*.*\b{re.escape(node_to_remove)}\.is_internal\b.*$",
+        rf"^\s*//\s*\[FUSED_EVENT\]\.istate=\s*(?:\d+\s*\[\d+\](?:\s*,\s*\d+\s*\[\d+\])*)?\s*;?\s*$",
+        rf"^\s*.*\b{re.escape(node_to_remove)}\b.*$",
+    ]
+
+    # Split the content into lines while keeping the line endings
+    lines = new_content.splitlines(keepends=True)
+    final_lines = []
+
+    for line in lines:
+        should_remove_line = False
+        for pat in logical_interaction_patterns:
+            if re.search(pat, line, re.IGNORECASE):  # Use IGNORECASE for patterns too
+                should_remove_line = True
+                break
+
+        if not should_remove_line:
+            final_lines.append(line)
+
+    final_content = "".join(final_lines)
+
+    # Write the modified content back to the file
+    with open(file_path, "w") as f:
+        f.write(final_content)
+
+    print(
+        f"Successfully processed file: {file_path}. Node '{node_to_remove}' and its references have been removed."
+    )
+
+
 # Main function
-def replace_node_names_in_file(file_path, name_maps):
+def replace_node_names_in_file(file_path, name_maps, nodes_to_remove, nodes_to_add):
     ext = os.path.splitext(file_path)[1]
     if ext == ".cfg":
         uppercase_cfg_node_names(file_path)
@@ -161,14 +237,16 @@ def replace_node_names_in_file(file_path, name_maps):
     with open(file_path, "w") as f:
         f.write(content)
 
-    # create new nodes: montagud_nodes += ['MEK2', 'TSC2', 'MAP3K3', 'CHK2']
-
-    nodes_add = {"MEK1": "MEK2", "TSC1": "TSC2", "MAP3K1": "MAP3K3", "CHK1": "CHK2"}
-
-    for key, value in nodes_add.items():
+    for key, value in nodes_to_add.items():
         if ext == ".cfg":
             create_new_cfg_nodes(file_path, key, value)
             add_new_node_to_logic(file_path, key, value)
         else:
             create_new_bnd_nodes(file_path, key, value)
             add_new_node_to_logic(file_path, key, value)
+
+    for node_to_remove in nodes_to_remove:
+        if ext == ".cfg":
+            remove_cfg_node(file_path, node_to_remove)
+        else:
+            print("change manually the bnd files with the node to remove")

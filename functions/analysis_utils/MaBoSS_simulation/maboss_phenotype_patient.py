@@ -287,7 +287,11 @@ def collect_group_data(group_folder_path, patients_id):
 
         for input_name in df.index:
             for phenotype in df.columns:
-                value = df.at[input_name, phenotype]
+                #value = df.at[input_name, phenotype]
+
+                # test
+                value = df.loc[input_name, phenotype]
+    
                 try:
                     combined_data[input_name][phenotype].append(float(value))
                 except Exception as e:

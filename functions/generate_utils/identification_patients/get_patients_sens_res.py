@@ -9,11 +9,14 @@ def get_patients(
     drug_data,
     annotations_models,
     drug_interest,
-    tissue_interest=None,
-    tissue_remove=None,
+    tissue_interest,
+    tissue_remove,
 ):
     if tissue_interest is not None:
         tissue_interest = tissue_interest.upper()
+
+        # added - to check
+        annotations_models["tissue"] = annotations_models["tissue"].astype(str)
         annotations_models["tissue"] = annotations_models["tissue"].str.upper()
         annotations_models = annotations_models[
             annotations_models["tissue"] == tissue_interest
@@ -21,6 +24,9 @@ def get_patients(
 
     if tissue_remove is not None:
         tissue_remove = tissue_remove.upper()
+
+        # added - to check
+        annotations_models["tissue"] = annotations_models["tissue"].astype(str)
         annotations_models["tissue"] = annotations_models["tissue"].str.upper()
         annotations_models = annotations_models[
             annotations_models["tissue"] != tissue_remove

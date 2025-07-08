@@ -92,8 +92,8 @@ def compute_mannwhitneyu_test_means(
     conditions_list_sens = group_2_stats_values.index
 
     p_values_records_mannwhitneyu_two_sides = []
-    p_values_records_mannwhitneyu_less = []
     p_values_records_mannwhitneyu_greater = []
+    
 
     for phenotype in phenotypes_list_res:
         if phenotype in phenotypes_list_sens:
@@ -108,12 +108,6 @@ def compute_mannwhitneyu_test_means(
                     statistic, p_value_res_sens = mannwhitneyu(
                         stats_data_res, stats_data_sens, alternative="two-sided"
                     )
-                    statistic, p_value_res_sens_less = mannwhitneyu(
-                        stats_data_res, stats_data_sens, alternative="less"
-                    )
-                    statistic, p_value_res_sens_greater = mannwhitneyu(
-                        stats_data_res, stats_data_sens, alternative="greater"
-                    )
 
                     p_values_records_mannwhitneyu_two_sides.append(
                         {
@@ -123,21 +117,6 @@ def compute_mannwhitneyu_test_means(
                         }
                     )
 
-                    p_values_records_mannwhitneyu_less.append(
-                        {
-                            "Condition": condition,
-                            "Phenotype": phenotype,
-                            "Mannwhitneyu_P_value_Resistant": p_value_res_sens_less,
-                        }
-                    )
-
-                    p_values_records_mannwhitneyu_greater.append(
-                        {
-                            "Condition": condition,
-                            "Phenotype": phenotype,
-                            "Mannwhitneyu_P_value_Resistant": p_value_res_sens_greater,
-                        }
-                    )
     # Create DataFrames from the records
     p_values_df_mannwhitneyu_two_sides = pd.DataFrame(
         p_values_records_mannwhitneyu_two_sides
@@ -146,25 +125,11 @@ def compute_mannwhitneyu_test_means(
         ["Condition", "Phenotype"], inplace=True
     )
 
-    p_values_df_mannwhitneyu_less = pd.DataFrame(p_values_records_mannwhitneyu_less)
-    p_values_df_mannwhitneyu_less.set_index(["Condition", "Phenotype"], inplace=True)
-
-    p_values_df_mannwhitneyu_greater = pd.DataFrame(
-        p_values_records_mannwhitneyu_greater
-    )
-    p_values_df_mannwhitneyu_greater.set_index(["Condition", "Phenotype"], inplace=True)
-
     # check which one has a pvalue < 0.05
 
     p_values_df_mannwhitneyu_two_sides = p_values_df_mannwhitneyu_two_sides[
         p_values_df_mannwhitneyu_two_sides["Mannwhitneyu_P_value_Resistant"] <= 0.05
     ]
-    p_values_df_mannwhitneyu_less_sign = p_values_df_mannwhitneyu_less[
-        p_values_df_mannwhitneyu_less["Mannwhitneyu_P_value_Resistant"] <= 0.05
-    ].copy()
-    p_values_df_mannwhitneyu_greater_sign = p_values_df_mannwhitneyu_greater[
-        p_values_df_mannwhitneyu_greater["Mannwhitneyu_P_value_Resistant"] <= 0.05
-    ].copy()
 
     choices = ["***", "**", "*"]
     conditions = [
@@ -180,60 +145,11 @@ def compute_mannwhitneyu_test_means(
     p_values_df_mannwhitneyu_two_sides.loc[:, "Star_significant"] = np.select(
         conditions, choices, default=""
     )
-
-    conditions = [
-        p_values_df_mannwhitneyu_less_sign["Mannwhitneyu_P_value_Resistant"] < 0.001,
-        (p_values_df_mannwhitneyu_less_sign["Mannwhitneyu_P_value_Resistant"] >= 0.001)
-        & (p_values_df_mannwhitneyu_less_sign["Mannwhitneyu_P_value_Resistant"] < 0.01),
-        (p_values_df_mannwhitneyu_less_sign["Mannwhitneyu_P_value_Resistant"] >= 0.01)
-        & (
-            p_values_df_mannwhitneyu_less_sign["Mannwhitneyu_P_value_Resistant"] <= 0.05
-        ),
-    ]
-
-    p_values_df_mannwhitneyu_less_sign.loc[:, "Star_significant"] = np.select(
-        conditions, choices, default=""
-    )
-
-    conditions = [
-        p_values_df_mannwhitneyu_greater_sign["Mannwhitneyu_P_value_Resistant"] < 0.001,
-        (
-            p_values_df_mannwhitneyu_greater_sign["Mannwhitneyu_P_value_Resistant"]
-            >= 0.001
-        )
-        & (
-            p_values_df_mannwhitneyu_greater_sign["Mannwhitneyu_P_value_Resistant"]
-            < 0.01
-        ),
-        (
-            p_values_df_mannwhitneyu_greater_sign["Mannwhitneyu_P_value_Resistant"]
-            >= 0.01
-        )
-        & (
-            p_values_df_mannwhitneyu_greater_sign["Mannwhitneyu_P_value_Resistant"]
-            <= 0.05
-        ),
-    ]
-
-    p_values_df_mannwhitneyu_greater_sign.loc[:, "Star_significant"] = np.select(
-        conditions, choices, default=""
-    )
-
-    p_values_df_mannwhitneyu_two_sides.to_csv(
-        f"{folder}/p_values_df_mannwhitneyu_two_sides_{drug_interest}.csv",
-        index=True,
-    )
-    p_values_df_mannwhitneyu_less_sign.to_csv(
-        f"{folder}/p_values_df_mannwhitneyu_less_sign_{drug_interest}.csv",
-        index=True,
-    )
-
-    filename = f"{folder}/p_values_df_mannwhitneyu_greater_sign_{drug_interest}.csv"
-    if gene is not None:
-        filename = (
-            f"{folder}/{gene}_p_values_df_mannwhitneyu_greater_sign_{drug_interest}.csv"
-        )
-    return p_values_df_mannwhitneyu_greater_sign
+    # p_values_df_mannwhitneyu_two_sides.to_csv(
+    #     f"{folder}/p_values_df_mannwhitneyu_two_sides_{drug_interest}.csv",
+    #     index=True,
+    # )
+    return p_values_df_mannwhitneyu_two_sides
 
 
 def compute_power_calculation(df_res_combined, df_sens_combined):
