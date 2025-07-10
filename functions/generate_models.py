@@ -178,7 +178,9 @@ def generate_models_re(
     df_melted_proteins,
     table_proteins_patients,
     nodes_to_remove,
+    nodes_to_add,
     intervention_gene=None,
+    genetic_intervention=None,
 ):
     patients_categ = ["resistant", "sensitive", "healthy"]
     patients_ids = top_resistant_ids + top_sensitive_ids + top_healthy_ids
@@ -194,6 +196,7 @@ def generate_models_re(
         name_maps,
         type_models,
         nodes_to_remove,
+        nodes_to_add,
     )
 
     models_folder_res = f"{folder_models}/resistant/pers_models"
@@ -202,32 +205,47 @@ def generate_models_re(
 
     # simulate drug target
     tailor_bnd_genes_intervention(
-        drug_targets, top_resistant_ids, models_folder_res, drug_interest
+        drug_targets,
+        genetic_intervention,
+        top_resistant_ids,
+        models_folder_res,
+        drug_interest,
     )
 
     tailor_bnd_genes_intervention(
-        drug_targets, top_sensitive_ids, models_folder_sens, drug_interest
+        drug_targets,
+        genetic_intervention,
+        top_sensitive_ids,
+        models_folder_sens,
+        drug_interest,
     )
     tailor_bnd_genes_intervention(
-        drug_targets, top_healthy_ids, models_folder_healthy, drug_interest
+        drug_targets,
+        genetic_intervention,
+        top_healthy_ids,
+        models_folder_healthy,
+        drug_interest,
     )
 
     # simulate gene intervention if provided
-    if intervention_gene is not None:
+    if intervention_gene is not None and genetic_intervention is not None:
         tailor_bnd_genes_intervention(
             intervention_gene,
+            genetic_intervention,
             top_resistant_ids,
             models_folder_res,
             drug_interest,
         )
         tailor_bnd_genes_intervention(
             intervention_gene,
+            genetic_intervention,
             top_sensitive_ids,
             models_folder_sens,
             drug_interest,
         )
         tailor_bnd_genes_intervention(
             intervention_gene,
+            genetic_intervention,
             top_healthy_ids,
             models_folder_healthy,
             drug_interest,

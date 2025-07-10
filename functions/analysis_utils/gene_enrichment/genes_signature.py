@@ -37,6 +37,7 @@ def compute_genes_mean_signature(
     # resistant group changes according to what is the condition and the phenotype
     # group_proliferation_resistant: group with high phenotype
 
+    # adjust the expression values here
     group_phenotype_resistant = data_phenotype_patients[
         (data_phenotype_patients["Drug status"] == "Resistant")
         & (data_phenotype_patients[f"{condition}_{phenotype}"] >= 0.7)
@@ -44,10 +45,13 @@ def compute_genes_mean_signature(
 
     # 2 groups: resistant_proliferating_group and sensitive_group_ids
     resistant_group_ids = group_phenotype_resistant["Model_ID"].tolist()
-    sensitive_group = data_phenotype_patients[
-        data_phenotype_patients["Drug status"] == "Sensitive"
+
+    group_phenotype_sensitive = data_phenotype_patients[
+        (data_phenotype_patients["Drug status"] == "Sensitive")
+        & (data_phenotype_patients[f"{condition}_{phenotype}"] <= 0.5)
     ]
-    sensitive_group_ids = sensitive_group["Model_ID"].tolist()
+
+    sensitive_group_ids = group_phenotype_sensitive["Model_ID"].tolist()
 
     # annotations
     tissue_status_distribution_res = annotations_models[
@@ -188,35 +192,6 @@ def compute_genes_mean_signature(
 
         f.write("\nTissue Ratio (Sensitive Group / Total):\n")
         ratio_tissue_sens.to_csv(f, header=False)
-
-    # output_dir = f"{folder}/genes_diff_expressed"
-    # os.makedirs(output_dir, exist_ok=True)
-
-    # # test
-    # # significant_genes.to_csv(
-    # #     f"{output_dir}/significant_genes_{condition}_ON_{phenotype}.csv",
-    # #     index=True,
-    # # )
-
-    # genes_stats_results.to_csv(
-    #     f"{output_dir}/_genes_{condition}_ON_{phenotype}.csv",
-    #     index=True,
-    # )
-
-    # # Save tissue_status_distribution as extra rows in the same CSV
-    # # Append tissue_status_distribution and group sizes
-
-    # # gender and sample_site
-
-    # with open(
-    #     f"{output_dir}/significant_genes_{condition}_ON_{phenotype}.csv", "a"
-    # ) as f:
-    #     f.write("\nTissue Status Distribution\n")
-    #     tissue_status_distribution.to_csv(f, header=True)
-    #     f.write(f"\nResistant group size,{len(resistant_group_ids)}\n")
-    #     f.write(f"Sensitive group size,{len(sensitive_group_ids)}\n")
-    #     f.write(f"\nGender ratio\n, {ratio_gender}\n")
-    #     f.write(f"\nTissue ratio\n, {ratio_tissue}\n")
 
 
 def create_results_gene_enrichment(

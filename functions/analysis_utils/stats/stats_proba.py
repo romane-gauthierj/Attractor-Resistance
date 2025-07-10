@@ -4,6 +4,9 @@ import numpy as np
 from scipy.stats import shapiro, ttest_ind, mannwhitneyu, kruskal
 import ast
 import os
+import seaborn as sns
+import matplotlib.pyplot as plt
+
 from statsmodels.stats.multitest import multipletests
 from statsmodels.stats.power import TTestIndPower
 
@@ -93,7 +96,6 @@ def compute_mannwhitneyu_test_means(
 
     p_values_records_mannwhitneyu_two_sides = []
     p_values_records_mannwhitneyu_greater = []
-    
 
     for phenotype in phenotypes_list_res:
         if phenotype in phenotypes_list_sens:
@@ -152,7 +154,7 @@ def compute_mannwhitneyu_test_means(
     return p_values_df_mannwhitneyu_two_sides
 
 
-def compute_power_calculation(df_res_combined, df_sens_combined):
+def compute_power_calculation(df_res_combined, df_sens_combined, folder_results_temp):
     """
     Compute the number of patients required for a power of 0.8 and alpha of 0.05
     """
@@ -191,7 +193,74 @@ def compute_power_calculation(df_res_combined, df_sens_combined):
             )
             nb_patients_required.loc[condition, phenotype] = sample_size
 
-    return nb_patients_required
+
+    output_path = os.path.join(
+        folder_results_temp, "output", "power_calculation_nb_patients_table.png"
+    )
+    # visually respresentation
+    nb_patients_required = nb_patients_required.astype(float).round(1)
+
+    # Create figure
+    fig, ax = plt.subplots(
+        figsize=(
+            nb_patients_required.shape[1] * 1.5,
+            nb_patients_required.shape[0] * 0.6,
+        )
+    )
+
+    # Hide axes
+    ax.axis("off")
+
+    # Create the table
+    table = ax.table(
+        cellText=nb_patients_required.values,
+        rowLabels=nb_patients_required.index,
+        colLabels=nb_patients_required.columns,
+        cellLoc="center",
+        rowLoc="center",
+        loc="center",
+    )
+
+    # Set general table styling
+    table.auto_set_font_size(False)
+    table.set_fontsize(10)
+    table.scale(1.2, 1.2)
+
+    # Set header background color
+    header_color = "#f0f0f0"  # Light gray
+    row_header_color = "#f7f7f7"
+
+    # Apply styling to headers only
+    for (row, col), cell in table.get_celld().items():
+        if row == 0 and col == -1:
+            # Top-left corner (blank) cell
+            cell.set_facecolor("white")
+            cell.set_text_props(weight="bold")
+        elif row == 0:
+            # Column headers
+            cell.set_facecolor(header_color)
+            cell.set_text_props(weight="bold")
+        elif col == -1:
+            # Row headers
+            cell.set_facecolor(row_header_color)
+            cell.set_text_props(weight="bold")
+        else:
+            # All other cells (keep clean)
+            cell.set_facecolor("white")
+
+    # Set global font (e.g., Arial) if available
+    plt.rcParams["font.family"] = "Arial"
+
+    # Add title
+    plt.title(
+        "Required Patients per Input-Phenotype (Power=0.8, α=0.05)", fontsize=12, pad=20
+    )
+
+    # Save the image
+   
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    plt.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close()
 
 
 def compute_power_calculation_genes(

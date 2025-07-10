@@ -238,11 +238,8 @@ def downstream_analysis(
         res_tables_path, sens_tables_path, folder_results_temp
     )
 
-    patients_phenot_table.to_csv(f"{folder_results_temp}/outputs")
-
     # do power calculation (assess the required size of each condition-phenotype pair)
-    nb_patients_required = compute_power_calculation(df_res_combined, df_sens_combined)
-    nb_patients_required.to_csv(f"{folder_results_temp}/outputs")
+    compute_power_calculation(df_res_combined, df_sens_combined, folder_results_temp)
 
     # gene differential expression analysis
     create_results_gene_enrichment(
@@ -254,13 +251,6 @@ def downstream_analysis(
         folder_results_temp,
         annotations_models,
     )
-
-    return nb_patients_required
-
-
-
-
-
 
     # compute kruskal test for healthy, resistant and sensitive patients
     # group_files = {

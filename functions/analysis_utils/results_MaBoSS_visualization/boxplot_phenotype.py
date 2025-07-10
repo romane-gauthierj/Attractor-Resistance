@@ -53,6 +53,8 @@ def create_boxplot(folder_result, res_data, sens_data, significant_df):
 
     phenotypes = significant_df["Phenotype"].unique()
     conditions = significant_df.index.values
+    # only unique values
+    conditions = list(set(conditions))
 
     # phenotypes = list(res_data.columns[1:])
     # conditions = list(res_data.index)

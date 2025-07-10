@@ -77,18 +77,19 @@ def create_generic_patients_cfgs_bnds(
     name_maps,
     type_models,
     nodes_to_remove,
+    nodes_to_add,
 ):
     # --- Templates ---
-    cfg_template_path = (
-        folder_generic_models + "Montagud2022_Prostate_Cancer_original.cfg"
-    )
-    bnd_template_path = (
-        folder_generic_models + "Montagud2022_Prostate_Cancer_original.bnd"
-    )
+    cfg_template_path = folder_generic_models + "/Montagud2022_Prostate_Cancer.cfg"
+    bnd_template_path = folder_generic_models + "/Montagud2022_Prostate_Cancer.bnd"
 
     # --- Pre process the generic model (proteins or genes names) ---
-    replace_node_names_in_file(cfg_template_path, name_maps, nodes_to_remove)
-    replace_node_names_in_file(bnd_template_path, name_maps, nodes_to_remove)
+    replace_node_names_in_file(
+        cfg_template_path, name_maps, nodes_to_remove, nodes_to_add
+    )
+    replace_node_names_in_file(
+        bnd_template_path, name_maps, nodes_to_remove, nodes_to_add
+    )
 
     # --- Sensitive Patients ---
 

@@ -3,7 +3,7 @@ import re
 
 
 def tailor_bnd_genes_intervention(
-    gene_intervs, patients_group, models_folder, drug_interest
+    gene_intervs, genetic_intervention, patients_group, models_folder, drug_interest
 ):
     """
     Modify the .bnd files for each patient in the patients_group to set the specified gene
@@ -43,12 +43,23 @@ def tailor_bnd_genes_intervention(
                 rf"Node\s+{re.escape(gene_interv)}\s*\{{[^{{}}]*?(?:\{{[^{{}}]*?\}}[^{{}}]*?)*\}}",
                 re.DOTALL,
             )
+            if genetic_intervention == "KO":
+                # simulate a Knockout (KO)
 
-            new_gene_block = f"""Node {gene_interv} {{
-        logic = 0;
-        rate_up = 0;
-        rate_down = 1;
-    }}"""
+                new_gene_block = f"""Node {gene_interv} {{
+            logic = 0;
+            rate_up = 0;
+            rate_down = 1;
+        }}"""
+            elif genetic_intervention == "KI":
+                # simulate a Knockin (KI)
+                new_gene_block = f"""Node {gene_interv} {{
+            logic = 1;
+            rate_up = 1;
+            rate_down = 0;
+        }}"""
+            else:
+                print("not a valid gene modification, pleasure chose between KO or KI")
 
             gene_match = pattern.search(content)
             if gene_match:

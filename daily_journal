@@ -1272,3 +1272,65 @@ simulate E2F1 KO for refametinib
 
 
 146 min to run models. and results
+
+
+
+
+July 8:
+finished: computed tissue distribution in each patient group, removed the prostate specific nodes (fused_event, AR_ERG), apply synonyms to generic models (for baseline), 
+gotbthe same piecharts as did before with the generic models
+nutrients/EGF ON, Proliferation r
+1. tried hemato only with 35 patients-> bad results 
+2. tried with lung 35 patients Refametinib->
+3. tried simulate EGFR knockout with CHK1 inhibitor 
+
+pipeline 1: try to decrease nb of patients for hemato (15 patients) - no nice results
+pipeline 2: compute results for Lung -good results
+pipeline 3:  simulate EGFR knockout with CHK1 inhibitor - no nice results
+-> also try hemato with refametinib
+
+
+
+
+
+
+
+
+
+to do: rerun models and results for refametinib with genes proteins models after removing the two nodes and check does not change anything 
+
+identify key driver genes and try to knock out these genes and rerun results
+
+-> look at heamtopoetic only if observe diff bw resistant and sensitive then okay (if not try more restrictive -> be more resistant)
+
+
+
+
+July 9 
+to do:
+check way compute diff of genes expression and check the ommon differently expressed genes bw the two drugs ? does it make sense ? share common pathways??
+
+
+
+to do:
+try with 50-60 patients in each group for refametinib genes and see if better power calculation and also if still invasion phenotypes 
+keep writing (issues with not many resistant/ sensitive; balance bw nb of patients and tissue distribution)
+
+
+
+
+
+July 10
+finished: kept writing the discussion 
+
+try to simulate induction of b caderin gene 
+
+
+1. simulate induction of CCND1 and see if can reduce invasion 
+2. try simulate induction of CCND1 combined with knockout of FOXA1 and E2F1
+
+
+
+try to do the genes diff expression analysis bw healthy and res/ sens
+
+try to do a mutations downstream analysis before KO or KI some genes as they are 
