@@ -1321,16 +1321,22 @@ keep writing (issues with not many resistant/ sensitive; balance bw nb of patien
 
 
 July 10
-finished: kept writing the discussion 
-
-try to simulate induction of b caderin gene 
-
-
-1. simulate induction of CCND1 and see if can reduce invasion 
-2. try simulate induction of CCND1 combined with knockout of FOXA1 and E2F1
+finished: kept writing the discussion, mutations downstream analysis before KO or KI, simulate KI and KO of b caderin gene 
 
 
 
-try to do the genes diff expression analysis bw healthy and res/ sens
 
-try to do a mutations downstream analysis before KO or KI some genes as they are 
+
+TO DO
+
+!!! try to do the genes diff expression analysis bw healthy and res/ sens
+!try to block EZH2 alone
+!try simulate induction of CTNNB1 combined with knockout of FOXA1 and E2F1 (to try to reduce even more the invasion phenotype)
+
+
+try EZH2 (represses E-cadherin), 
+try PDK1 
+try FOS 
+
+
+ E2F1 ??-> can support EMT
