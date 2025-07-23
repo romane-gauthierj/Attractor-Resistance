@@ -28,6 +28,7 @@ def compute_genes_mean_signature(
     conditions = [
         data_phenotype_patients["Model_ID"].isin(top_resistant_ids),
         data_phenotype_patients["Model_ID"].isin(top_sensitive_ids),
+
     ]
 
     choices = ["Resistant", "Sensitive"]
@@ -40,7 +41,7 @@ def compute_genes_mean_signature(
     # adjust the expression values here
     group_phenotype_resistant = data_phenotype_patients[
         (data_phenotype_patients["Drug status"] == "Resistant")
-        & (data_phenotype_patients[f"{condition}_{phenotype}"] >= 0.7)
+        & (data_phenotype_patients[f"{condition}_{phenotype}"] >= 0.8)
     ]
 
     # 2 groups: resistant_proliferating_group and sensitive_group_ids
@@ -48,7 +49,7 @@ def compute_genes_mean_signature(
 
     group_phenotype_sensitive = data_phenotype_patients[
         (data_phenotype_patients["Drug status"] == "Sensitive")
-        & (data_phenotype_patients[f"{condition}_{phenotype}"] <= 0.5)
+        & (data_phenotype_patients[f"{condition}_{phenotype}"] <= 0.4)
     ]
 
     sensitive_group_ids = group_phenotype_sensitive["Model_ID"].tolist()

@@ -241,7 +241,7 @@ def downstream_analysis(
     # do power calculation (assess the required size of each condition-phenotype pair)
     compute_power_calculation(df_res_combined, df_sens_combined, folder_results_temp)
 
-    # gene differential expression analysis
+    # gene differential expression analysis between resistant and sensitive
     create_results_gene_enrichment(
         rna_seq_data_filtered,
         patients_phenot_table,
@@ -251,6 +251,8 @@ def downstream_analysis(
         folder_results_temp,
         annotations_models,
     )
+
+
 
     # compute kruskal test for healthy, resistant and sensitive patients
     # group_files = {

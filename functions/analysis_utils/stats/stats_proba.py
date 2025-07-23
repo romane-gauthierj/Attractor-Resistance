@@ -259,7 +259,7 @@ def compute_power_calculation(df_res_combined, df_sens_combined, folder_results_
     # Save the image
    
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    plt.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.savefig(output_path, dpi=400, bbox_inches="tight")
     plt.close()
 
 

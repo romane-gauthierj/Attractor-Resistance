@@ -45,19 +45,18 @@ import os
 
 
 def create_boxplot(folder_result, res_data, sens_data, significant_df):
-    # res_data.rename(columns={"Unnamed: 0": "Condition"}, inplace=True)
-    # sens_data.rename(columns={"Unnamed: 0": "Condition"}, inplace=True)
-    if significant_df is None or significant_df.empty:
-        print("No significant results to plot. Skipping boxplot creation.")
-        return
+    # if only significatif results printed:
+    # if significant_df is None or significant_df.empty:
+    #     print("No significant results to plot. Skipping boxplot creation.")
+    #     return
 
-    phenotypes = significant_df["Phenotype"].unique()
-    conditions = significant_df.index.values
-    # only unique values
-    conditions = list(set(conditions))
+    # phenotypes = significant_df["Phenotype"].unique()
+    # conditions = significant_df.index.values
+    # # only unique values
+    # conditions = list(set(conditions))
 
-    # phenotypes = list(res_data.columns[1:])
-    # conditions = list(res_data.index)
+    phenotypes = list(res_data.columns)
+    conditions = list(res_data.index)
 
     n_phenotypes = len(phenotypes)
     fig, axes = plt.subplots(
@@ -162,7 +161,7 @@ def create_boxplot(folder_result, res_data, sens_data, significant_df):
     os.makedirs(output_path, exist_ok=True)
     plt.savefig(
         f"{output_path}/boxplot_expression_per_phenotype.png",
-        dpi=300,
+        dpi=400,
         bbox_inches="tight",
     )
 

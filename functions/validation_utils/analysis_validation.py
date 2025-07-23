@@ -15,6 +15,7 @@ from functions.analysis_utils.MaBoSS_simulation.maboss_phenotype_patient import 
 
 from functions.analysis_utils.results_MaBoSS_visualization.create_phenotypes_patients_table import (
     plot_three_side_by_side_heatmaps,
+    plot_two_stacked_heatmaps,
 )
 from functions.analysis_utils.stats.stats_proba import compute_kruskal_test_means
 
@@ -51,7 +52,7 @@ def validation_analysis(
         # )
 
     # compute the mean of each attractor for each condition for all th group
-    compute_phenotype_mean_group_validation(groups, folder_results)
+    # compute_phenotype_mean_group_validation(groups, folder_results)
 
     # heatmap of the mean of each group
     mean1 = pd.read_csv(
@@ -67,9 +68,12 @@ def validation_analysis(
         index_col=0,
     )
 
-    plot_three_side_by_side_heatmaps(
-        mean1, mean2, mean3, folder_results, labels=["high", "middle", "low"]
-    )
+    # plot_three_side_by_side_heatmaps(
+    #     mean1, mean2, mean3, folder_results, labels=["high", "middle", "low"]
+    # )
+
+    # can also just look at low and high gleason score
+    plot_two_stacked_heatmaps(mean1, mean3, folder_results, labels=["high", "low"])
 
     # combine all the data for each group
     for group in groups:

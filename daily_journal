@@ -1340,3 +1340,114 @@ try FOS
 
 
  E2F1 ??-> can support EMT
+
+
+
+ July 14 
+ to do: try gene expression analysis on sensitive vs healthy, look for ctnnb1 literature, can we get boxplot of its expression? write down our results
+
+
+
+
+ July 15
+ to do: try to understand why CTNNB1 is equal expressed in healthy..
+ should i try to compute also the gene expression mean for the healthy group?
+
+ maybe for the thesis - recreate boxplot but only with the phenotype of interest ? and so we do not need to restrict to significant results only?
+
+ kruskal test on the three groups of ctnnb1 ?
+
+
+
+ ctnnb1 expression in healthy not very different from the expression in the resistant and sensitive groups
+ -> dual role so maybe complicated to just look at the expression level ?
+
+
+
+ results: significant p value but diff shapes -> there's a significant difference in the mean ranks or the overall distributions of the groups. 
+
+
+
+ try to run again the KO of CTNNB1 but while only keeping invasion and proliferation as phenotypes
+ -> try in the boxplot to only look at the significant values 
+ -> check the distribution of data and also 
+ -> try to block more genes ? 
+
+
+
+
+
+
+ July 16
+ to do: how much of invasion the patients have ? significant diff from before knocking out CTNNB1??
+
+ sensitive- more sensitive when KO CTNNB1
+
+
+
+
+
+
+
+Found that MEK inhibitor limited efficacy in KRAS mutant
+
+
+
+
+
+July 20 
+- try to find if MEK and CTNNB1 have been identified as synthetic lethal screen 
+-> not currently in the literature (SynLethDB database)
+
+
+
+July 21 
+- in the paper: more clear about the novelty - use attractors to stratify patients and then propose therapies targets 
+                be more clear about why looking at EGF-invasion condition 
+                share stats test of sign. lower invasion under EGF in the sensitive group when EGF is targeted
+                in the discussion - mention the image that connects b catenin and MEK 
+                material and methods - makes the pipeline better 
+                better plot to represent the diff of invasion before CTNNB1 KO and after 
+
+
+with graeme 
+- synthetic lethal screen - obeserve anything between CTNNB1 and MAP2K genes ? 
+- way of validating if this has not been observed ? - mail with mercedes 
+- overleaf - how to display an image on two columns ? 
+
+
+
+
+network X check to create networks (discussion part)-> color nodes b catenin and MEK 
+
+
+- specify each phenotype, why we chose them and what does they represent - hallmarks of cancer ? 
+
+
+to do: https://www.nature.com/articles/ncomms11581#:~:text=Cyclin%20D1%20(Ccnd1)%20is%20a,in%20cell%20motility7%2C8. 
+read this article - double function of Cyclin D1 (invasion/ metastasis)-> do we also see this in my patients?
+
+
+
+
+
+July 22
+- could cancer cells induce apopotosis in healthy cells??
+- Why high Cyclin D1 gene in the sensitive group...
+- look if we have CDH1 in the rna seq data ? -> E-Cadherin 
+
+
+
+
+to do: try KO of cyclin D1 gene, find two known genes related to invasion and when KO reduces invasion; try a third one not known in the literature 
+
+
+TO DO: check proliferation increase after ctnnb1 is not significative
+
+
+look at the result of cyclin D1 KO -> proliferation is reduced when KO ? -> check stats test 
+
+
+
+
+TODO - try both cyclin D1 and ctnnb1 KO 
