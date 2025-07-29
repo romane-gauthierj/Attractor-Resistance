@@ -1451,3 +1451,17 @@ look at the result of cyclin D1 KO -> proliferation is reduced when KO ? -> chec
 
 
 TODO - try both cyclin D1 and ctnnb1 KO 
+
+
+
+
+July 29 
+
+to do: comprendre markov chain + stochastic process et ajouter method dans paper, debug code
+
+s'assurer que les nodes du model sont ceux du paper montagud 
+peut ajouter mapping synonyme 
+
+
+
+comprendre comment on a modifié le generic model pour split les nodes 

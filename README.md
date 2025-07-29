@@ -28,6 +28,12 @@ pip install -r requirements.txt
 
 
 
+step 1
+- import data montagud cfg et bnd et enlever tous les fused event et ar_erg dans le modele generic 
+- run pipeline 1
+
+
+
 
 
 

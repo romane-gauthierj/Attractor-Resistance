@@ -43,6 +43,12 @@ def tailor_bnd_genes_intervention(
                 rf"Node\s+{re.escape(gene_interv)}\s*\{{[^{{}}]*?(?:\{{[^{{}}]*?\}}[^{{}}]*?)*\}}",
                 re.DOTALL,
             )
+
+
+             # Initialize new_gene_block to None
+            new_gene_block = None
+
+
             if genetic_intervention == "KO":
                 # simulate a Knockout (KO)
 
@@ -59,22 +65,21 @@ def tailor_bnd_genes_intervention(
             rate_down = 0;
         }}"""
             else:
-                print("not a valid gene modification, pleasure chose between KO or KI")
+                print("not a valid gene modification, please chose between KO or KI")
+                continue
 
-            gene_match = pattern.search(content)
-            if gene_match:
-                print(f"{gene_interv} node found. Replacing...")
-                content, n_subs = re.subn(pattern, new_gene_block, content)
-                if n_subs > 0:
-                    with open(bnd_file, "w") as file:
-                        file.write(content)
-                    print(f"{patient_id}: CNV — nodes modified")
-                    modified_files.append(bnd_file)
-
+            # Only proceed if we have a valid gene block
+            if new_gene_block is not None:
+                gene_match = pattern.search(content)
+                if gene_match:
+                    print(f"{gene_interv} node found. Replacing...")
+                    content, n_subs = re.subn(pattern, new_gene_block, content)
+                    if n_subs > 0:
+                        print(f"{patient_id}: CNV — nodes modified")
+                    else:
+                        print(f"{patient_id}: CNV — no substitution made")
                 else:
-                    print(f"{patient_id}: CNV — no substitution made")
-            else:
-                print(f"No {gene_interv} node found in file for patient {patient_id}")
+                    print(f"No {gene_interv} node found in file for patient {patient_id}")
 
         with open(bnd_file, "w") as file:
             file.write(content)

@@ -76,7 +76,6 @@ def create_generic_patients_cfgs_bnds(
     drug_interest,
     name_maps,
     type_models,
-    nodes_to_remove,
     nodes_to_add,
 ):
     # --- Templates ---
@@ -85,10 +84,10 @@ def create_generic_patients_cfgs_bnds(
 
     # --- Pre process the generic model (proteins or genes names) ---
     replace_node_names_in_file(
-        cfg_template_path, name_maps, nodes_to_remove, nodes_to_add
+        cfg_template_path, name_maps, nodes_to_add
     )
     replace_node_names_in_file(
-        bnd_template_path, name_maps, nodes_to_remove, nodes_to_add
+        bnd_template_path, name_maps, nodes_to_add
     )
 
     # --- Sensitive Patients ---

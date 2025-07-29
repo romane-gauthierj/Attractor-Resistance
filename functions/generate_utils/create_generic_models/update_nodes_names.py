@@ -64,6 +64,13 @@ def create_new_bnd_nodes(file_path, original_node, new_node):
     with open(file_path, "r") as f:
         content = f.read()
 
+    # Check if the new node already exists to avoid duplicates
+    new_node_pattern = re.compile(rf"Node\s+{re.escape(new_node)}\s*\{{", re.IGNORECASE)
+    if new_node_pattern.search(content):
+        print(f"Node {new_node} already exists. Skipping creation.")
+        return
+    
+
     # Find the node block for the original node
     pattern = re.compile(
         rf"(Node\s+{original_node}\s*\{{.*?\n\}})", re.DOTALL | re.IGNORECASE
@@ -75,18 +82,24 @@ def create_new_bnd_nodes(file_path, original_node, new_node):
 
     node_block = match.group(0)
 
-    # Replace all whole-word occurrences of original_node (including $u_ and $d_ forms)
-    def node_repl(m):
-        # Handle $u_ORIGINAL, $d_ORIGINAL, u_ORIGINAL, d_ORIGINAL
-        prefix = m.group(1) or ""
-        return f"{prefix}{new_node}"
-
-    # Replace $u_ORIGINAL, $d_ORIGINAL, u_ORIGINAL, d_ORIGINAL
+   # Create new node block by replacing node name and variable references
     node_block_new = re.sub(
-        rf"(\$?[ud]_){original_node}\b", rf"\1{new_node}", node_block
+        rf"Node\s+{re.escape(original_node)}\s*\{{", 
+        f"Node {new_node} {{", 
+        node_block
     )
+    
+    # Replace $u_ and $d_ references
+    node_block_new = re.sub(
+        rf"(\$[ud]_){re.escape(original_node)}\b", 
+        rf"\1{new_node}", 
+        node_block_new
+    )
+
+
     # Replace all other whole-word occurrences (e.g., in logic)
-    node_block_new = re.sub(rf"\b{original_node}\b", new_node, node_block_new)
+    # node_block_new = re.sub(rf"\b{original_node}\b", new_node, node_block_new)
+
 
     # Insert the new node block after the original
     insert_pos = match.end()
@@ -94,6 +107,11 @@ def create_new_bnd_nodes(file_path, original_node, new_node):
 
     with open(file_path, "w") as f:
         f.write(new_content)
+    
+    print(f"Created new node {new_node} based on {original_node}")
+
+
+
 
 
 def create_new_cfg_nodes(file_path, original_node, new_node):
@@ -169,63 +187,15 @@ def remove_cfg_node(file_path, node_to_remove):
         f.writelines(new_lines)
 
 
-def remove_bnd_node(file_path, node_to_remove):
-    with open(file_path, "r") as f:
-        content = f.read()
-
-    node_block_pattern = re.compile(
-        rf"Node\s+{re.escape(node_to_remove)}\s*\{{.*?^\s*\}}\s*$",
-        re.DOTALL | re.MULTILINE | re.IGNORECASE,
-    )
-
-    new_content = node_block_pattern.sub("", content)
-
-    if new_content == content:
-        print(
-            f"Warning: Node block '{node_to_remove}' not found in the file. "
-            "Proceeding to remove other references if any."
-        )
-    logical_interaction_patterns = [
-        rf"^\s*.*\b\$[ud]_{re.escape(node_to_remove)}\b.*$",
-        rf"^\s*.*\b{re.escape(node_to_remove)}\.is_internal\b.*$",
-        rf"^\s*//\s*\[FUSED_EVENT\]\.istate=\s*(?:\d+\s*\[\d+\](?:\s*,\s*\d+\s*\[\d+\])*)?\s*;?\s*$",
-        rf"^\s*.*\b{re.escape(node_to_remove)}\b.*$",
-    ]
-
-    # Split the content into lines while keeping the line endings
-    lines = new_content.splitlines(keepends=True)
-    final_lines = []
-
-    for line in lines:
-        should_remove_line = False
-        for pat in logical_interaction_patterns:
-            if re.search(pat, line, re.IGNORECASE):  # Use IGNORECASE for patterns too
-                should_remove_line = True
-                break
-
-        if not should_remove_line:
-            final_lines.append(line)
-
-    final_content = "".join(final_lines)
-
-    # Write the modified content back to the file
-    with open(file_path, "w") as f:
-        f.write(final_content)
-
-    print(
-        f"Successfully processed file: {file_path}. Node '{node_to_remove}' and its references have been removed."
-    )
-
-
 # Main function
-def replace_node_names_in_file(file_path, name_maps, nodes_to_remove, nodes_to_add):
+def replace_node_names_in_file(file_path, name_maps, nodes_to_add):
     ext = os.path.splitext(file_path)[1]
     if ext == ".cfg":
         uppercase_cfg_node_names(file_path)
     else:
         uppercase_bnd_node_names(file_path)
 
-    # transform all the nodes names to genes/ proteins names depending on the type_models
+
 
     with open(file_path, "r") as f:
         content = f.read()
@@ -237,16 +207,18 @@ def replace_node_names_in_file(file_path, name_maps, nodes_to_remove, nodes_to_a
     with open(file_path, "w") as f:
         f.write(content)
 
-    for key, value in nodes_to_add.items():
-        if ext == ".cfg":
-            create_new_cfg_nodes(file_path, key, value)
-            add_new_node_to_logic(file_path, key, value)
-        else:
-            create_new_bnd_nodes(file_path, key, value)
-            add_new_node_to_logic(file_path, key, value)
+    # Add duplicate tracking here
+    if nodes_to_add:
+        created_nodes = set()
+        for key, value in nodes_to_add.items():
+            if value not in created_nodes:
+                if ext == ".cfg":
+                    create_new_cfg_nodes(file_path, key, value)
+                    add_new_node_to_logic(file_path, key, value)
+                else:
+                    create_new_bnd_nodes(file_path, key, value)
+                    add_new_node_to_logic(file_path, key, value)
+                created_nodes.add(value)
+            else:
+                print(f"Node {value} already created, skipping...")
 
-    for node_to_remove in nodes_to_remove:
-        if ext == ".cfg":
-            remove_cfg_node(file_path, node_to_remove)
-        else:
-            print("change manually the bnd files with the node to remove")

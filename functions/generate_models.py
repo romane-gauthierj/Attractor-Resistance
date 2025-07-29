@@ -85,7 +85,6 @@ def pre_process_re(
 
     table_proteins_patients = create_table_proteins_patients(df_melted_protein)
 
-    print("preprocessed  proteins")
 
     if type_models == "genes_models":
         top_resistant_ids = list(
@@ -177,7 +176,6 @@ def generate_models_re(
     type_models,
     df_melted_proteins,
     table_proteins_patients,
-    nodes_to_remove,
     nodes_to_add,
     intervention_gene=None,
     genetic_intervention=None,
@@ -195,8 +193,7 @@ def generate_models_re(
         drug_interest,
         name_maps,
         type_models,
-        nodes_to_remove,
-        nodes_to_add,
+        nodes_to_add=nodes_to_add,
     )
 
     models_folder_res = f"{folder_models}/resistant/pers_models"
