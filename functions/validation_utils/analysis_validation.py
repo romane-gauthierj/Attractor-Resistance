@@ -42,17 +42,17 @@ def validation_analysis(
         folder_validation_temp = os.path.join(folder_validation, group)
 
         # compute the phenotype distribution for each condition for all the group
-        # compute_phenotype_table(
-        #     folder_results_temp,
-        #     folder_validation_temp,
-        #     patient,
-        #     inputs_list,
-        #     phenotype_interest,
-        #     context_label,
-        # )
+        compute_phenotype_table(
+            folder_results_temp,
+            folder_validation_temp,
+            patient,
+            inputs_list,
+            phenotype_interest,
+            context_label,
+        )
 
     # compute the mean of each attractor for each condition for all th group
-    # compute_phenotype_mean_group_validation(groups, folder_results)
+    compute_phenotype_mean_group_validation(groups, folder_results)
 
     # heatmap of the mean of each group
     mean1 = pd.read_csv(
@@ -68,9 +68,9 @@ def validation_analysis(
         index_col=0,
     )
 
-    # plot_three_side_by_side_heatmaps(
-    #     mean1, mean2, mean3, folder_results, labels=["high", "middle", "low"]
-    # )
+    plot_three_side_by_side_heatmaps(
+        mean1, mean2, mean3, folder_results, labels=["high", "middle", "low"]
+    )
 
     # can also just look at low and high gleason score
     plot_two_stacked_heatmaps(mean1, mean3, folder_results, labels=["high", "low"])

@@ -3,104 +3,192 @@
 import pandas as pd
 import re
 import os
+import numpy as np
+from sklearn.preprocessing import MinMaxScaler
 
 
-# function used for validation and general pipeline
+
+# Step 2 - personalization (with their method)
+
+from sklearn.preprocessing import MinMaxScaler
+
+def normalize_rna_seq_efficient(rna_seq_data_models_filtered):
+    """
+    Efficient min-max normalization using pandas groupby
+    """
+    rna_normalized = rna_seq_data_models_filtered.copy()
+    
+    def minmax_normalize_group(group):
+        """Apply min-max normalization to a group (gene)"""
+        scaler = MinMaxScaler()
+        group['rsem_tpm_normalized'] = scaler.fit_transform(group[['rsem_tpm']]).flatten()
+        return group
+    
+    print("Applying min-max normalization per gene...")
+    
+    # Group by gene and apply normalization
+    rna_normalized = rna_normalized.groupby('gene_symbol').apply(minmax_normalize_group).reset_index(drop=True)
+    
+    print("Normalization completed!")
+    print(f"Original column: 'rsem_tpm', Normalized column: 'rsem_tpm_normalized'")
+    return rna_normalized
+
+
+
+
 def personalized_patients_genes_cfgs(
-    rna_seq_data,
-    montagud_nodes,
+    rna_seq_data_models_filtered,
+    montagud_node_model,
     folder_models,
-    patients_ids,
-    rna_seq_data_filtered,
+    amplif_factor,
     context_label,
 ):
-    rna_seq_data = rna_seq_data[rna_seq_data["model_id"].isin(patients_ids)]
+    # Apply the normalization
+    rna_seq_data_normalized = normalize_rna_seq_efficient(rna_seq_data_models_filtered)
 
-    rna_seq_data = rna_seq_data[["model_id", "gene_symbol", "rsem_tpm"]]
 
-    rna_seq_data_max = rna_seq_data
-    rna_seq_data_max["gene_max"] = rna_seq_data_max.groupby("gene_symbol")[
-        "rsem_tpm"
-    ].transform("max")
-
+    print("==== Processing all genes per patient ===")
     # Loop through each file in the directory
     for filename in os.listdir(folder_models):
+        if not filename.endswith('.cfg'):
+            continue
+
         file_path = os.path.join(folder_models, filename)
+        print(f"\nProcessing file: {filename}")
+
         if os.path.isfile(file_path):  # Make sure it's a file, not a subdirectory
             # model_id_in_file = os.path.splitext(filename)[0]  # remove .cfg extension
             # model_id_in_file = os.path.splitext(filename)[0].replace('_AZD8931', '')
             model_id_in_file = os.path.splitext(filename)[0].replace(
                 f"_{context_label}", ""
             )
-            # Only proceed if model_id is in table_genes_patients
-            if model_id_in_file in rna_seq_data_filtered.index:
-                with open(file_path, "r") as file:
-                    content = file.read()
-                    # rna_seq_data_filtered_filtered = rna_seq_data_filtered[rna_seq_data_filtered.index == model_id_in_file]
-                if model_id_in_file in rna_seq_data_filtered.index:
-                    row = rna_seq_data_filtered.loc[model_id_in_file]
-                    # Only modify if this row corresponds to the file being processed
-                    high_genes = row["High Gene Expression"]
-                    low_genes = row["Low Gene Expression"]
-                    gene_high_list = [
-                        gene.strip() for gene in high_genes.split(",") if gene.strip()
-                    ]
-                    gene_low_list = [
-                        gene.strip() for gene in low_genes.split(",") if gene.strip()
-                    ]
-                    gene_list = list(set(gene_high_list + gene_low_list))
-                    for gene in gene_list:  # add condition if gene is in the genes of the boolean generic network
-                        if gene in montagud_nodes:
-                            expr_max = rna_seq_data_max.loc[
-                                rna_seq_data_max["gene_symbol"] == gene, "gene_max"
-                            ].iloc[0]
-                            gene_expr = rna_seq_data.loc[
-                                (rna_seq_data["gene_symbol"] == gene)
-                                & (rna_seq_data["model_id"] == model_id_in_file),
-                                "rsem_tpm",
-                            ].iloc[0]
-                            prob_1 = min(max(gene_expr / expr_max, 0), 1)
+            
+            with open(file_path, "r") as file:
+                content = file.read()
+      
 
-                            u_pattern = re.compile(
-                                rf"\$u_{gene}\s*=\s*(0|1);", re.DOTALL
-                            )
-                            d_pattern = re.compile(
-                                rf"\$d_{gene}\s*=\s*(0|1);", re.DOTALL
-                            )
-                            u_line = f"$u_{gene} = {prob_1:.4f};"
-                            d_line = f"$d_{gene} = {1 - prob_1:.4f};"
-                            content = re.sub(u_pattern, u_line, content)
-                            content = re.sub(d_pattern, d_line, content)
-                # modified_file_path = os.path.join(modified_output_dir, f'{filename}_{drug_name}')
-                modified_file_path = os.path.join(folder_models, filename)
+            for gene in montagud_node_model:
+                gene_data_normalized = rna_seq_data_normalized[
+                        (rna_seq_data_normalized["gene_symbol"] == gene) &
+                        (rna_seq_data_normalized["model_id"] == model_id_in_file)
+                    ]['rsem_tpm_normalized']
+                
+                if gene_data_normalized.empty:
+                        print(f"  No data for {gene}")
+                        continue
 
-                with open(modified_file_path, "w") as file:
-                    file.write(content)
-                print(f"Modified and saved: {modified_file_path}")
+                # Calculate the transition up and down values
+
+                k_up = amplif_factor**(2 * (gene_data_normalized.iloc[0] - 0.5))
+                if k_up != 0:
+                    k_down = 1/ k_up
+                else:
+                    # Handle edge case
+                    k_up = 0.001
+                    k_down = 1000
+
+                # Apply modifications
+                u_pattern = re.compile(rf"\$u_{re.escape(gene)}\s*=\s*[0-9]*\.?[0-9]+;", re.DOTALL)
+                d_pattern = re.compile(rf"\$d_{re.escape(gene)}\s*=\s*[0-9]*\.?[0-9]+;", re.DOTALL)
+                
+                u_line = f"$u_{gene} = {k_up:.4f};"
+                d_line = f"$d_{gene} = {k_down:.4f};"
+                
+                content = re.sub(u_pattern, u_line, content)
+                content = re.sub(d_pattern, d_line, content)
 
 
-# function used for validation and general pipeline
+
+        # Save modified file
+        modified_file_path = os.path.join(folder_models, filename)
+        with open(modified_file_path, "w") as file:
+            file.write(content)
+        print(f"Modified and saved: {modified_file_path}")
+
+
+
+
+# Step 2 - personalization (with my method)
+# def personalized_patients_genes_cfgs(
+#     rna_seq_data_models_filtered,
+#     montagud_node_model,
+#     folder_models,
+#     context_label,
+# ):
+#     rna_seq_data_max = rna_seq_data_models_filtered.copy()
+#     rna_seq_data_max["gene_max"] = rna_seq_data_max.groupby("gene_symbol")[
+#         "rsem_tpm"
+#     ].transform("max")
+
+
+#     print("==== Processing all genes per patient ===")
+#     # Loop through each file in the directory
+#     for filename in os.listdir(folder_models):
+#         if not filename.endswith('.cfg'):
+#             continue
+
+#         file_path = os.path.join(folder_models, filename)
+#         print(f"\nProcessing file: {filename}")
+
+#         if os.path.isfile(file_path):  # Make sure it's a file, not a subdirectory
+#             # model_id_in_file = os.path.splitext(filename)[0]  # remove .cfg extension
+#             # model_id_in_file = os.path.splitext(filename)[0].replace('_AZD8931', '')
+#             model_id_in_file = os.path.splitext(filename)[0].replace(
+#                 f"_{context_label}", ""
+#             )
+            
+#             with open(file_path, "r") as file:
+#                 content = file.read()
+      
+
+#             for gene in montagud_node_model:
+#                 gene_data = rna_seq_data_models_filtered[
+#                         (rna_seq_data_models_filtered["gene_symbol"] == gene) &
+#                         (rna_seq_data_models_filtered["model_id"] == model_id_in_file)
+#                     ]
+#                 if gene_data.empty:
+#                         print(f"  No data for {gene}")
+#                         continue
+
+#                 # Calculate expression probability
+#                 expr_max = rna_seq_data_max.loc[
+#                     rna_seq_data_max["gene_symbol"] == gene, "gene_max"
+#                 ].iloc[0]
+#                 gene_expr = gene_data["rsem_tpm"].iloc[0]
+#                 prob_1 = min(max(gene_expr / expr_max, 0), 1)
+
+
+#                 # Apply modifications
+#                 u_pattern = re.compile(rf"\$u_{re.escape(gene)}\s*=\s*[0-9]*\.?[0-9]+;", re.DOTALL)
+#                 d_pattern = re.compile(rf"\$d_{re.escape(gene)}\s*=\s*[0-9]*\.?[0-9]+;", re.DOTALL)
+                
+#                 u_line = f"$u_{gene} = {prob_1:.4f};"
+#                 d_line = f"$d_{gene} = {1 - prob_1:.4f};"
+                
+#                 content = re.sub(u_pattern, u_line, content)
+#                 content = re.sub(d_pattern, d_line, content)
+
+
+
+#         # Save modified file
+#         modified_file_path = os.path.join(folder_models, filename)
+#         with open(modified_file_path, "w") as file:
+#             file.write(content)
+#         print(f"Modified and saved: {modified_file_path}")
+
+
+
 def personalized_patients_proteins_cfgs(
     df_melted_proteins,
-    montagud_nodes,
+    montagud_node_model,
     folder_models,
-    patients_ids,
-    table_proteins_patients,
-    drug_interest,
+    context_label,
 ):
-    df_melted_proteins = df_melted_proteins[
-        df_melted_proteins["model_id"].isin(patients_ids)
-    ]
 
     df_melted_proteins = df_melted_proteins[["model_id", "protein_symbol", "rsem_tpm"]]
 
-    # Open each file in the directory
-    # os.makedirs(original_data_dir, exist_ok=True)
 
-    # Directory where modified files will be saved
-    # os.makedirs(results_dir, exist_ok=True)
-
-    protein_data_max = df_melted_proteins
+    protein_data_max = df_melted_proteins.copy()
     protein_data_max["protein_max"] = protein_data_max.groupby("protein_symbol")[
         "rsem_tpm"
     ].transform("max")
@@ -111,76 +199,318 @@ def personalized_patients_proteins_cfgs(
             continue
         file_path = os.path.join(folder_models, filename)
         if os.path.isfile(file_path):  # Make sure it's a file, not a subdirectory
-            # model_id_in_file = os.path.splitext(filename)[0]  # remove .cfg extension
-            # model_id_in_file = os.path.splitext(filename)[0].replace('_AZD8931', '')
+
             model_id_in_file = os.path.splitext(filename)[0].replace(
-                f"_{drug_interest}", ""
+                f"_{context_label}", ""
             )
+            
             # Only proceed if model_id is in table_proteins_patients
-            if model_id_in_file in table_proteins_patients.index:
-                with open(file_path, "r") as file:
-                    content = file.read()
-                    # rna_seq_data_filtered_filtered = rna_seq_data_filtered[rna_seq_data_filtered.index == model_id_in_file]
-                if model_id_in_file in table_proteins_patients.index:
-                    row = table_proteins_patients.loc[model_id_in_file]
-                    # Only modify if this row corresponds to the file being processed
-                    high_proteins = row["High Protein Abundance"]
-                    low_proteins = row["Low Protein Abundance"]
-                    protein_high_list = [
-                        protein.strip()
-                        for protein in high_proteins.split(",")
-                        if protein.strip()
-                    ]
-                    protein_low_list = [
-                        protein.strip()
-                        for protein in low_proteins.split(",")
-                        if protein.strip()
-                    ]
-                    protein_list = list(set(protein_high_list + protein_low_list))
-                    for protein in protein_list:  # add condition if protein is in the proteins of the boolean generic network
-                        if protein in montagud_nodes:
-                            expr_max = protein_data_max.loc[
-                                protein_data_max["protein_symbol"] == protein,
-                                "protein_max",
-                            ].iloc[0]
+            with open(file_path, "r") as file:
+                content = file.read()
+            
+            for protein in montagud_node_model:
 
-                            prot_expr = df_melted_proteins.loc[
-                                (df_melted_proteins["protein_symbol"] == protein)
-                                & (df_melted_proteins["model_id"] == model_id_in_file),
-                                "rsem_tpm",
-                            ].iloc[0]
+                protein_max_data = protein_data_max[
+                    protein_data_max["protein_symbol"] == protein
+                ]
+                
+                if protein_max_data.empty:
+                    print(f"  No max data for protein: {protein}")
+                    continue
+                
+                # Check if this patient has data for this protein
+                patient_protein_data = df_melted_proteins[
+                    (df_melted_proteins["protein_symbol"] == protein) &
+                    (df_melted_proteins["model_id"] == model_id_in_file)
+                ]
+                
+                if patient_protein_data.empty:
+                    print(f"  No data for protein {protein} in patient {model_id_in_file}")
+                    continue
+                                
 
-                            prob_1 = min(max(prot_expr / expr_max, 0), 1)
+                expr_max = protein_max_data["protein_max"].iloc[0]
+                prot_expr = patient_protein_data["rsem_tpm"].iloc[0]
 
-                            u_pattern = re.compile(
-                                rf"\$u_{protein}\s*=\s*(0|1);", re.DOTALL
-                            )
 
-                            d_pattern = re.compile(
-                                rf"\$d_{protein}\s*=\s*(0|1);", re.DOTALL
-                            )
-                            u_line = f"$u_{protein} = {prob_1:.4f};"
-                            d_line = f"$d_{protein} = {1 - prob_1:.4f};"
-                            content = re.sub(u_pattern, u_line, content)
-                            content = re.sub(d_pattern, d_line, content)
+                prob_1 = min(max(prot_expr / expr_max, 0), 1)
 
+                print(f"  Protein: {protein}, Expression: {prot_expr:.4f}, Max: {expr_max:.4f}, Prob: {prob_1:.4f}")
+
+
+                u_pattern = re.compile(rf"\$u_{re.escape(protein)}\s*=\s*[0-9]*\.?[0-9]+;", re.DOTALL)
+                d_pattern = re.compile(rf"\$d_{re.escape(protein)}\s*=\s*[0-9]*\.?[0-9]+;", re.DOTALL)
+
+                u_line = f"$u_{protein} = {prob_1:.4f};"
+                d_line = f"$d_{protein} = {1 - prob_1:.4f};"
                     
-                            u_pattern = re.compile(
-                                rf"\$u_{protein}\s*=\s*\d+\.?\d*;", re.DOTALL
-                            )
-                            d_pattern = re.compile(
-                                rf"\$d_{protein}\s*=\s*\d+\.?\d*;", re.DOTALL
-                            )
+                        
+                content = re.sub(u_pattern, u_line, content)
+                content = re.sub(d_pattern, d_line, content)
 
-                            u_line = f"$u_{protein} = {prob_1:.4f};"
-                            d_line = f"$d_{protein} = {1 - prob_1:.4f};"
-
-                            content, num_u = re.subn(u_pattern, u_line, content)
-                            content, num_d = re.subn(d_pattern, d_line, content)
 
                 # modified_file_path = os.path.join(modified_output_dir, f'{filename}_{drug_name}')
-                modified_file_path = os.path.join(folder_models, filename)
+        modified_file_path = os.path.join(folder_models, filename)
+        with open(modified_file_path, "w") as file:
+            file.write(content)
+        print(f"Modified and saved: {modified_file_path}")
 
-                with open(modified_file_path, "w") as file:
-                    file.write(content)
-                print(f"Modified and saved: {modified_file_path}")
+
+
+# def personalized_patients_genes_cfgs(
+#     rna_seq_data_models_filtered,
+#     montagud_node_model,
+#     folder_models,
+#     table_rna_seq_patients,
+#     context_label,
+# ):
+   
+
+#     rna_seq_data_max = rna_seq_data_models_filtered.copy()
+#     rna_seq_data_max["gene_max"] = rna_seq_data_max.groupby("gene_symbol")[
+#         "rsem_tpm"
+#     ].transform("max")
+
+
+#     print("==== Processing all genes per patient ===")
+#     # Loop through each file in the directory
+#     for filename in os.listdir(folder_models):
+#         file_path = os.path.join(folder_models, filename)
+#         if os.path.isfile(file_path):  # Make sure it's a file, not a subdirectory
+#             # model_id_in_file = os.path.splitext(filename)[0]  # remove .cfg extension
+#             # model_id_in_file = os.path.splitext(filename)[0].replace('_AZD8931', '')
+#             model_id_in_file = os.path.splitext(filename)[0].replace(
+#                 f"_{context_label}", ""
+#             )
+#             # Only proceed if model_id is in table_genes_patients
+#             if model_id_in_file in table_rna_seq_patients.index:
+#                 with open(file_path, "r") as file:
+#                     content = file.read()
+#                     # rna_seq_data_filtered_filtered = rna_seq_data_filtered[rna_seq_data_filtered.index == model_id_in_file]
+#                 if model_id_in_file in table_rna_seq_patients.index:
+#                     row = table_rna_seq_patients.loc[model_id_in_file]
+#                     # Only modify if this row corresponds to the file being processed
+#                     high_genes = row["High Gene Expression"]
+#                     low_genes = row["Low Gene Expression"]
+#                     gene_high_list = [
+#                         gene.strip() for gene in high_genes.split(",") if gene.strip()
+#                     ]
+#                     gene_low_list = [
+#                         gene.strip() for gene in low_genes.split(",") if gene.strip()
+#                     ]
+
+#                     gene_list = list(set(gene_high_list + gene_low_list))
+#                     for gene in gene_list:  # add condition if gene is in the genes of the boolean generic network
+#                         if gene in montagud_node_model:
+#                             expr_max = rna_seq_data_max.loc[
+#                                 rna_seq_data_max["gene_symbol"] == gene, "gene_max"
+#                             ].iloc[0]
+#                             gene_expr = rna_seq_data_models_filtered.loc[
+#                                 (rna_seq_data_models_filtered["gene_symbol"] == gene)
+#                                 & (rna_seq_data_models_filtered["model_id"] == model_id_in_file),
+#                                 "rsem_tpm",
+#                             ].iloc[0]
+#                             prob_1 = min(max(gene_expr / expr_max, 0), 1)
+
+                           
+#                             u_pattern = re.compile(rf"\$u_{re.escape(gene)}\s*=\s*[0-9]*\.?[0-9]+;", re.DOTALL)
+#                             d_pattern = re.compile(rf"\$d_{re.escape(gene)}\s*=\s*[0-9]*\.?[0-9]+;", re.DOTALL)
+
+
+#                             u_line = f"$u_{gene} = {prob_1:.4f};"
+#                             d_line = f"$d_{gene} = {1 - prob_1:.4f};"
+#                             content = re.sub(u_pattern, u_line, content)
+#                             content = re.sub(d_pattern, d_line, content)
+#                 # modified_file_path = os.path.join(modified_output_dir, f'{filename}_{drug_name}')
+#                 modified_file_path = os.path.join(folder_models, filename)
+
+#                 with open(modified_file_path, "w") as file:
+#                     file.write(content)
+#                 print(f"Modified and saved: {modified_file_path}")
+
+
+# function used for validation and general pipeline
+# def personalized_patients_genes_cfgs(
+#     rna_seq_data,
+#     montagud_node_model,
+#     folder_models,
+#     patients_ids,
+#     rna_seq_data_filtered,
+#     context_label,
+# ):
+#     rna_seq_data = rna_seq_data[rna_seq_data["model_id"].isin(patients_ids)]
+
+#     rna_seq_data = rna_seq_data[["model_id", "gene_symbol", "rsem_tpm"]]
+
+#     print('rna_seq_data', rna_seq_data)
+
+
+#     rna_seq_data_max = rna_seq_data
+#     rna_seq_data_max["gene_max"] = rna_seq_data_max.groupby("gene_symbol")[
+#         "rsem_tpm"
+#     ].transform("max")
+
+
+
+#     # Loop through each file in the directory
+#     for filename in os.listdir(folder_models):
+
+#         file_path = os.path.join(folder_models, filename)
+#         if os.path.isfile(file_path):  # Make sure it's a file, not a subdirectory
+#             # model_id_in_file = os.path.splitext(filename)[0]  # remove .cfg extension
+#             # model_id_in_file = os.path.splitext(filename)[0].replace('_AZD8931', '')
+#             model_id_in_file = os.path.splitext(filename)[0].replace(
+#                 f"_{context_label}", ""
+#             )
+#             # Only proceed if model_id is in table_genes_patients
+#             if model_id_in_file in rna_seq_data_filtered.index:
+#                 with open(file_path, "r") as file:
+#                     content = file.read()
+#                     # rna_seq_data_filtered_filtered = rna_seq_data_filtered[rna_seq_data_filtered.index == model_id_in_file]
+#                 if model_id_in_file in rna_seq_data_filtered.index:
+#                     row = rna_seq_data_filtered.loc[model_id_in_file]
+#                     # Only modify if this row corresponds to the file being processed
+#                     high_genes = row["High Gene Expression"]
+#                     low_genes = row["Low Gene Expression"]
+#                     gene_high_list = [
+#                         gene.strip() for gene in high_genes.split(",") if gene.strip()
+#                     ]
+#                     gene_low_list = [
+#                         gene.strip() for gene in low_genes.split(",") if gene.strip()
+#                     ]
+#                     gene_list = list(set(gene_high_list + gene_low_list))
+#                     for gene in gene_list:  # add condition if gene is in the genes of the boolean generic network
+#                         if gene in montagud_node_model:
+#                             expr_max = rna_seq_data_max.loc[
+#                                 rna_seq_data_max["gene_symbol"] == gene, "gene_max"
+#                             ].iloc[0]
+#                             gene_expr = rna_seq_data.loc[
+#                                 (rna_seq_data["gene_symbol"] == gene)
+#                                 & (rna_seq_data["model_id"] == model_id_in_file),
+#                                 "rsem_tpm",
+#                             ].iloc[0]
+#                             prob_1 = min(max(gene_expr / expr_max, 0), 1)
+
+#                             u_pattern = re.compile(
+#                                 rf"\$u_{gene}\s*=\s*(0|1);", re.DOTALL
+#                             )
+#                             d_pattern = re.compile(
+#                                 rf"\$d_{gene}\s*=\s*(0|1);", re.DOTALL
+#                             )
+#                             u_line = f"$u_{gene} = {prob_1:.4f};"
+#                             d_line = f"$d_{gene} = {1 - prob_1:.4f};"
+#                             content = re.sub(u_pattern, u_line, content)
+#                             content = re.sub(d_pattern, d_line, content)
+#                 # modified_file_path = os.path.join(modified_output_dir, f'{filename}_{drug_name}')
+#                 modified_file_path = os.path.join(folder_models, filename)
+
+#                 with open(modified_file_path, "w") as file:
+#                     file.write(content)
+#                 print(f"Modified and saved: {modified_file_path}")
+
+
+# function used for validation and general pipeline
+# def personalized_patients_proteins_cfgs(
+#     df_melted_proteins,
+#     montagud_node_model,
+#     folder_models,
+#     patients_ids,
+#     table_proteins_patients,
+#     drug_interest,
+# ):
+#     df_melted_proteins = df_melted_proteins[
+#         df_melted_proteins["model_id"].isin(patients_ids)
+#     ]
+
+#     df_melted_proteins = df_melted_proteins[["model_id", "protein_symbol", "rsem_tpm"]]
+
+#     # Open each file in the directory
+#     # os.makedirs(original_data_dir, exist_ok=True)
+
+#     # Directory where modified files will be saved
+#     # os.makedirs(results_dir, exist_ok=True)
+
+#     protein_data_max = df_melted_proteins
+#     protein_data_max["protein_max"] = protein_data_max.groupby("protein_symbol")[
+#         "rsem_tpm"
+#     ].transform("max")
+
+#     # Loop through each file in the directory
+#     for filename in os.listdir(folder_models):
+#         if not filename.endswith(".cfg"):
+#             continue
+#         file_path = os.path.join(folder_models, filename)
+#         if os.path.isfile(file_path):  # Make sure it's a file, not a subdirectory
+#             # model_id_in_file = os.path.splitext(filename)[0]  # remove .cfg extension
+#             # model_id_in_file = os.path.splitext(filename)[0].replace('_AZD8931', '')
+#             model_id_in_file = os.path.splitext(filename)[0].replace(
+#                 f"_{drug_interest}", ""
+#             )
+#             # Only proceed if model_id is in table_proteins_patients
+#             if model_id_in_file in table_proteins_patients.index:
+#                 with open(file_path, "r") as file:
+#                     content = file.read()
+#                     # rna_seq_data_filtered_filtered = rna_seq_data_filtered[rna_seq_data_filtered.index == model_id_in_file]
+#                 if model_id_in_file in table_proteins_patients.index:
+#                     row = table_proteins_patients.loc[model_id_in_file]
+#                     # Only modify if this row corresponds to the file being processed
+#                     high_proteins = row["High Protein Abundance"]
+#                     low_proteins = row["Low Protein Abundance"]
+#                     protein_high_list = [
+#                         protein.strip()
+#                         for protein in high_proteins.split(",")
+#                         if protein.strip()
+#                     ]
+#                     protein_low_list = [
+#                         protein.strip()
+#                         for protein in low_proteins.split(",")
+#                         if protein.strip()
+#                     ]
+#                     protein_list = list(set(protein_high_list + protein_low_list))
+#                     for protein in protein_list:  # add condition if protein is in the proteins of the boolean generic network
+#                         if protein in montagud_node_model:
+#                             expr_max = protein_data_max.loc[
+#                                 protein_data_max["protein_symbol"] == protein,
+#                                 "protein_max",
+#                             ].iloc[0]
+
+#                             prot_expr = df_melted_proteins.loc[
+#                                 (df_melted_proteins["protein_symbol"] == protein)
+#                                 & (df_melted_proteins["model_id"] == model_id_in_file),
+#                                 "rsem_tpm",
+#                             ].iloc[0]
+
+#                             prob_1 = min(max(prot_expr / expr_max, 0), 1)
+
+#                             u_pattern = re.compile(
+#                                 rf"\$u_{protein}\s*=\s*(0|1);", re.DOTALL
+#                             )
+
+#                             d_pattern = re.compile(
+#                                 rf"\$d_{protein}\s*=\s*(0|1);", re.DOTALL
+#                             )
+#                             u_line = f"$u_{protein} = {prob_1:.4f};"
+#                             d_line = f"$d_{protein} = {1 - prob_1:.4f};"
+#                             content = re.sub(u_pattern, u_line, content)
+#                             content = re.sub(d_pattern, d_line, content)
+
+                    
+#                             u_pattern = re.compile(
+#                                 rf"\$u_{protein}\s*=\s*\d+\.?\d*;", re.DOTALL
+#                             )
+#                             d_pattern = re.compile(
+#                                 rf"\$d_{protein}\s*=\s*\d+\.?\d*;", re.DOTALL
+#                             )
+
+#                             u_line = f"$u_{protein} = {prob_1:.4f};"
+#                             d_line = f"$d_{protein} = {1 - prob_1:.4f};"
+
+#                             content, num_u = re.subn(u_pattern, u_line, content)
+#                             content, num_d = re.subn(d_pattern, d_line, content)
+
+#                 # modified_file_path = os.path.join(modified_output_dir, f'{filename}_{drug_name}')
+#                 modified_file_path = os.path.join(folder_models, filename)
+
+#                 with open(modified_file_path, "w") as file:
+#                     file.write(content)
+#                 print(f"Modified and saved: {modified_file_path}")

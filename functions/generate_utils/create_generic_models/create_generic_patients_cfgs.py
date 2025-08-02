@@ -13,8 +13,6 @@ def create_generic_patients_cfg_bnd_validation(
     patients_ids,
     patients_groups,
     tissue,
-    name_maps,
-    nodes_to_remove,
 ):
     """
     Create personalized .cfg and .bnd files for a list of patient IDs based on generic templates.
@@ -27,10 +25,6 @@ def create_generic_patients_cfg_bnd_validation(
     - tissue: str, tissue type to include in the output filenames
     - type_model: gene/ proteins model
     """
-
-    # --- Pre process the generic model ---
-    replace_node_names_in_file(cfg_template_path, name_maps, nodes_to_remove)
-    replace_node_names_in_file(bnd_template_path, name_maps, nodes_to_remove)
 
     # Ensure output directory exists
     os.makedirs(folder_pers_models, exist_ok=True)
@@ -66,6 +60,18 @@ def create_generic_patients_cfg_bnd_validation(
 
 # Load patient IDs
 
+# def create_generic_patients_cfgs_bnds(
+#     folder_generic_models,
+#     folder_models,
+#     resistant_patients_ids,
+#     sensitive_patients_ids,
+#     top_healthy_ids,
+#     drug_interest,
+#     name_maps,
+#     type_models,
+#     nodes_to_add,
+# ):
+    
 
 def create_generic_patients_cfgs_bnds(
     folder_generic_models,
@@ -74,21 +80,19 @@ def create_generic_patients_cfgs_bnds(
     sensitive_patients_ids,
     top_healthy_ids,
     drug_interest,
-    name_maps,
     type_models,
-    nodes_to_add,
 ):
     # --- Templates ---
     cfg_template_path = folder_generic_models + "/Montagud2022_Prostate_Cancer.cfg"
     bnd_template_path = folder_generic_models + "/Montagud2022_Prostate_Cancer.bnd"
 
     # --- Pre process the generic model (proteins or genes names) ---
-    replace_node_names_in_file(
-        cfg_template_path, name_maps, nodes_to_add
-    )
-    replace_node_names_in_file(
-        bnd_template_path, name_maps, nodes_to_add
-    )
+    # replace_node_names_in_file(
+    #     cfg_template_path, name_maps, nodes_to_add
+    # )
+    # replace_node_names_in_file(
+    #     bnd_template_path, name_maps, nodes_to_add
+    # )
 
     # --- Sensitive Patients ---
 

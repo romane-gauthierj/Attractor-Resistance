@@ -6,10 +6,9 @@ from functions.generate_utils.identification_patients.get_patients_sens_res impo
 from functions.generate_utils.pre_process_data.pre_process_cnv import preprocess_cnv
 from functions.generate_utils.pre_process_data.pre_process_genes import (
     process_genes,
-    create_table_rna_seq_patients,
 )
 from functions.generate_utils.pre_process_data.pre_process_montagud_nodes import (
-    process_montagud_nodes,
+    process_montagud_nodes,process_montagud_nodes_synonyms
 )
 from functions.generate_utils.create_generic_models.update_phenotypes_generic_models import (
     generic_models_update_phenotypes,
@@ -21,10 +20,7 @@ from functions.generate_utils.create_person_models.tailor_cfgs_patients import (
     personalized_patients_genes_cfgs,
     personalized_patients_proteins_cfgs,
 )
-from functions.generate_utils.pre_process_data.pre_process_genes import (
-    create_table_rna_seq_patients,
-    process_genes,
-)
+
 from functions.generate_utils.create_person_models.tailor_bnd_cnv import (
     tailor_bnd_cnv_cm,
 )
@@ -35,12 +31,12 @@ from functions.analysis_utils.genes_intervention.pers_interventions import (
 
 from functions.generate_utils.pre_process_data.pre_process_proteins import (
     process_proteins,
-    create_table_proteins_patients,
 )
 
 
 def pre_process_re(
-    montagud_data,
+    montagud_original_data_df,
+    nodes_montagud_synonyms,
     rna_seq_data,
     cnv_data,
     number_patients,
@@ -49,12 +45,8 @@ def pre_process_re(
     drug_interest,
     proteins_data,
     type_models,
-    name_montagud_maps,
-    nodes_to_add,
-    synonyms_maps,
     tissue_interest=None,
     tissue_remove=None,
-    nodes_to_remove=None,
 ):
     top_resistant_ids, top_sensitive_ids, healthy_ids = get_patients(
         number_patients,
@@ -67,58 +59,59 @@ def pre_process_re(
 
     patients_ids = top_resistant_ids + top_sensitive_ids + healthy_ids
 
-    # preprocess montagud nodes
-    montagud_nodes = process_montagud_nodes(
-        montagud_data, name_montagud_maps, nodes_to_add, nodes_to_remove
+  
+
+    montagud_node_synonyms, synonyms_to_nodes_dict = process_montagud_nodes_synonyms(nodes_montagud_synonyms)
+
+
+    montagud_node_model, all_montagud_nodes = process_montagud_nodes(
+        montagud_original_data_df, montagud_node_synonyms
     )
 
-    # preprocess rna seq data
-    rna_seq_data_filtered = process_genes(
-        patients_ids, montagud_nodes, rna_seq_data, synonyms_maps
-    )
-    table_rna_seq_patients = create_table_rna_seq_patients(rna_seq_data_filtered)
+ 
+    rna_seq_data_models_filtered = process_genes(patients_ids, rna_seq_data, all_montagud_nodes, synonyms_to_nodes_dict)
+    # table_rna_seq_patients = create_table_rna_seq_patients(rna_seq_data_models_filtered)
+    
 
     # pre process proteins data
-    df_melted_protein = process_proteins(
-        proteins_data, montagud_nodes, synonyms_maps, patients_ids
-    )
+    df_melted_protein = process_proteins(patients_ids, proteins_data, all_montagud_nodes, synonyms_to_nodes_dict)
+    # table_proteins_patients = create_table_proteins_patients(df_melted_protein)
 
-    table_proteins_patients = create_table_proteins_patients(df_melted_protein)
 
 
     if type_models == "genes_models":
         top_resistant_ids = list(
-            set(table_rna_seq_patients.index) & set(top_resistant_ids)
+            set(rna_seq_data_models_filtered["model_id"]) & set(top_resistant_ids)
         )
         top_sensitive_ids = list(
-            set(table_rna_seq_patients.index) & set(top_sensitive_ids)
+            set(rna_seq_data_models_filtered["model_id"]) & set(top_sensitive_ids)
         )
-        top_healthy_ids = list(set(table_rna_seq_patients.index) & set(healthy_ids))
+        top_healthy_ids = list(set(rna_seq_data_models_filtered["model_id"]) & set(healthy_ids))
 
     elif type_models == "proteins_models":
         # if proteins models
         top_resistant_ids = list(
-            set(table_proteins_patients.index) & set(top_resistant_ids)
+            set(df_melted_protein["model_id"]) & set(top_resistant_ids)
         )
         top_sensitive_ids = list(
-            set(table_proteins_patients.index) & set(top_sensitive_ids)
+            set(df_melted_protein["model_id"]) & set(top_sensitive_ids)
         )
-        top_healthy_ids = list(set(table_proteins_patients.index) & set(healthy_ids))
+        top_healthy_ids = list(set(df_melted_protein["model_id"]) & set(healthy_ids))
 
     elif type_models == "genes_proteins_models":
         top_resistant_ids = list(
-            set(table_proteins_patients.index)
-            & set(table_rna_seq_patients.index)
+            set(df_melted_protein["model_id"])
+            & set(rna_seq_data_models_filtered["model_id"])
             & set(top_resistant_ids)
         )
         top_sensitive_ids = list(
-            set(table_proteins_patients.index)
-            & set(table_rna_seq_patients.index)
+            set(df_melted_protein["model_id"])
+            & set(rna_seq_data_models_filtered["model_id"])
             & set(top_sensitive_ids)
         )
         top_healthy_ids = list(
-            set(table_proteins_patients.index)
-            & set(table_rna_seq_patients.index)
+            set(df_melted_protein["model_id"])
+            & set(rna_seq_data_models_filtered["model_id"])
             & set(healthy_ids)
         )
     else:
@@ -142,20 +135,19 @@ def pre_process_re(
             f.write(f"{pid}\n")
 
     # preprocess cnv data
-    cnv_data_filtered = preprocess_cnv(
-        cnv_data, montagud_nodes, patients_ids, synonyms_maps
+    cnv_data_filtered = preprocess_cnv(patients_ids,
+        cnv_data, all_montagud_nodes, synonyms_to_nodes_dict
     )
+
 
     return (
         top_resistant_ids,
         top_sensitive_ids,
         top_healthy_ids,
-        montagud_nodes,
-        rna_seq_data_filtered,
+        montagud_node_model,
+        rna_seq_data_models_filtered,
         cnv_data_filtered,
-        table_rna_seq_patients,
         df_melted_protein,
-        table_proteins_patients,
     )
 
 
@@ -168,22 +160,20 @@ def generate_models_re(
     drug_interest,
     drug_targets,
     phenotype_interest,
-    rna_seq_data,
-    montagud_nodes,
-    table_rna_seq_patients,
+    rna_seq_data_models_filtered,
+    montagud_node_model,
     cnv_data_filtered,
-    name_maps,
     type_models,
     df_melted_proteins,
-    table_proteins_patients,
-    nodes_to_add,
+    amplif_factor,
     intervention_gene=None,
     genetic_intervention=None,
 ):
     patients_categ = ["resistant", "sensitive", "healthy"]
-    patients_ids = top_resistant_ids + top_sensitive_ids + top_healthy_ids
+    # patients_ids = top_resistant_ids + top_sensitive_ids + top_healthy_ids
 
     # create generic models cfgs and bnds
+
     create_generic_patients_cfgs_bnds(
         folder_generic_models,
         folder_models,
@@ -191,16 +181,82 @@ def generate_models_re(
         top_sensitive_ids,
         top_healthy_ids,
         drug_interest,
-        name_maps,
         type_models,
-        nodes_to_add=nodes_to_add,
     )
+
 
     models_folder_res = f"{folder_models}/resistant/pers_models"
     models_folder_sens = f"{folder_models}/sensitive/pers_models"
     models_folder_healthy = f"{folder_models}/healthy/pers_models"
 
-    # simulate drug target
+
+
+
+    for patient_categ in patients_categ:
+        folder_models_pheno = f"{folder_models}/{patient_categ}/pers_models"
+        generic_models_update_phenotypes(phenotype_interest, folder_models_pheno)
+
+        folder_models_categ = f"{folder_models}/{patient_categ}/pers_models"
+
+        if patient_categ == "sensitive":
+            patients_ids_categ = top_sensitive_ids
+        elif patient_categ == "resistant":
+            patients_ids_categ = top_resistant_ids
+        else:  # "healthy"
+            patients_ids_categ = top_healthy_ids
+
+        # personalization of the patients models according to the type of models
+        if type_models == "genes_models":
+            # personalized_patients_genes_cfgs(
+            #     rna_seq_data,
+            #     montagud_node_model,
+            #     folder_models_categ,
+            #     patients_ids_categ,
+            #     table_rna_seq_patients,
+            #     context_label = drug_interest,
+            # )
+            personalized_patients_genes_cfgs(
+                rna_seq_data_models_filtered,
+                montagud_node_model,
+                folder_models_categ,
+                amplif_factor,
+                context_label = drug_interest,
+            )
+
+
+        elif type_models == "proteins_models":
+            personalized_patients_proteins_cfgs(
+                df_melted_proteins,
+                montagud_node_model,
+                folder_models_categ,
+                context_label = drug_interest,
+            )
+        elif type_models == "genes_proteins_models":
+            # proteins will overwrite genes
+            personalized_patients_genes_cfgs(
+                rna_seq_data_models_filtered,
+                montagud_node_model,
+                folder_models_categ,
+                context_label = drug_interest,
+            )
+            personalized_patients_proteins_cfgs(
+                df_melted_proteins,
+                montagud_node_model,
+                folder_models_categ,
+                context_label = drug_interest,
+            )
+        else:
+            raise ValueError(
+                "Type of models not recognized. Please choose from 'genes_models', 'proteins_models', or 'genes_proteins_models'."
+            )
+
+        # create personalized models (CNV expression)
+        folder_models_cnv = f"{folder_models}/{patient_categ}/pers_models"
+        tailor_bnd_cnv_cm(
+            cnv_data_filtered, folder_models_cnv, drug_interest=drug_interest
+        )
+
+     # simulate drug target (overwrite all)
     tailor_bnd_genes_intervention(
         drug_targets,
         genetic_intervention,
@@ -223,6 +279,7 @@ def generate_models_re(
         models_folder_healthy,
         drug_interest,
     )
+
 
     # simulate gene intervention if provided
     if intervention_gene is not None and genetic_intervention is not None:
@@ -248,63 +305,28 @@ def generate_models_re(
             drug_interest,
         )
 
-    for patient_categ in patients_categ:
-        folder_models_pheno = f"{folder_models}/{patient_categ}/pers_models"
-        generic_models_update_phenotypes(phenotype_interest, folder_models_pheno)
 
-        folder_models_categ = f"{folder_models}/{patient_categ}/pers_models"
 
-        if patient_categ == "sensitive":
-            patients_ids_categ = top_sensitive_ids
-        elif patient_categ == "resistant":
-            patients_ids_categ = top_resistant_ids
-        else:  # "healthy"
-            patients_ids_categ = top_healthy_ids
 
-        # personalization of the patients models according to the type of models
-        if type_models == "genes_models":
-            personalized_patients_genes_cfgs(
-                rna_seq_data,
-                montagud_nodes,
-                folder_models_categ,
-                patients_ids_categ,
-                table_rna_seq_patients,
-                drug_interest,
-            )
-        elif type_models == "proteins_models":
-            personalized_patients_proteins_cfgs(
-                df_melted_proteins,
-                montagud_nodes,
-                folder_models_categ,
-                patients_ids_categ,
-                table_proteins_patients,
-                drug_interest,
-            )
-        elif type_models == "genes_proteins_models":
-            # proteins will overwrite genes
-            personalized_patients_genes_cfgs(
-                rna_seq_data,
-                montagud_nodes,
-                folder_models_categ,
-                patients_ids_categ,
-                table_rna_seq_patients,
-                drug_interest,
-            )
-            personalized_patients_proteins_cfgs(
-                df_melted_proteins,
-                montagud_nodes,
-                folder_models_categ,
-                patients_ids_categ,
-                table_proteins_patients,
-                drug_interest,
-            )
-        else:
-            raise ValueError(
-                "Type of models not recognized. Please choose from 'genes_models', 'proteins_models', or 'genes_proteins_models'."
-            )
-
-        # create personalized models (CNV expression)
-        folder_models_cnv = f"{folder_models}/{patient_categ}/pers_models"
-        tailor_bnd_cnv_cm(
-            cnv_data_filtered, folder_models_cnv, drug_interest=drug_interest
-        )
+# old version
+# def generate_models_re(
+#     folder_generic_models,
+#     folder_models,
+#     top_resistant_ids,
+#     top_sensitive_ids,
+#     top_healthy_ids,
+#     drug_interest,
+#     drug_targets,
+#     phenotype_interest,
+#     rna_seq_data,
+#     montagud_node_model,
+#     table_rna_seq_patients,
+#     cnv_data_filtered,
+#     name_maps,
+#     type_models,
+#     df_melted_proteins,
+#     table_proteins_patients,
+#     nodes_to_add,
+#     intervention_gene=None,
+#     genetic_intervention=None,
+# )

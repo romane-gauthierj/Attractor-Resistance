@@ -1465,3 +1465,224 @@ peut ajouter mapping synonyme
 
 
 comprendre comment on a modifié le generic model pour split les nodes 
+
+
+
+
+
+
+
+
+
+June 30
+finished: recreated the models by keeping the same initial names but changes in the files the names that they can be (with all the synonyms)
+remove the tables for proteins and genes, 
+tried: change the calculation of the transition rates
+
+
+
+Results
+not as good as results as before when keep all genes not only the most different-> maybe try to only keep the genes expression with high Z and low Z score
+
+also change the validation functions (montagud nodes,..)
+
+
+
+
+pour validation - regarder si meilleurs resultats si on ajouter fused event et ar_erg 
+
+essayer aussi avec leur data de transition rates, est-ce que c'est mieux? 
+change diff combination of data - cnv for continous ? rna seq discrete? - and compare with the validation
+
+
+read the paper about stratification
+
+que faire avec MYC_MAX ???
+
+
+ERG try to also change it to OFF all the time ???
+try different way of mutations (CNV) - with logic name as well?
+increase the time of simulation
+try with many inputs simulataneously
+
+try modify initial state according to gene expression
+
+try remove MYC_MAX -> does Myc takes a value ??
+explain the new steps (remove table preprocessing, use new way of computing the transition rate, not change the node themself but map their synonyms to the names of the networks)
+
+
+Results
+- nice results with Pictilisib and PI3K
+- not great results with refametinib -> but also high variability -> so require many patients 
+
+
+to do: check what's wrong with the validation- maybe add the prostate specific gene 
+        try to remove MYC_MAX and check that MYC takes some values as well as EMT and all nodes not at least once changed
+        try to identify targets to block to reverse the effect
+
+        try to understand why it works when targeting PI3K or CHK1_2 but not MEK1
+        check the way calculate power (nb patients)
+
+
+
+
+
+July 31 
+to do: read the two papers,  try to understand why does not work with Refametinib but does with the other drugs (with the paper about resistance)
+play avec les initial states - est-ce que ca change 
+ecrire et modifier les parties du paper 
+
+
+tried: to keep AR_ERG and fused_event in the validation but not better results
+
+
+
+
+
+
+
+check that in the montagud nodes we have these nodes 
+check what happens in case of doublon -> wants the transition rates to change to both genes 
+
+
+
+should i also try to block EGF and FGF when simulate only the activation of one specific genes ?
+
+
+worst case - can try with other data for the validation 
+
+TODO:
+- read papers 
+- maybe try with other data the validation (for the other paper)
+- change also the way of calculating transition rates for proteins personalization
+
+
+
+
+
+TODO 
+1. do survival analysis between phenotype and death (for the validation)
+2. do genes signature correlation to phenotype 
+3. if not nice results - try with breast cancer data
+
+
+
+
+
+
+survival analysis on TCGA dataset (cellmodel passport data do not have survival data)
+- event: status 0 or 1 if dead or not
+- time: overal survival 
+log-rank test : stats test to compare survival distribution of two or more groups
+
+
+
+# Survival analysis - implementation
+
+in paper - METABRIC dataset on Fumia model (somatic mutations, copy number alterations,
+and gene expression)
+
+run MaBoSS on many patients then group them based on their proliferation level (high vs low) -> extract their models id and then take the model id for which have info about event and time then run the logrank_test and check that p values is significatif to see a real correlation between prolif/ invasion/ apoptosis on survival outcome 
+
+
+from lifelines.statistics import logrank_test
+g_1 = [5, 6, 7, 8, 10]
+g_2 = [4, 6, 8, 9, 12]
+e_1 = [1, 1, 1, 1, 1]  # 1 = event occurred, 0 = censored
+e_2 = [1, 1, 1, 1, 1]
+
+result = logrank_test(g_1, g_2, 
+                      e_A= e_1, 
+                      e_B= e_2)
+print("Test Statistic:", result.test_statistic)
+print("P-value:", result.p_value)
+
+
+try with breast cancer data : https://www.cbioportal.org/study/summary?id=brca_metabric (with overal survival and event dataset)
+
+-> try this on random patients (check if more invasion) for prostate and then breast cancer (paper)
+-> objective: prove that invasion, proliferation correlate with bad survival outcome (and so resistance)
+
+
+
+
+# try to see if correlation between phenotype node and genes signature 
+
+in the paper
+MSigDB
+GSVA R package, survival R package
+Correlations are assessed based on Spearman rank method and 95% confidence intervals are obtained by bootstrap (n= 1000)
+https://www.youtube.com/watch?v=egO7Lt92gDY
+
+ For the METABRIC
+cohort, the patient’s Nottingham prognostic index (NPI) and
+survival data 
+
+
+
+Hallmark G2M Checkpoint
+https://www.gsea-msigdb.org/gsea/msigdb/human/geneset/HALLMARK_G2M_CHECKPOINT.html
+
+and apoptosis
+https://www.gsea-msigdb.org/gsea/msigdb/human/geneset/HALLMARK_APOPTOSIS.html
+
+
+
+
+In my research
+GSEA dataset - hallmark Eithelial Mesenchymal Transition (Invasion)
+https://www.gsea-msigdb.org/gsea/msigdb/human/geneset/HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION.html
+
+
+->> use this approach to identify what is the best personalization method (for which the gene signature correlates the best with the phenotype node activated)
+
+
+
+
+
+# try other combination of personalization (if wish ow can support my way with montagud paper)
+# Try diff normalization method (based on the distribution of each gene)
+# Try more resistrictive for CNV (only -2 and + 2)
+
+
+
+
+August 1:
+to do: write new validation method - compute correlation between apoptosis node On proba and apoptosis hallmark (same with EMT, and proliferation) for my current data 
+repeat but with their breast tissue cancer data from cBioportal 
+
+Do a survival analysis between low and high proliferation phenotype -> shows that proliferation is linked to worse survival outcome 
+
+
+
+
+si la diff expression entre les genes est importantes -> normalizer tous les genes ensemble 
+si seulement la diff expression du gene a travers plein de sample est important -> par gene okay
+
+pour normlaization - check comment mes genes ont été normalizé (pas ouf de normalizer par dessus) 
+try other normalization (against all the genes)
+
+
+
+
+TODO this afternoon
+- visualization correlation 
+- do survival analysis to compare between low and high proliferation group 
+- vizualisation survival
+- check normalization against healthy samples
+
+
+try all this on their breast cancer data (with the mutations) check if better results
+
+-> then modify normalization technique, modify formula gene transition, try CNV as continuous data, add mutations data
+
+
+
+
+
+
+
+check what does normalization mean in the paper - same as data processing? 
+
+
+finished: correct cnv tailor fct -> check if impact the results

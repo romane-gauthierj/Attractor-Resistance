@@ -2,6 +2,38 @@ import pandas as pd
 import sys
 import os
 
+
+def preprocess_cnv(patients_ids, cnv_data, all_montagud_nodes, synonyms_to_nodes_dict):
+    # filter out Neural Category
+    cnv_data_filtered = cnv_data[cnv_data["cn_category"] != "Neutral"]
+
+    # keep only the patients id and montagud nodes
+    cnv_data_filtered = cnv_data_filtered[
+        cnv_data_filtered["symbol"].isin(all_montagud_nodes)
+    ]
+    cnv_data_filtered = cnv_data_filtered[
+        cnv_data_filtered["model_id"].isin(patients_ids)
+    ]
+    cnv_data_filtered = cnv_data_filtered[
+        ["model_id", "symbol", "total_copy_number", "cn_category"]
+    ]
+    cnv_data_filtered.rename(columns={"symbol": "gene_symbol"}, inplace=True)
+
+    cnv_data_filtered = cnv_data_filtered[
+        ~cnv_data_filtered["total_copy_number"].isna()
+    ]
+
+    # remplace the cnv gene symbol column names by its synonyms in the proteins_synonyms_maps dictionary
+
+    # apply the synonym mapping 
+    for gene in cnv_data_filtered['gene_symbol'].unique():
+        if gene in synonyms_to_nodes_dict:
+            cnv_data_filtered.loc[cnv_data_filtered['gene_symbol'] == gene, 'gene_symbol'] = synonyms_to_nodes_dict[gene]
+
+    return cnv_data_filtered
+
+
+
 # # Add the parent directory to sys.path
 # sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 # from identification_patients.get_patients_sens_res import get_patients
@@ -33,29 +65,31 @@ import os
 # cnv_data = pd.read_csv('../data/cellmodel_data/cnv_summary_20250207.csv')
 
 
-def preprocess_cnv(cnv_data, montagud_nodes, patients_ids, synonyms_maps):
-    # filter out Neural Category
-    cnv_data_filtered = cnv_data[cnv_data["cn_category"] != "Neutral"]
+# def preprocess_cnv(cnv_data, montagud_nodes, patients_ids, synonyms_maps):
+#     # filter out Neural Category
+#     cnv_data_filtered = cnv_data[cnv_data["cn_category"] != "Neutral"]
 
-    # keep only the patients id and montagud nodes
-    cnv_data_filtered = cnv_data_filtered[
-        cnv_data_filtered["symbol"].isin(montagud_nodes)
-    ]
-    cnv_data_filtered = cnv_data_filtered[
-        cnv_data_filtered["model_id"].isin(patients_ids)
-    ]
-    cnv_data_filtered = cnv_data_filtered[
-        ["model_id", "symbol", "total_copy_number", "cn_category"]
-    ]
-    cnv_data_filtered.rename(columns={"symbol": "gene_symbol"}, inplace=True)
+#     # keep only the patients id and montagud nodes
+#     cnv_data_filtered = cnv_data_filtered[
+#         cnv_data_filtered["symbol"].isin(montagud_nodes)
+#     ]
+#     cnv_data_filtered = cnv_data_filtered[
+#         cnv_data_filtered["model_id"].isin(patients_ids)
+#     ]
+#     cnv_data_filtered = cnv_data_filtered[
+#         ["model_id", "symbol", "total_copy_number", "cn_category"]
+#     ]
+#     cnv_data_filtered.rename(columns={"symbol": "gene_symbol"}, inplace=True)
 
-    cnv_data_filtered = cnv_data_filtered[
-        ~cnv_data_filtered["total_copy_number"].isna()
-    ]
+#     cnv_data_filtered = cnv_data_filtered[
+#         ~cnv_data_filtered["total_copy_number"].isna()
+#     ]
 
-    # remplace the cnv gene symbol column names by its synonyms in the proteins_synonyms_maps dictionary
-    cnv_data_filtered["gene_symbol"] = cnv_data_filtered["gene_symbol"].apply(
-        lambda x: synonyms_maps.get(x, x)
-    )
+#     # remplace the cnv gene symbol column names by its synonyms in the proteins_synonyms_maps dictionary
+#     cnv_data_filtered["gene_symbol"] = cnv_data_filtered["gene_symbol"].apply(
+#         lambda x: synonyms_maps.get(x, x)
+#     )
 
-    return cnv_data_filtered
+#     return cnv_data_filtered
+
+

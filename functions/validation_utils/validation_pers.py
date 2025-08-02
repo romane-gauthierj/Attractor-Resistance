@@ -11,6 +11,9 @@ from statsmodels.stats.multitest import multipletests
 from collections import defaultdict
 from pathlib import Path
 
+from functions.generate_utils.pre_process_data.pre_process_montagud_nodes import (
+    process_montagud_nodes,process_montagud_nodes_synonyms
+)
 
 from functions.generate_utils.create_generic_models.create_generic_patients_cfgs import (
     create_generic_patients_cfg_bnd_validation,
@@ -18,14 +21,8 @@ from functions.generate_utils.create_generic_models.create_generic_patients_cfgs
 from functions.generate_utils.create_generic_models.update_phenotypes_generic_models import (
     generic_models_update_phenotypes,
 )
-from functions.generate_utils.pre_process_data.pre_process_genes import (
-    create_table_rna_seq_patients,
-)
 
-from functions.generate_utils.pre_process_data.pre_process_proteins import (
-    process_proteins_validation,
-    create_table_proteins_patients,
-)
+
 
 from functions.generate_utils.create_person_models.tailor_cfgs_patients import (
     personalized_patients_genes_cfgs,
@@ -62,18 +59,26 @@ def create_gleason_score_groups(phenotype_data, size_group):
     return sampled_df, patients_id
 
 
-def pre_process_cnv(cnv_data, patients_id, montagud_nodes, synonyms_maps):
+
+
+def pre_process_cnv(cnv_data, patients_id, all_montagud_nodes, synonyms_to_nodes_dict):
     # pre-process TCGA CNV data
 
     cnv_data_col = list(cnv_data.columns)
     common_col = list(set(cnv_data_col) & set(patients_id))
     col_keep = ["Gene Symbol"] + common_col
     cnv_data_filtered = cnv_data[col_keep]
+    cnv_data_filtered = cnv_data_filtered[cnv_data_filtered["Gene Symbol"].isin(all_montagud_nodes)]
+
+    for gene in cnv_data_filtered['Gene Symbol'].unique():
+        if gene in synonyms_to_nodes_dict:
+            cnv_data_filtered.loc[cnv_data_filtered['Gene Symbol'] == gene, 'Gene Symbol'] = synonyms_to_nodes_dict[gene]
 
     # remplace the cnv symbol column names by its synonyms in the synonyms_maps dictionary
-    cnv_data_filtered["Gene Symbol"] = cnv_data_filtered["Gene Symbol"].apply(
-        lambda x: synonyms_maps.get(x, x)
-    )
+    # cnv_data_filtered["Gene Symbol"] = cnv_data_filtered["Gene Symbol"].apply(
+    #     lambda x: synonyms_maps.get(x, x)
+    # )
+
 
     df_melted_cnv = cnv_data_filtered.melt(
         id_vars=["Gene Symbol"], var_name="samples_id", value_name="expression_value"
@@ -97,23 +102,50 @@ def pre_process_cnv(cnv_data, patients_id, montagud_nodes, synonyms_maps):
     choices = ["Loss", "Normal", "Gain"]
     df_melted_cnv.loc[:, "effect"] = np.select(conditions, choices, default="")
 
-    df_melted_cnv = df_melted_cnv[df_melted_cnv["gene_symbol"].isin(montagud_nodes)]
+    
     df_melted_cnv.to_csv("data/TCGA_data/prostate/filtered_data/cnv_samples_table.csv")
     return df_melted_cnv
 
 
-def pre_process_genes(genes_data, patients_id, synonyms_maps):
+
+
+def pre_process_genes(genes_data, patients_id, all_montagud_nodes, synonyms_to_nodes_dict):
     # pre-process genes data
 
     genes_data_col = list(genes_data.columns)
     common_col = list(set(genes_data_col) & set(patients_id))
     col_keep = ["sample"] + common_col
     genes_data_filtered = genes_data[col_keep]
+    genes_data_filtered = genes_data_filtered[genes_data_filtered["sample"].isin(all_montagud_nodes)]
+
+    # Special cases handling: Create both mTORC1 and mTORC2 from MTOR data
+    syn_dict = {'MTOR': ['mTORC1', 'mTORC2'], 'MYC': ['MYC', 'MYC_MAX'], 'PIK3CA': ['PI3K', 'PIP3'], 'LDHA': ['LDHA', 'Lactic_acid'], 'ERG': ['AR_ERG', 'ERG']}
+    # Get all keys
+    list_genes_duplicates = syn_dict.keys()
+
 
     # remplace the gene symbol column names by its synonyms in the synonyms_maps dictionary
-    genes_data_filtered["sample"] = genes_data_filtered["sample"].apply(
-        lambda x: synonyms_maps.get(x, x)
-    )
+    for gene in genes_data_filtered['sample'].unique():
+        if gene in synonyms_to_nodes_dict and gene not in list_genes_duplicates:
+            genes_data_filtered.loc[genes_data_filtered['sample'] == gene, 'sample'] = synonyms_to_nodes_dict[gene]
+
+    for duplicate_gene in list_genes_duplicates:
+        gene_duplicate_data = genes_data_filtered[genes_data_filtered['sample'] == duplicate_gene].copy()
+        if not gene_duplicate_data.empty:
+            # Create mTORC1 data
+            gene_duplicate_1_data = gene_duplicate_data.copy()
+            gene_duplicate_1_data['sample'] = syn_dict[duplicate_gene][0]
+            
+            # Create mTORC2 data  
+            gene_duplicate_2_data = gene_duplicate_data.copy()
+            gene_duplicate_2_data['sample'] = syn_dict[duplicate_gene][1]
+            
+            # Remove original MTOR and add both complexes
+            genes_data_filtered = genes_data_filtered[genes_data_filtered['sample'] != duplicate_gene]
+            genes_data_filtered = pd.concat([genes_data_filtered, gene_duplicate_1_data, gene_duplicate_2_data], ignore_index=True)
+
+            print(f" Duplicated {duplicate_gene}: {syn_dict[duplicate_gene][0]} ({len(gene_duplicate_1_data)} rows) + {syn_dict[duplicate_gene][1]} ({len(gene_duplicate_2_data)} rows)")
+
 
     df_melted_gene = genes_data_filtered.melt(
         id_vars=["sample"],  # columns to keep fixed
@@ -130,48 +162,111 @@ def pre_process_genes(genes_data, patients_id, synonyms_maps):
             "expression_value": "rsem_tpm",
         }
     )
-    df_melted_gene["gene_symbol"] = df_melted_gene["gene_symbol"].str.upper()
-    df_melted_gene["gene_symbol"] = df_melted_gene["gene_symbol"].str.replace(
-        "_", "", regex=False
-    )
+ 
     df_melted_gene.to_csv(
         "data/TCGA_data/prostate/filtered_data/genes_samples_table.csv"
     )
-    table_rna_seq_patients = create_table_rna_seq_patients(df_melted_gene)
 
-    return df_melted_gene, table_rna_seq_patients
+    return df_melted_gene
 
 
-def pre_process_montagud_nodes(montagud_data, name_maps, nodes_to_add):
-    # transform nodes_to_add to list if single element
-    if isinstance(nodes_to_add, str):
-        nodes_to_add = [nodes_to_add]
+def process_proteins_validation(
+    proteins_data, patients_id, montagud_nodes, synonyms_to_nodes_dict
+):
+    proteins_data["sample"] = proteins_data["sample"].str.rsplit("-", n=2).str[0]
+    proteins_data["sample"] = proteins_data["sample"].str.replace("_", "", regex=False)
+    proteins_data["sample"] = proteins_data["sample"].str.replace("-", "", regex=False)
 
-    # Create list of genes of interest (in Montagud data)
-    montagud_nodes = list(
-        set(montagud_data["Target node"].tolist() + montagud_data["Source"].tolist())
+
+    montagud_nodes = [str(node) for node in montagud_nodes if pd.notna(node) and node != '']
+    montagud_nodes = [node for node in montagud_nodes if node != 'nan']
+
+    pattern = "|".join(montagud_nodes)
+
+    # Filter rows where 'sample' contains any name from the list
+    # check??
+    proteins_data["sample"] = proteins_data["sample"].astype(str)
+
+    proteins_data = proteins_data[
+        proteins_data["sample"].str.contains(pattern, case=False, na=False)
+    ]
+
+    proteins_data = proteins_data.dropna(how="all", subset=proteins_data.columns[1:])
+
+    mods = ["_PS", "_PT", "_PY"]
+    proteins_data = proteins_data[
+        ~proteins_data["sample"].apply(lambda p: any(mod in p for mod in mods))
+    ]
+
+    # remplace the protein symbol column names by its synonyms in the proteins_synonyms_maps dictionary
+    for protein in proteins_data['sample'].unique():
+        if protein in synonyms_to_nodes_dict:
+            proteins_data.loc[proteins_data['sample'] == protein, 'sample'] = synonyms_to_nodes_dict[protein]
+
+
+
+    # Keep only the proteins present in the montagud list
+
+    proteins_data_col = list(proteins_data.columns)
+    common_col = list(set(proteins_data_col) & set(patients_id))
+    col_keep = ["sample"] + common_col
+    proteins_data_filtered = proteins_data[col_keep]
+
+    df_melted_protein = proteins_data_filtered.melt(
+        id_vars=["sample"],  # columns to keep fixed
+        var_name="samples_id",  # name for the variable column (sample IDs)
+        value_name="expression_value",  # name for the values
     )
-    montagud_nodes = [node for node in montagud_nodes if node != "0/1"]
-    montagud_nodes = [node.upper() for node in montagud_nodes if isinstance(node, str)]
-    # Apply mapping
-    montagud_nodes = [name_maps.get(x, x) for x in montagud_nodes]
-    # Add any additional nodes
-    montagud_nodes = list(set(montagud_nodes + nodes_to_add))
 
-    return montagud_nodes
+    df_melted_protein["sample"] = df_melted_protein["sample"].str.split("|").str[0]
+
+    df_melted_protein = df_melted_protein.rename(
+        columns={
+            "samples_id": "model_id",
+            "sample": "protein_symbol",
+            "expression_value": "rsem_tpm",
+        }
+    )
+  
+    def replace_with_base_name(protein_name):
+        for base in montagud_nodes:
+            if protein_name.startswith(base):
+                return base
+        return protein_name  # if no match found, keep original
+
+    # Assuming your dataframe is df and column to replace is 'protein_symbol'
+    df_melted_protein["protein_symbol"] = df_melted_protein["protein_symbol"].apply(
+        replace_with_base_name
+    )
+
+    df_melted_protein = df_melted_protein[
+        df_melted_protein["protein_symbol"].isin(montagud_nodes)
+    ]
+    df_melted_protein["protein_symbol"] = df_melted_protein[
+        "protein_symbol"
+    ].str.replace("_", "", regex=False)
+    df_melted_protein = df_melted_protein[df_melted_protein["rsem_tpm"].notna()]
+    # df_melted_protein.to_csv(
+    #     "data/TCGA_data/prostate/filtered_data/proteins_samples_table.csv"
+    # )
+    return df_melted_protein
+
+
 
 
 #   MAIN function
+
+
+
 def pre_process_data_validation(
+    montagud_original_data_df,
+    nodes_montagud_synonyms,
+    genes_data,
+    cnv_data,
     size_group,
     phenotype_data,
-    cnv_data,
-    montagud_data,
-    name_maps,
-    nodes_to_add,
-    genes_data,
     proteins_data,
-    synonyms_maps,
+    
 ):
     # get the patients
     patients_groups, patients_id = create_gleason_score_groups(
@@ -179,34 +274,49 @@ def pre_process_data_validation(
     )
 
     # pre process montagud nodes
-    montagud_nodes = pre_process_montagud_nodes(montagud_data, name_maps, nodes_to_add)
+
+    montagud_node_synonyms, synonyms_to_nodes_dict = process_montagud_nodes_synonyms(nodes_montagud_synonyms)
+
+
+    montagud_node_model, all_montagud_nodes = process_montagud_nodes(
+        montagud_original_data_df, montagud_node_synonyms
+    )
+
+
+
+
+
 
     # pre process CNV data
     df_melted_cnv = pre_process_cnv(
-        cnv_data, patients_id, montagud_nodes, synonyms_maps
+        cnv_data, patients_id, all_montagud_nodes, synonyms_to_nodes_dict
     )
+
 
     # pre process genes data
-    df_melted_gene, table_rna_seq_patients = pre_process_genes(
-        genes_data, patients_id, synonyms_maps
+    df_melted_gene = pre_process_genes(
+        genes_data, patients_id, all_montagud_nodes, synonyms_to_nodes_dict
     )
 
+
+
     # pre process proteins data
+
     df_melted_protein = process_proteins_validation(
-        proteins_data, montagud_nodes, synonyms_maps, patients_id
+        proteins_data, patients_id, all_montagud_nodes, synonyms_to_nodes_dict
     )
-    table_proteins_patients = create_table_proteins_patients(df_melted_protein)
+
+
 
     return (
         patients_groups,
         patients_id,
-        montagud_nodes,
+        montagud_node_model,
         df_melted_gene,
-        table_rna_seq_patients,
         df_melted_cnv,
         df_melted_protein,
-        table_proteins_patients,
     )
+
 
 
 def create_pers_models_generic(
@@ -215,16 +325,14 @@ def create_pers_models_generic(
     original_model_bnd,
     patients_id,
     tissue,
-    name_maps,
     type_models,
     phenotype_interest,
     patients_groups,
-    montagud_nodes,
+    montagud_node_model,
     df_melted_gene,
     df_melted_cnv,
-    table_rna_seq_patients,
     df_melted_proteins,
-    table_proteins_patients,
+    amplif_factor,
     context_label,
 ):
     model_generic = "analysis/validation/generic"
@@ -247,7 +355,6 @@ def create_pers_models_generic(
         patients_id,
         patients_groups,
         tissue,
-        name_maps,
     )
 
     groups = list(set(patients_groups["Gleason_group"]))
@@ -264,21 +371,37 @@ def create_pers_models_generic(
             print("Personalizing genes models...")
             personalized_patients_genes_cfgs(
                 df_melted_gene,
-                montagud_nodes,
+                montagud_node_model,
                 folder_validation_temp,
-                patients_id,
-                table_rna_seq_patients,
-                context_label,
+                amplif_factor,
+                context_label = context_label,
             )
         else:
             personalized_patients_proteins_cfgs(
                 df_melted_proteins,
-                montagud_nodes,
+                montagud_node_model,
                 folder_validation_temp,
-                patients_id,
-                table_proteins_patients,
-                context_label,
+                context_label = context_label,
             )
 
         # # personalize the networks with CNV
         tailor_bnd_cnv_validation(df_melted_cnv, folder_validation_temp, context_label)
+
+
+
+# def pre_process_montagud_nodes(montagud_data, name_maps, nodes_to_add):
+#     # transform nodes_to_add to list if single element
+#     if isinstance(nodes_to_add, str):
+#         nodes_to_add = [nodes_to_add]
+
+#     # Create list of genes of interest (in Montagud data)
+#     montagud_nodes = list(
+#         set(montagud_data["Target node"].tolist() + montagud_data["Source"].tolist())
+#     )
+#     montagud_nodes = [node for node in montagud_nodes if node != "0/1"]
+#     # Apply mapping
+#     montagud_nodes = [name_maps.get(x, x) for x in montagud_nodes]
+#     # Add any additional nodes
+#     montagud_nodes = list(set(montagud_nodes + nodes_to_add))
+
+#     return montagud_nodes

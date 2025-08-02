@@ -81,6 +81,7 @@ def downstream_analysis(
 
         # # compute phenotype table for each patient (attractor distribution)
         for patient in top_patients_ids:
+            
             if list_active_inputs is None:
                 # run for only one input ON at a time
                 compute_phenotype_table(
