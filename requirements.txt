@@ -11,3 +11,4 @@ shutil
 gseapy
 lifelines
 sklearn
+diptest

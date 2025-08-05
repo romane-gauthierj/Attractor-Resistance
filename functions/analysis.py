@@ -41,6 +41,8 @@ from functions.analysis_utils.stats.stats_proba import compute_kruskal_test_mean
 
 
 def downstream_analysis(
+    folder_name, 
+    subdir,
     folder_result,
     folder_models,
     drug_interest,
@@ -207,10 +209,21 @@ def downstream_analysis(
     patient_sensitive_mean = compute_mean_phenotype_values(df_sens_combined)
     patient_healthy_mean = compute_mean_phenotype_values(df_healthy_combined)
 
+
+    # patient_resistant_median = compute_median_phenotype_values(df_res_combined)
+    # patient_sensitive_median = compute_median_phenotype_values(df_sens_combined)
+    # patient_healthy_median = compute_median_phenotype_values(df_healthy_combined)
+
+
+
     # resistant and sensitive patients
     plot_side_by_side_heatmaps(
         patient_resistant_mean, patient_sensitive_mean, folder_results_temp
     )
+
+    # plot_side_by_side_heatmaps(
+    #     patient_resistant_median, patient_sensitive_median, folder_results_temp
+    # )
 
     # resistant, sensitive and healthy patients
     plot_three_side_by_side_heatmaps(
@@ -221,9 +234,19 @@ def downstream_analysis(
         labels=patients_categ,
     )
 
+    # plot_three_side_by_side_heatmaps(
+    #     patient_resistant_median,
+    #     patient_sensitive_median,
+    #     patient_healthy_median,
+    #     folder_results_temp,
+    #     labels=patients_categ,
+    # )
+
+
     rna_seq_data_filtered = pd.read_csv(
-        f"analysis/{drug_interest}/data_filtered/rna_seq_data_filtered.csv"
+        f"analysis/{drug_interest}/{folder_name}/{subdir}/data_filtered/rna_seq_data_filtered.csv"
     )
+
 
     res_tables_path = f"{folder_result_resistant}"
     sens_tables_path = f"{folder_result_sensitive}"

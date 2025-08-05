@@ -1686,3 +1686,118 @@ check what does normalization mean in the paper - same as data processing?
 
 
 finished: correct cnv tailor fct -> check if impact the results
+
+
+
+
+August 2
+to do: 
+- check gene signature again in breast validation pipeline
+-  check formula of normalization again (do we really need to do normalization ? other method of normalization? does it change the results a lot ?) 
+- try with different normalization/ remove it 
+- check the paper again (normalizazion technique, what best personalization method used?)
+- try to include mutations data - does it change something ? 
+- try with our way with CNV 
+
+
+
+
+try to personalize with proteins first and if no info use genes instead 
+try to also include mutations 
+why can not have access to gene signature?
+rerun again with this new normalization technique but with the other rna seq data (z score data)
+
+when did the gene signature - need to exclude the genes used for personalize the model (it is said in the paper)? Why if so ?
+can also extract Nottingham prognostic index from the metabric data
+
+
+
+TODO
+
+essayer de pouvoir utiliser the rna seq data dans la fonction correlateavec gene signature
+proba against NPI
+
+
+
+
+August 3
+finished: replaced CNV by mutations data and run again the pipeline, correlation between proliferation proba of the model with NPI 
+to do: 
+        start thinking about what to change in the paper 
+        change comment on a modifé les genes normalization -> pour chaque gene calculer sa distribution et puis faire normalization en fonction 
+
+
+
+        ajouter correlation à pipeline 2
+        ajouter que pour chaque gene calculer la distribution puis choisir la technique de normalization (si trop compliqué- calculer distribtuion de chaque gene pour cell model passport rna seq gene et verifier que tous unimodal )
+
+        peut-être montrer que high invasion and tumor grade check correlation between
+
+
+
+
+
+j'ai run the pipeline 1 avec Azd.. CHK1_2 avec CNV 
+
+try to be more strict with cnv (just the +2 and -2)?
+
+
+
+August 4 
+Catch up - Graeme 
+
+
+- not all the genes were taken into consideration 
+- changes my way of creating the boolean networks to avoid removing nodes automatically 
+- then changes the validation results
+- found a paper about how to use boolean network stochastic simulation to stratify the patients - different ways to validate the best approach of personalization (correlation to NPI (represent severity of disease), correlate to pathway signature) and they compute survival analysis between low and high proliferation group 
+- change way to calculate the up and down regulation of each gene based on their distribution (unimodal, bimodal, zero-inflated) and then apply the formula of the paper 
+- add the mutations data
+
+
+
+
+
+try to include both mutations and cnv and genes (Pictilisib and PI3K)
+
+
+check distribution des genes cell model passport
+
+
+
+!!!! bimodal genes distributions!!!!!:
+['ERG', 'CCNB3', 'RAG1', 'NF1', 'ATM', 'GLI1']
+
+essayer d'enlever le norme et voir si meilleur resultat 
+
+
+
+
+TODO 
+- redownload processed rna seq data and try to remove the normalization step
+try with the other rna seq data (tpm..) and repeat with and without normalization
+
+
+
+
+
+
+
+ August 5
+
+ todo: check the distribution of one gene in each dataset, decide on the rna seq dataset i will be using 
+ update parts of the text i did and collect all the formula and start the method figure
+ identify diff expressed gene and try KO
+
+
+
+essayer differentes methodes de normalization (quoi la reference pour identifier meilleure technique pour cell model passport data?)
+1) normaliser un par un
+2) normaliser en prenant compte des autres genes (comme dans un sample si plus d'un inhibiteur que activateur ca peut changer le outcome)
+3) pas normaliser 
+
+
+check amplif factor - comment le choisir
+identify the best normalization technique based on the signature correlation
+
+repeter avec 35 patients

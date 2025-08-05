@@ -17,7 +17,13 @@ def preprocess_cnv(patients_ids, cnv_data, all_montagud_nodes, synonyms_to_nodes
     cnv_data_filtered = cnv_data_filtered[
         ["model_id", "symbol", "total_copy_number", "cn_category"]
     ]
-    cnv_data_filtered.rename(columns={"symbol": "gene_symbol"}, inplace=True)
+    cnv_data_filtered.rename(columns={"symbol": "gene_symbol", "cn_category": "effect"}, inplace=True)
+
+    # Replace values in the 'effect' column
+    cnv_data_filtered['effect'] = cnv_data_filtered['effect'].replace({
+        'Gain': 'amplification',
+        'Loss': 'deletion'
+    })
 
     cnv_data_filtered = cnv_data_filtered[
         ~cnv_data_filtered["total_copy_number"].isna()

@@ -80,7 +80,6 @@ def create_generic_patients_cfgs_bnds(
     sensitive_patients_ids,
     top_healthy_ids,
     drug_interest,
-    type_models,
 ):
     # --- Templates ---
     cfg_template_path = folder_generic_models + "/Montagud2022_Prostate_Cancer.cfg"

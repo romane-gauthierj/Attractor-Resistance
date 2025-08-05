@@ -32,6 +32,7 @@ from functions.analysis_utils.genes_intervention.pers_interventions import (
 from functions.generate_utils.pre_process_data.pre_process_proteins import (
     process_proteins,
 )
+from functions.generate_utils.pre_process_data.preprocess_mutations import pre_process_mutations
 
 
 def pre_process_re(
@@ -39,12 +40,14 @@ def pre_process_re(
     nodes_montagud_synonyms,
     rna_seq_data,
     cnv_data,
+    mutations_data,
     number_patients,
     drug_data,
     annotations_models,
     drug_interest,
     proteins_data,
     type_models,
+    onco_tsg_data,
     tissue_interest=None,
     tissue_remove=None,
 ):
@@ -70,12 +73,16 @@ def pre_process_re(
 
  
     rna_seq_data_models_filtered = process_genes(patients_ids, rna_seq_data, all_montagud_nodes, synonyms_to_nodes_dict)
-    # table_rna_seq_patients = create_table_rna_seq_patients(rna_seq_data_models_filtered)
     
 
     # pre process proteins data
     df_melted_protein = process_proteins(patients_ids, proteins_data, all_montagud_nodes, synonyms_to_nodes_dict)
-    # table_proteins_patients = create_table_proteins_patients(df_melted_protein)
+
+
+
+ #TODO - check this is correct
+    mutations_data_filtered = pre_process_mutations(mutations_data, patients_ids, all_montagud_nodes, onco_tsg_data,synonyms_to_nodes_dict)
+
 
 
 
@@ -145,13 +152,18 @@ def pre_process_re(
         top_sensitive_ids,
         top_healthy_ids,
         montagud_node_model,
+        all_montagud_nodes,
         rna_seq_data_models_filtered,
         cnv_data_filtered,
         df_melted_protein,
+        mutations_data_filtered,
     )
 
 
 def generate_models_re(
+    normalization_method,
+    discrete_variable,
+    continuous_variable,
     folder_generic_models,
     folder_models,
     top_resistant_ids,
@@ -163,6 +175,7 @@ def generate_models_re(
     rna_seq_data_models_filtered,
     montagud_node_model,
     cnv_data_filtered,
+    mutations_data_filtered,
     type_models,
     df_melted_proteins,
     amplif_factor,
@@ -181,7 +194,6 @@ def generate_models_re(
         top_sensitive_ids,
         top_healthy_ids,
         drug_interest,
-        type_models,
     )
 
 
@@ -206,44 +218,39 @@ def generate_models_re(
             patients_ids_categ = top_healthy_ids
 
         # personalization of the patients models according to the type of models
-        if type_models == "genes_models":
-            # personalized_patients_genes_cfgs(
-            #     rna_seq_data,
-            #     montagud_node_model,
-            #     folder_models_categ,
-            #     patients_ids_categ,
-            #     table_rna_seq_patients,
-            #     context_label = drug_interest,
-            # )
+        if continuous_variable == "genes":
             personalized_patients_genes_cfgs(
                 rna_seq_data_models_filtered,
                 montagud_node_model,
                 folder_models_categ,
                 amplif_factor,
-                context_label = drug_interest,
+                drug_interest, # context label
+                normalization_method,
             )
 
 
-        elif type_models == "proteins_models":
+        elif continuous_variable == "proteins":
             personalized_patients_proteins_cfgs(
                 df_melted_proteins,
                 montagud_node_model,
                 folder_models_categ,
-                context_label = drug_interest,
+                drug_interest,  # context label
             )
-        elif type_models == "genes_proteins_models":
+        elif continuous_variable == "genes_proteins":
             # proteins will overwrite genes
             personalized_patients_genes_cfgs(
                 rna_seq_data_models_filtered,
                 montagud_node_model,
                 folder_models_categ,
-                context_label = drug_interest,
+                drug_interest,  # context label
+                normalization_method,
+
             )
             personalized_patients_proteins_cfgs(
                 df_melted_proteins,
                 montagud_node_model,
                 folder_models_categ,
-                context_label = drug_interest,
+                drug_interest,  # context label
             )
         else:
             raise ValueError(
@@ -252,9 +259,32 @@ def generate_models_re(
 
         # create personalized models (CNV expression)
         folder_models_cnv = f"{folder_models}/{patient_categ}/pers_models"
-        tailor_bnd_cnv_cm(
-            cnv_data_filtered, folder_models_cnv, drug_interest=drug_interest
-        )
+
+
+        if discrete_variable == 'mutations':
+            print('mutations is used to personalize the networks')
+            tailor_bnd_cnv_cm(
+                mutations_data_filtered, folder_models_cnv,
+            )
+        elif discrete_variable == 'cnv':
+            print('cnv is used to personalize the networks')
+            tailor_bnd_cnv_cm(
+                cnv_data_filtered, folder_models_cnv,
+            )
+        elif discrete_variable == 'mutations_cnv':
+            tailor_bnd_cnv_cm(
+                cnv_data_filtered, folder_models_cnv,
+            )
+            tailor_bnd_cnv_cm(
+                mutations_data_filtered, folder_models_cnv,
+            )
+
+
+            print('mutations and cnv are used to personalize the networks')
+
+        
+        else:
+            print('Please select a discrete variable between cnv, mutations or mutations_cnv')
 
      # simulate drug target (overwrite all)
     tailor_bnd_genes_intervention(
@@ -304,29 +334,3 @@ def generate_models_re(
             models_folder_healthy,
             drug_interest,
         )
-
-
-
-
-# old version
-# def generate_models_re(
-#     folder_generic_models,
-#     folder_models,
-#     top_resistant_ids,
-#     top_sensitive_ids,
-#     top_healthy_ids,
-#     drug_interest,
-#     drug_targets,
-#     phenotype_interest,
-#     rna_seq_data,
-#     montagud_node_model,
-#     table_rna_seq_patients,
-#     cnv_data_filtered,
-#     name_maps,
-#     type_models,
-#     df_melted_proteins,
-#     table_proteins_patients,
-#     nodes_to_add,
-#     intervention_gene=None,
-#     genetic_intervention=None,
-# )

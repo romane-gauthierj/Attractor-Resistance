@@ -118,6 +118,14 @@ def create_boxplot(folder_result, res_data, sens_data, significant_df):
             patch.set_facecolor("#FF7F0E")  # Resistant = orange
         for patch in box2["boxes"]:
             patch.set_facecolor("#008000")  # Sensitive = green
+        
+          # Set median lines to black
+        for median in box1["medians"]:
+            median.set_color("black")
+            median.set_linewidth(2)  # Optional: make median line thicker
+        for median in box2["medians"]:
+            median.set_color("black")
+            median.set_linewidth(2)  #
 
         # Set x-ticks at the center of each group
         ax.set_xticks(group_positions)
@@ -307,6 +315,12 @@ def create_boxplot_three_groups(
             )
             for patch in box1["boxes"]:
                 patch.set_facecolor("#FF7F0E")  # Orange = Resistant
+
+            # Set median lines to black
+            for median in box1["medians"]:
+                median.set_color("black")
+                median.set_linewidth(2)
+
         else:
             box1 = {"boxes": []}  # Empty dict to prevent error in legend loop
 
@@ -319,6 +333,11 @@ def create_boxplot_three_groups(
             )
             for patch in box2["boxes"]:
                 patch.set_facecolor("#008000")  # Green = Sensitive
+
+             # Set median lines to black
+            for median in box2["medians"]:
+                median.set_color("black")
+                median.set_linewidth(2)
         else:
             box2 = {"boxes": []}
 
@@ -331,6 +350,9 @@ def create_boxplot_three_groups(
             )
             for patch in box3["boxes"]:
                 patch.set_facecolor("#1f77b4")  # Blue = Healthy
+            for median in box3["medians"]:
+                median.set_color("black")
+                median.set_linewidth(2)
         else:
             box3 = {"boxes": []}
 

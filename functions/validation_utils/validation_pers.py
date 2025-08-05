@@ -320,6 +320,7 @@ def pre_process_data_validation(
 
 
 def create_pers_models_generic(
+    normalization_method,
     folder_validation,
     original_model_cfg,
     original_model_bnd,
@@ -375,6 +376,8 @@ def create_pers_models_generic(
                 folder_validation_temp,
                 amplif_factor,
                 context_label = context_label,
+                normalization_method = normalization_method,
+                
             )
         else:
             personalized_patients_proteins_cfgs(

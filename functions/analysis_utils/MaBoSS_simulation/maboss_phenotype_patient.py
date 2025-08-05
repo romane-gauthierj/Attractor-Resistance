@@ -262,6 +262,21 @@ def compute_mean_phenotype_values(df_patients_combined):
             patient_mean.loc[condition][phenotype] = mean
     return patient_mean
 
+# def compute_median_phenotype_values(df_patients_combined):
+#     import statistics
+#     # compute mean for each patient in the resistant group
+#     conditions = df_patients_combined.index
+#     phenotypes = df_patients_combined.columns
+#     patient_median = pd.DataFrame(index=conditions, columns=phenotypes)
+
+#     for condition, values in df_patients_combined.iterrows():
+#         for phenotype in df_patients_combined.columns:
+#             df_patients_values = df_patients_combined.loc[condition][phenotype]
+#             df_patients_values = ast.literal_eval(df_patients_values)
+#             median = statistics.median(df_patients_values)
+#             patient_median.loc[condition][phenotype] = median
+#     return patient_median
+
 
 def collect_group_data(group_folder_path, patients_id):
     # Aggregates all patient CSVs in a group folder (e.g., resistant or sensitive).
