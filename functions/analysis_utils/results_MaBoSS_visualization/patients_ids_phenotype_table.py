@@ -5,6 +5,9 @@ from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 
 def create_combined_table_patients(res_tables_path, sens_tables_path, folder_results):
@@ -20,7 +23,6 @@ def create_combined_table_patients(res_tables_path, sens_tables_path, folder_res
         for f in os.listdir(sens_tables_path)
         if os.path.isfile(os.path.join(sens_tables_path, f))
     ]
-    # print(files_sensitive)
 
     patient_dataframes = {}
 
@@ -37,7 +39,6 @@ def create_combined_table_patients(res_tables_path, sens_tables_path, folder_res
                     df = pd.read_csv(file_path, index_col=0)
                     patient_dataframes[patient_id] = df
     patient_names = list(patient_dataframes.keys())
-    print(patient_names)
 
     # Collect all unique conditions and phenotypes across all patients
     all_conditions = set()
@@ -60,12 +61,11 @@ def create_combined_table_patients(res_tables_path, sens_tables_path, folder_res
                     value = patient_df.loc[condition, phenotype]
                     patients_phenot_table.at[patient, col_name] = value
                 else:
-                    print(f"Missing: {col_name} for patient '{patient}'")
+                    logger.warning(f"Missing: {col_name} for patient '{patient}'")
 
     output_dir = os.path.join(folder_results, "sensitive_resistant_results")
     os.makedirs(output_dir, exist_ok=True)
 
     output_path = os.path.join(output_dir, "patients_phenot_table.csv")
     patients_phenot_table.to_csv(output_path, index=True)
-    print(f"Saved final phenotype table to: {output_path}")
     return patients_phenot_table

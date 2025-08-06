@@ -6,6 +6,9 @@ import ast
 from collections import defaultdict
 import json  # for explicit serialization
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 def compute_phenotype_table_generic(
     folder_model,
@@ -45,23 +48,23 @@ def compute_phenotype_table_generic(
             res_lung_pers = model.run()
             last_state = res_lung_pers.get_nodes_probtraj()
             if len(last_state) < 10:
-                print(
+                logger.debug(
                     f"[{active_node}] Warning: Not enough data for convergence check."
                 )
                 break
             diff = last_state.diff().abs()
             max_change_recent = diff.tail(10).max()
-            # print(f"Max change over last 10 time steps for {active_node}:\n{max_change_recent}\n")
+            # logger.debug(f"Max change over last 10 time steps for {active_node}:\n{max_change_recent}\n")
             if (max_change_recent > threshold_diff).any():
                 current_max_time += 1
             else:
                 converged = True
         if not converged:
-            print(
+            logger.debug(
                 f"[{active_node}] Did not fully converge by max_time = {max_time_limit}."
             )
         final_probs = last_state.iloc[-1]
-        # print(f"[{active_node}] Final probabilities:\n{final_probs}\n")
+        # logger.debug(f"[{active_node}] Final probabilities:\n{final_probs}\n")
         for phenotype in phenotypes_interest:
             if phenotype in final_probs.index:
                 results.loc[active_node, phenotype] = final_probs[phenotype]
@@ -90,7 +93,7 @@ def compute_phenotype_table(
     model_pers_cfg = f"{folder_models}/{patient_id}_{context_label}.cfg"
 
     if not os.path.exists(model_pers_bnd) or not os.path.exists(model_pers_cfg):
-        print(f"Missing model files for {patient_id}")
+        logger.debug(f"Missing model files for {patient_id}")
         return None
 
     model_pers_lung = maboss.load(model_pers_bnd, model_pers_cfg)
@@ -117,23 +120,23 @@ def compute_phenotype_table(
 
             last_state = res_lung_pers.get_nodes_probtraj()
             if len(last_state) < 10:
-                print(
+                logger.debug(
                     f"[{active_node}] Warning: Not enough data for convergence check."
                 )
                 break
             diff = last_state.diff().abs()
             max_change_recent = diff.tail(10).max()
-            # print(f"Max change over last 10 time steps for {active_node}:\n{max_change_recent}\n")
+            # logger.debug(f"Max change over last 10 time steps for {active_node}:\n{max_change_recent}\n")
             if (max_change_recent > threshold_diff).any():
                 current_max_time += 1
             else:
                 converged = True
         if not converged:
-            print(
+            logger.debug(
                 f"[{active_node}] Did not fully converge by max_time = {max_time_limit}."
             )
         final_probs = last_state.iloc[-1]
-        # print(f"[{active_node}] Final probabilities:\n{final_probs}\n")
+        # logger.debug(f"[{active_node}] Final probabilities:\n{final_probs}\n")
         for phenotype in phenotypes_interest:
             if phenotype in final_probs.index:
                 results.loc[active_node, phenotype] = final_probs[phenotype]
@@ -155,7 +158,7 @@ def compute_phenotype_table_custom_inputs(
     model_pers_cfg = f"{folder_models}/pers_models/{patient_id}_{context_label}.cfg"
 
     if not os.path.exists(model_pers_bnd) or not os.path.exists(model_pers_cfg):
-        print(f"Missing model files for {patient_id}")
+        logger.debug(f"Missing model files for {patient_id}")
         return None
 
     model_pers_lung = maboss.load(model_pers_bnd, model_pers_cfg)
@@ -188,19 +191,19 @@ def compute_phenotype_table_custom_inputs(
             res_lung_pers = model_pers_lung.run()
             last_state = res_lung_pers.get_nodes_probtraj()
             if len(last_state) < 10:
-                print(
+                logger.debug(
                     f"[{active_inputs}] Warning: Not enough data for convergence check."
                 )
                 break
             diff = last_state.diff().abs()
             max_change_recent = diff.tail(10).max()
-            # print(f"Max change over last 10 time steps for {active_node}:\n{max_change_recent}\n")
+            # logger.debug(f"Max change over last 10 time steps for {active_node}:\n{max_change_recent}\n")
             if (max_change_recent > threshold_diff).any():
                 current_max_time += 1
             else:
                 converged = True
         if not converged:
-            print(
+            logger.debug(
                 f"[{active_inputs}] Did not fully converge by max_time = {max_time_limit}."
             )
         final_probs = last_state.iloc[-1]
@@ -245,7 +248,7 @@ def compute_phenotype_mean_group_validation(
             )
 
         else:
-            print(f"No CSV files found in {folder_path}")
+            logger.debug(f"No CSV files found in {folder_path}")
 
 
 def compute_mean_phenotype_values(df_patients_combined):
@@ -285,7 +288,7 @@ def collect_group_data(group_folder_path, patients_id):
 
     combined_data = defaultdict(lambda: defaultdict(list))
 
-    # List all files and print for debugging
+    # List all files and logger.debug for debugging
     all_files = os.listdir(group_folder_path)
 
     prefix = patients_id[0][:3]
@@ -310,7 +313,7 @@ def collect_group_data(group_folder_path, patients_id):
                 try:
                     combined_data[input_name][phenotype].append(float(value))
                 except Exception as e:
-                    print(f"Error converting value '{value}' in {file_path}: {e}")
+                    logger.debug(f"Error converting value '{value}' in {file_path}: {e}")
 
     combined_results = pd.DataFrame.from_dict(combined_data, orient="index")
     # Serialize lists as JSON strings for CSV output

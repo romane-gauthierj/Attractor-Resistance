@@ -1,5 +1,8 @@
 import os
 import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def tailor_bnd_genes_intervention(
@@ -25,7 +28,6 @@ def tailor_bnd_genes_intervention(
             if file.endswith(".bnd") and patient in file
         ]
         if not bnd_files:
-            print(f"No .bnd file found for patient: {patient}")
             continue
 
         bnd_file = os.path.join(models_folder, bnd_files[0])
@@ -38,7 +40,6 @@ def tailor_bnd_genes_intervention(
             content = file.read()
 
         for gene_interv in gene_intervs:
-            print(f"🔍 Processing patient {patient}, gene: {gene_interv}")
             pattern = re.compile(
                 rf"Node\s+{re.escape(gene_interv)}\s*\{{[^{{}}]*?(?:\{{[^{{}}]*?\}}[^{{}}]*?)*\}}",
                 re.DOTALL,
@@ -65,21 +66,19 @@ def tailor_bnd_genes_intervention(
             rate_down = 0;
         }}"""
             else:
-                print("not a valid gene modification, please chose between KO or KI")
                 continue
 
             # Only proceed if we have a valid gene block
             if new_gene_block is not None:
                 gene_match = pattern.search(content)
                 if gene_match:
-                    print(f"{gene_interv} node found. Replacing...")
                     content, n_subs = re.subn(pattern, new_gene_block, content)
                     if n_subs > 0:
-                        print(f"{patient_id}: CNV — nodes modified")
+                        logger.debug(f"{patient_id}: CNV — nodes modified")
                     else:
-                        print(f"{patient_id}: CNV — no substitution made")
+                        logger.debug(f"{patient_id}: CNV — no substitution made")
                 else:
-                    print(f"No {gene_interv} node found in file for patient {patient_id}")
+                    logger.debug(f"No {gene_interv} node found in file for patient {patient_id}")
 
         with open(bnd_file, "w") as file:
             file.write(content)

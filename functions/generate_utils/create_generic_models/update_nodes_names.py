@@ -1,6 +1,7 @@
 import os
 import re
-
+import logging
+logger = logging.getLogger(__name__)
 
 def uppercase_bnd_node_names(file_path):
     with open(file_path, "r") as f:
@@ -67,7 +68,7 @@ def create_new_bnd_nodes(file_path, original_node, new_node):
     # Check if the new node already exists to avoid duplicates
     new_node_pattern = re.compile(rf"Node\s+{re.escape(new_node)}\s*\{{", re.IGNORECASE)
     if new_node_pattern.search(content):
-        print(f"Node {new_node} already exists. Skipping creation.")
+        logger.debug(f"Node {new_node} already exists. Skipping creation.")
         return
     
 
@@ -77,7 +78,7 @@ def create_new_bnd_nodes(file_path, original_node, new_node):
     )
     match = pattern.search(content)
     if not match:
-        print(f"Node {original_node} not found.")
+        logger.debug(f"Node {original_node} not found.")
         return
 
     node_block = match.group(0)
@@ -108,8 +109,6 @@ def create_new_bnd_nodes(file_path, original_node, new_node):
     with open(file_path, "w") as f:
         f.write(new_content)
     
-    print(f"Created new node {new_node} based on {original_node}")
-
 
 
 
@@ -220,5 +219,5 @@ def replace_node_names_in_file(file_path, name_maps, nodes_to_add):
                     add_new_node_to_logic(file_path, key, value)
                 created_nodes.add(value)
             else:
-                print(f"Node {value} already created, skipping...")
+                logger.debug(f"Node {value} already created, skipping...")
 

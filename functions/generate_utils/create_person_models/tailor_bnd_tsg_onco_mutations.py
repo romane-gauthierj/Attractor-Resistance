@@ -1,7 +1,9 @@
 import pandas as pd
 import os
 import re
+import logging
 
+logger = logging.getLogger(__name__)
 
 def tailor_bnd_mutat_validation(
     lof_mutations_tsg_filtered,
@@ -29,7 +31,7 @@ def tailor_bnd_mutat_validation(
         if files:
             bnd_file = os.path.join(bnd_dir, files[0])
         else:
-            print(f"No .bnd file found for patient: {patient}")
+            logger.debug(f"No .bnd file found for patient: {patient}")
             continue
         genes = combined_df.loc[patient, "gene"]
 
@@ -44,13 +46,12 @@ def tailor_bnd_mutat_validation(
             content = file.read()
         modified_any = False
         for gene in gene_list:
-            print(f"🔍 Processing patient {patient}, gene: {gene}")
             pattern = re.compile(
                 rf"Node\s+{re.escape(gene)}\s*\{{[^{{}}]*?(?:\{{[^{{}}]*?\}}[^{{}}]*?)*\}}",
                 re.DOTALL
             )
             if patient in patients_onco_mutations and patient in patients_tsg_mutations:
-                print(
+                logger.warning(
                     f"Patient {patient} is in both oncogene and TSG mutation groups. Please review."
                 )
                 # Prefer oncogene block if both
@@ -72,23 +73,21 @@ def tailor_bnd_mutat_validation(
         rate_down = 1;
     }}"""
             else:
-                print(f"Patient {patient} not found in oncogene or TSG mutation lists.")
+                logger.warning(f"Patient {patient} not found in oncogene or TSG mutation lists.")
                 continue
             gene_match = pattern.search(content)
             if gene_match:
-                print(f"{gene} node found. Replacing...")
                 content, n_subs = re.subn(pattern, new_gene_block, content)
                 if n_subs > 0:
                     modified_any = True
             else:
-                print(f"No {gene} node found in file for patient {patient_id}")
+                logger.debug(f"No {gene} node found in file for patient {patient_id}")
 
         if modified_any:
-            print(f"{patient_id}: mutations — nodes modified")
             with open(bnd_file, "w") as file:
                 file.write(content)
         else:
-            print(f"{patient_id}: mutations — no nodes modified")
+            logger.debug(f"{patient_id}: mutations — no nodes modified")
 
 
 def tailor_bnd_tsg_onco_mut(
@@ -122,10 +121,10 @@ def tailor_bnd_tsg_onco_mut(
             if files_sens:
                 bnd_file = os.path.join(bnd_dir_sens, files_sens[0])
         if bnd_file is None:
-            print(f"No .bnd file found for patient: {patient}")
+            logger.debug(f"No .bnd file found for patient: {patient}")
             continue
         if patient not in mutations_data_filtered_combined.index:
-            print(f"Patient {patient} not found in mutation data.")
+            logger.debug(f"Patient {patient} not found in mutation data.")
             continue
         genes = mutations_data_filtered_combined.loc[patient, "HugoSymbol"]
         if isinstance(genes, pd.Series):
@@ -139,13 +138,12 @@ def tailor_bnd_tsg_onco_mut(
             content = file.read()
         modified_any = False
         for gene in gene_list:
-            print(f"🔍 Processing patient {patient}, gene: {gene}")
             pattern = re.compile(
                 rf"Node\s+{re.escape(gene)}\s*\{{[^{{}}]*?(?:\{{[^{{}}]*?\}}[^{{}}]*?)*\}}",
                 re.DOTALL
             )
             if patient in patients_onco_mutations and patient in patients_tsg_mutations:
-                print(
+                logger.warning(
                     f"Patient {patient} is in both oncogene and TSG mutation groups. Please review."
                 )
                 # Prefer oncogene block if both
@@ -167,20 +165,18 @@ def tailor_bnd_tsg_onco_mut(
         rate_down = 1;
     }}"""
             else:
-                print(f"Patient {patient} not found in oncogene or TSG mutation lists.")
+                logger.debug(f"Patient {patient} not found in oncogene or TSG mutation lists.")
                 continue
             gene_match = pattern.search(content)
             if gene_match:
-                print(f"{gene} node found. Replacing...")
                 content, n_subs = re.subn(pattern, new_gene_block, content)
                 if n_subs > 0:
                     modified_any = True
             else:
-                print(f"No {gene} node found in file for patient {patient_id}")
+                logger.debug(f"No {gene} node found in file for patient {patient_id}")
 
         if modified_any:
-            print(f"{patient_id}: mutations — nodes modified")
             with open(bnd_file, "w") as file:
                 file.write(content)
         else:
-            print(f"{patient_id}: mutations — no nodes modified")
+            logger.debug(f"{patient_id}: mutations — no nodes modified")

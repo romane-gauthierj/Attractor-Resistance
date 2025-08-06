@@ -3,6 +3,13 @@ import os
 import tempfile
 import shutil
 import ast
+from scipy.stats import mannwhitneyu
+import numpy as np
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 from functions.analysis_utils.MaBoSS_simulation.maboss_phenotype_patient import (
     compute_phenotype_table,
@@ -37,7 +44,7 @@ from functions.analysis_utils.gene_enrichment.genes_signature import (
 )
 from functions.analysis_utils.identify_cell_lines import get_cell_lines
 
-from functions.analysis_utils.stats.stats_proba import compute_kruskal_test_means
+from functions.analysis_utils.stats.stats_proba import compute_kruskal_test_means, compute_stats_test_after_ko
 
 
 def downstream_analysis(
@@ -168,7 +175,7 @@ def downstream_analysis(
         )
 
     else:
-        print("Skipping boxplot for res_sensitive due to no p-values.")
+        logger.debug("Skipping boxplot for res_sensitive due to no p-values.")
 
     if p_values_df_res_healthy is not None:
         p_values_df_res_healthy.to_csv(
@@ -187,7 +194,7 @@ def downstream_analysis(
             data_res_healthy,
         )
     else:
-        print("Skipping boxplot for res_healthy due to no p-values.")
+        logger.debug("Skipping boxplot for res_healthy due to no p-values.")
 
     # Create a heatmap of phenotype distribution under diff growth condition between resistant and sensitive
 
@@ -234,13 +241,6 @@ def downstream_analysis(
         labels=patients_categ,
     )
 
-    # plot_three_side_by_side_heatmaps(
-    #     patient_resistant_median,
-    #     patient_sensitive_median,
-    #     patient_healthy_median,
-    #     folder_results_temp,
-    #     labels=patients_categ,
-    # )
 
 
     rna_seq_data_filtered = pd.read_csv(
@@ -276,6 +276,16 @@ def downstream_analysis(
         annotations_models,
     )
 
+
+    # if intervention genes (mannwhiteney test stats)
+    # downstream analysis - CTNNB1 knockout 
+
+    # input_inter = 'EGF'
+    # phenotype_inter = 'Invasion'
+    # if intervention_gene is not None:
+    #     compute_stats_test_after_ko(drug_interest, discrete_variable,continuous_variable, drug_target, subdir, norm_technique ,  'EGF', 'Invasion')
+
+   
 
 
     # compute kruskal test for healthy, resistant and sensitive patients

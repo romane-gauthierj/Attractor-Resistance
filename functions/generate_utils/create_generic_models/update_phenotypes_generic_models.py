@@ -20,16 +20,13 @@ def generic_models_update_phenotypes(phenotype_interest, folder_models):
                     # Update existing assignment to 0
                     content, n_subs = pattern.subn(rf"\g<1>0", content)
                     if n_subs > 0:
-                        # print(f"Updated {node}.is_internal=0 in {filename}")
                         modified = True
                 else:
                     # Add new assignment at the end if not present
                     content += f"\n{node}.is_internal=0"
-                    # print(f"Added {node}.is_internal=0 to {filename}")
                     modified = True
             # Save only if modified
             if modified:
                 modified_file_path = os.path.join(folder_models, filename)
                 with open(modified_file_path, "w") as file:
                     file.write(content)
-                    print(f"Modified and saved: {modified_file_path}")

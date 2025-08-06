@@ -1,4 +1,7 @@
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 from functions.generate_utils.identification_patients.get_patients_sens_res import (
     get_patients,
@@ -262,12 +265,12 @@ def generate_models_re(
 
 
         if discrete_variable == 'mutations':
-            print('mutations is used to personalize the networks')
+            logger.debug('mutations is used to personalize the networks')
             tailor_bnd_cnv_cm(
                 mutations_data_filtered, folder_models_cnv,
             )
         elif discrete_variable == 'cnv':
-            print('cnv is used to personalize the networks')
+            logger.debug('cnv is used to personalize the networks')
             tailor_bnd_cnv_cm(
                 cnv_data_filtered, folder_models_cnv,
             )
@@ -280,11 +283,10 @@ def generate_models_re(
             )
 
 
-            print('mutations and cnv are used to personalize the networks')
-
+            logger.debug('mutations and cnv are used to personalize the networks')
         
         else:
-            print('Please select a discrete variable between cnv, mutations or mutations_cnv')
+            logger.debug('Please select a discrete variable between cnv, mutations or mutations_cnv')
 
      # simulate drug target (overwrite all)
     tailor_bnd_genes_intervention(

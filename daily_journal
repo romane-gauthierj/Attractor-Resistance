@@ -1801,3 +1801,84 @@ check amplif factor - comment le choisir
 identify the best normalization technique based on the signature correlation
 
 repeter avec 35 patients
+
+
+
+
+Finished: all the diff normalization, combine the two pipelines (should i create a function?)
+todo- check why NaN values in the networks
+
+
+August 6
+finished: created the main for the validation (with all the normalization technique), added the logg error, 
+
+
+- add distribution normalization for proteins as well as all the other normalization 
+- try to see if can use main function with intervention gene -> if so-> delete pipeline 3 
+
+
+
+Possible hallmarks we can use
+First 10 gene sets:
+  - TNF-alpha Signaling via NF-kB
+  - Hypoxia
+  - Cholesterol Homeostasis
+  - Mitotic Spindle
+  - Wnt-beta Catenin Signaling
+  - TGF-beta Signaling
+  - IL-6/JAK/STAT3 Signaling
+  - DNA Repair
+  - G2-M Checkpoint
+  - Apoptosis
+  - Notch Signaling
+  - Adipogenesis
+  - Estrogen Response Early
+  - Estrogen Response Late
+  - Androgen Response
+  - Myogenesis
+  - Protein Secretion
+  - Interferon Alpha Response
+  - Interferon Gamma Response
+  - Apical Junction
+  - Apical Surface
+  - Hedgehog Signaling
+  - Complement
+  - Unfolded Protein Response
+  - PI3K/AKT/mTOR  Signaling
+  - mTORC1 Signaling
+  - E2F Targets
+  - Myc Targets V1
+  - Myc Targets V2
+  - Epithelial Mesenchymal Transition
+  - Inflammatory Response
+  - Xenobiotic Metabolism
+  - Fatty Acid Metabolism
+  - Oxidative Phosphorylation
+  - Glycolysis
+  - Reactive Oxygen Species Pathway
+  - p53 Pathway
+  - UV Response Up
+  - UV Response Dn
+  - Angiogenesis
+  - heme Metabolism
+  - Coagulation
+  - IL-2/STAT5 Signaling
+  - Bile Acid Metabolism
+  - Pperoxisome
+  - Allograft Rejection
+  - Spermatogenesis
+  - KRAS Signaling Up
+  - KRAS Signaling Dn
+  - Pancreas Beta Cells
+
+
+
+
+  healthy patients - low proliferaiton but also less patients - can we really assess their phenotypes are lower??
+
+  make sure i really understand the expression values for the phenotype 
+
+
+
+
+  how can i assess the genes to intervene ??

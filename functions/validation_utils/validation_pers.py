@@ -32,6 +32,10 @@ from functions.generate_utils.create_person_models.tailor_bnd_cnv import (
     tailor_bnd_cnv_validation,
 )
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def create_gleason_score_groups(phenotype_data, size_group):
     # stratify by gleason score-> create groups
@@ -143,9 +147,6 @@ def pre_process_genes(genes_data, patients_id, all_montagud_nodes, synonyms_to_n
             # Remove original MTOR and add both complexes
             genes_data_filtered = genes_data_filtered[genes_data_filtered['sample'] != duplicate_gene]
             genes_data_filtered = pd.concat([genes_data_filtered, gene_duplicate_1_data, gene_duplicate_2_data], ignore_index=True)
-
-            print(f" Duplicated {duplicate_gene}: {syn_dict[duplicate_gene][0]} ({len(gene_duplicate_1_data)} rows) + {syn_dict[duplicate_gene][1]} ({len(gene_duplicate_2_data)} rows)")
-
 
     df_melted_gene = genes_data_filtered.melt(
         id_vars=["sample"],  # columns to keep fixed
@@ -369,7 +370,7 @@ def create_pers_models_generic(
         # # tissue instead of drug name
 
         if type_models == "genes_models":
-            print("Personalizing genes models...")
+            logger.debug("Personalizing genes models...")
             personalized_patients_genes_cfgs(
                 df_melted_gene,
                 montagud_node_model,

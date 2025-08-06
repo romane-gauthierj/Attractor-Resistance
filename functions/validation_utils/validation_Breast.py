@@ -9,9 +9,18 @@ import gseapy as gp
 from lifelines.statistics import logrank_test
 from lifelines import KaplanMeierFitter
 import matplotlib.pyplot as plt
-import os
 import maboss
 from pathlib import Path
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+import logging
+
+logger = logging.getLogger(__name__)
+
+from functions.generate_utils.pre_process_data.pre_process_genes import (
+ identify_genes_distribution, compute_multi_distrib_normalization,
+)
 
 
 def process_montagud_nodes_synonyms(montagud_synonyms_data):
@@ -69,8 +78,6 @@ def process_montagud_nodes(
     montagud_node_model = [node for node in montagud_node_model if node != "0/1"]
     all_montagud_nodes = list(set(montagud_node_synonyms['Node_synonyms'])) + list(set(montagud_node_synonyms['Node'])) + list(set(montagud_node_model))
 
-
-
     return montagud_node_model, all_montagud_nodes
 
 
@@ -114,8 +121,6 @@ def process_genes(patients_ids, rna_seq_data, all_montagud_nodes, synonyms_to_no
             # Remove original MTOR and add both complexes
             rna_seq_data_filtered = rna_seq_data_filtered[rna_seq_data_filtered['Hugo_Symbol'] != duplicate_gene]
             rna_seq_data_filtered = pd.concat([rna_seq_data_filtered, gene_duplicate_1_data, gene_duplicate_2_data], ignore_index=True)
-
-            print(f" Duplicated {duplicate_gene}: {syn_dict[duplicate_gene][0]} ({len(gene_duplicate_1_data)} rows) + {syn_dict[duplicate_gene][1]} ({len(gene_duplicate_2_data)} rows)")
 
         
 
@@ -308,8 +313,7 @@ def create_generic_patients_cfgs_bnds(
             file.write(patient_cfg)
         with open(bnd_output_path, "w") as file:
             file.write(patient_bnd)
-        print(f"Created files for patient {patient_id}")
-    print(
+    logger.debug(
         "All .cfg and .bnd files created for sensitive, resistant and healthy patients."
     )
 
@@ -332,12 +336,10 @@ def generic_models_update_phenotypes(phenotype_interest, folder_models):
                 if re.search(pattern, content):
                     content, n_subs = pattern.subn(rf"\g<1>FALSE;", content)
                     if n_subs > 0:
-                        print(f"Updated {node}.is_internal=FALSE in {filename}")
                         modified = True
                 else:
                     # Add new assignment at the end if not present
                     content += f"\n{node}.is_internal=FALSE;"
-                    print(f"Added {node}.is_internal=FALSE to {filename}")
                     modified = True
 
             
@@ -346,7 +348,6 @@ def generic_models_update_phenotypes(phenotype_interest, folder_models):
                 modified_file_path = os.path.join(folder_models, filename)
                 with open(modified_file_path, "w") as file:
                     file.write(content)
-                    print(f"Modified and saved: {modified_file_path}")
 
 
 
@@ -396,9 +397,9 @@ def generic_models_update_phenotypes(phenotype_interest, folder_models):
 #     rna_normalized = rna_normalized.groupby('gene_symbol').apply(sigmoid_normalize_group).reset_index(drop=True)
 
     
-#     return rna_normalized
 
-import numpy as np
+
+#     return rna_normalized
 
 def normalize_rna_seq_efficient(rna_seq_data_models_filtered, normalize_technique):
     rna_normalized = rna_seq_data_models_filtered.copy()
@@ -493,7 +494,7 @@ def normalize_rna_seq_efficient(rna_seq_data_models_filtered, normalize_techniqu
         else:
             rna_normalized['rsem_tpm_normalized'] = 0.5
         
-        print(f"Global normalization: min={global_min:.2f}, max={global_max:.2f}")
+        logger.debug(f"Global normalization: min={global_min:.2f}, max={global_max:.2f}")
         return rna_normalized
     
 
@@ -509,30 +510,54 @@ def normalize_rna_seq_efficient(rna_seq_data_models_filtered, normalize_techniqu
         else:
             rna_normalized['rsem_tpm_normalized'] = 0.5
         
-        print(f"Log+Global normalization: log_min={log_min:.2f}, log_max={log_max:.2f}")
+        logger.debug(f"Log+Global normalization: log_min={log_min:.2f}, log_max={log_max:.2f}")
         return rna_normalized
         
    # Group by gene and apply normalization
     if normalize_technique == 'sigmoid':
-        print("Applying global sigmoid normalization...")
+        logger.debug("Applying global sigmoid normalization...")
         rna_normalized = rna_normalized.groupby('gene_symbol').apply(local_sigmoid_normalize_group).reset_index(drop=True)
 
     elif normalize_technique == 'min-max':
-        print("Applying global min-max normalization...")
+        logger.debug("Applying global min-max normalization...")
         rna_normalized = rna_normalized.groupby('gene_symbol').apply(local_min_max_normalize_group).reset_index(drop=True)
 
     elif normalize_technique == 'log_transf':
-        print("Applying global log_transf normalization...")
+        logger.debug("Applying global log_transf normalization...")
         rna_normalized = rna_normalized.groupby('gene_symbol').apply(local_log_transform_group).reset_index(drop=True)
 
 
     elif normalize_technique == 'global_minmax':
-        print("Applying global min-max normalization...")
+        logger.debug("Applying global min-max normalization...")
         rna_normalized = global_minmax_normalize()
     
     elif normalize_technique == 'global_log':
-        print("Applying log + global normalization...")
+        logger.debug("Applying log + global normalization...")
         rna_normalized = global_log_normalize()
+    
+
+
+    elif normalize_technique == 'distribution_normalization':
+        logger.debug("Applying distribution normalization (paper)...")
+
+        rna_normalized_filt = rna_seq_data_models_filtered[['model_id', 'gene_symbol', 'rsem_tpm']]
+
+        rna_normalized_filt = rna_normalized_filt.rename(columns={'gene_symbol': 'Hugo_Symbol'})
+
+        rna_normalized_filt = rna_normalized_filt.groupby(['model_id', 'Hugo_Symbol'], as_index=False).agg({'rsem_tpm': 'mean'})
+
+        rna_normalized_filt = rna_normalized_filt.pivot(
+        index='Hugo_Symbol',      # Genes as index
+        columns='model_id',       # Patients as columns
+        values='rsem_tpm'         # Expression values
+        )
+
+        rna_normalized_filt.index.name = 'Hugo_Symbol'
+        rna_normalized_filt.columns.name = None
+
+
+        rna_seq_data_filtered_analysis_pivoted_distribution = identify_genes_distribution(rna_normalized_filt)
+        rna_normalized = compute_multi_distrib_normalization(rna_seq_data_filtered_analysis_pivoted_distribution)
 
 
     return rna_normalized
@@ -541,24 +566,28 @@ def normalize_rna_seq_efficient(rna_seq_data_models_filtered, normalize_techniqu
 
 def personalized_patients_genes_cfgs(
     rna_seq_data_models_filtered,
-    montagud_node_model,
+    all_montagud_nodes,
     folder_models,
     amplif_factor,
     normalization_method
 ):
     # Apply the normalization
+   
+#     rna_seq_data_models_filtered = rna_seq_data_models_filtered.loc[
+#     rna_seq_data_models_filtered.index.isin(all_montagud_nodes)
+# ]
+    
+#     print('rna_seq_data_models_filtered:', rna_seq_data_models_filtered)
+
     rna_seq_data_normalized = normalize_rna_seq_efficient(rna_seq_data_models_filtered, normalization_method)
 
 
-    print("==== Processing all genes per patient ===")
     # Loop through each file in the directory
     for filename in os.listdir(folder_models):
         if not filename.endswith('.cfg'):
             continue
 
         file_path = os.path.join(folder_models, filename)
-        print(f"\nProcessing file: {filename}")
-
         if os.path.isfile(file_path):  # Make sure it's a file, not a subdirectory
             # model_id_in_file = os.path.splitext(filename)[0]  # remove .cfg extension
             # model_id_in_file = os.path.splitext(filename)[0].replace('_AZD8931', '')
@@ -568,14 +597,14 @@ def personalized_patients_genes_cfgs(
                 content = file.read()
       
 
-            for gene in montagud_node_model:
+            for gene in all_montagud_nodes:
                 gene_data_normalized = rna_seq_data_normalized[
                         (rna_seq_data_normalized["gene_symbol"] == gene) &
                         (rna_seq_data_normalized["model_id"] == model_id_in_file)
                     ]['rsem_tpm_normalized']
                 
                 if gene_data_normalized.empty:
-                        print(f"  No data for {gene}")
+                        logger.debug(f"  No data for {gene}")
                         continue
 
                 # Calculate the transition up and down values
@@ -610,16 +639,6 @@ def personalized_patients_genes_cfgs(
         modified_file_path = os.path.join(folder_models, filename)
         with open(modified_file_path, "w") as file:
             file.write(content)
-        print(f"Modified and saved: {modified_file_path}")
-
-
-
-
-
-
-
-
-
 
 
 def tailor_bnd_cnv_cm(cnv_data_filtered, folder_models):
@@ -642,13 +661,13 @@ def tailor_bnd_cnv_cm(cnv_data_filtered, folder_models):
             if file.endswith(".bnd") and patient in file
         ]
         if not files_categ:
-            print(f"No .bnd file found for patient: {patient}")
+            logger.debug(f"No .bnd file found for patient: {patient}")
             continue
 
         bnd_file = os.path.join(folder_models, files_categ[0])
 
         if bnd_file is None:
-            print(f"No .bnd file found for patient: {patient}")
+            logger.debug(f"No .bnd file found for patient: {patient}")
             continue
 
         genes = cnv_data_filtered[cnv_data_filtered["model_id"] == patient][
@@ -661,9 +680,7 @@ def tailor_bnd_cnv_cm(cnv_data_filtered, folder_models):
             content = file.read()
 
         modified_any = False
-        for gene in gene_list:
-            print(f"🔍 Processing patient {patient}, gene: {gene}")
-            
+        for gene in gene_list:            
             # Check if this specific patient-gene combination is in both gain and loss
             patient_gene_in_gain = len(gain_group[
                 (gain_group["model_id"] == patient) & 
@@ -681,7 +698,7 @@ def tailor_bnd_cnv_cm(cnv_data_filtered, folder_models):
             )
 
             if patient_gene_in_gain and patient_gene_in_loss:
-                print(
+                logger.warning(
                     f"Patient {patient} with gene {gene} is in both gain and loss groups. Please review."
                 )
                 new_gene_block = f"""Node {gene} {{
@@ -702,34 +719,145 @@ def tailor_bnd_cnv_cm(cnv_data_filtered, folder_models):
         rate_down = 1;
     }}"""
             else:
-                print(f"Patient {patient} with gene {gene} not found in gain or loss CNV groups.")
+                logger.debug(f"Patient {patient} with gene {gene} not found in gain or loss CNV groups.")
                 continue
 
             gene_match = pattern.search(content)
             if gene_match:
-                print(f"{gene} node found. Replacing...")
                 content, n_subs = re.subn(pattern, new_gene_block, content)
                 if n_subs > 0:
                     modified_any = True
             else:
-                print(f"No {gene} node found in file for patient {patient_id}")
+                logger.debug(f"No {gene} node found in file for patient {patient_id}")
 
         if modified_any:
-            print(f"{patient_id}: CNV — nodes modified")
             with open(bnd_file, "w") as file:
                 file.write(content)
         else:
-            print(f"{patient_id}: CNV — no nodes modified")
+            logger.debug(f"{patient_id}: CNV — no nodes modified")
+
+
+
+def compute_phenotype_table(
+    folder_save_results,
+    folder_models,
+    patient_id,
+    input_nodes,
+    phenotypes_interest,
+):
+
+
+    model_pers_bnd = f"{folder_models}/{patient_id}.bnd"
+    model_pers_cfg = f"{folder_models}/{patient_id}.cfg"
+
+    if not os.path.exists(model_pers_bnd) or not os.path.exists(model_pers_cfg):
+        logger.warning(f"Missing model files for {patient_id}")
+        return None
+
+    model_pers_lung = maboss.load(model_pers_bnd, model_pers_cfg)
+
+    results = pd.DataFrame(index=input_nodes, columns=phenotypes_interest)
+
+    threshold_diff = 0.01
+    initial_max_time = 5
+    max_time_limit = 30
+
+    for active_node in input_nodes:
+        model_pers_lung.network.set_istate(active_node, [0, 1])
+        for inactive_node in input_nodes:
+            if inactive_node != active_node:
+                model_pers_lung.network.set_istate(inactive_node, [1, 0])
+
+        converged = False
+        current_max_time = initial_max_time
+        while not converged and current_max_time < max_time_limit:
+            model_pers_lung.update_parameters(
+                time_tick=0.1, max_time=current_max_time, sample_count=500
+            )
+            res_lung_pers = model_pers_lung.run()
+
+            last_state = res_lung_pers.get_nodes_probtraj()
+            if len(last_state) < 10:
+                logger.warning(
+                    f"[{active_node}] Warning: Not enough data for convergence check."
+                )
+                break
+            diff = last_state.diff().abs()
+            max_change_recent = diff.tail(10).max()
+            if (max_change_recent > threshold_diff).any():
+                current_max_time += 1
+            else:
+                converged = True
+        if not converged:
+            logger.warning(
+                f"[{active_node}] Did not fully converge by max_time = {max_time_limit}."
+            )
+        final_probs = last_state.iloc[-1]
+        for phenotype in phenotypes_interest:
+            if phenotype in final_probs.index:
+                results.loc[active_node, phenotype] = final_probs[phenotype]
+    
+    os.makedirs(folder_save_results, exist_ok=True)  # Ensure the folder exists
+    results.to_csv(f"{folder_save_results}/{patient_id}.csv")
+    return results
+
+
+
+
+def combine_patient_results(results_folder):
+    """
+    Combine individual patient CSV files into one dataframe
+    """
+    all_data = []
+    
+    # Get all CSV files in the results folder
+    csv_files = [f for f in os.listdir(results_folder) if f.endswith('.csv')]
+    
+    for csv_file in csv_files:
+        # Extract patient ID from filename (remove .csv extension)
+        patient_id = Path(csv_file).stem
+        
+        # Read the CSV file
+        df = pd.read_csv(os.path.join(results_folder, csv_file), index_col=0)
+        
+        # Calculate mean values across all inputs for each phenotype
+        patient_data = {
+            'patient_id': patient_id,
+            'Proliferation': df['Proliferation'].mean(),
+            'Apoptosis': df['Apoptosis'].mean()
+        }
+        
+        all_data.append(patient_data)
+    
+    # Create combined dataframe
+    combined_df = pd.DataFrame(all_data)
+    combined_df.set_index('patient_id', inplace=True)
+    combined_df.to_csv(f'{results_folder}/combined_patients_ids.csv')
+    
+    return combined_df
 
 
 
 
 
+def correlate_boolean_predictions_with_gene_signatures(validation, proba_phenotype, hallmark, phenotype, rna_seq_data, patients_ids):
 
+    # Melt the dataframe so that patient columns become rows with a 'model_id' column
+    if validation:
+        rna_seq_breast_long = pd.melt(
+            rna_seq_data,
+            id_vars=['Hugo_Symbol', 'Entrez_Gene_Id'],  # Keep these columns as identifiers
+            value_vars=rna_seq_data.columns[2:],      # All patient/model columns
+            var_name='model_id',                        # New column for patient/model ID
+            value_name='expression_value'               # New column for expression value
+        )
 
-def correlate_boolean_predictions_with_gene_signatures(proba_phenotype, hallmark, phenotype, rna_seq_data, patients_ids):
+        rna_seq_breast_long = rna_seq_breast_long.rename(columns={'Hugo_Symbol': 'gene_symbol', 'expression_value':'rsem_tpm'})
+    else:
+        rna_seq_breast_long = rna_seq_data.copy()
+        
     # Preprocessing -> get gene expression matrix
-    rna_seq_data_filtered = rna_seq_data[rna_seq_data['model_id'].isin(patients_ids)]
+    rna_seq_data_filtered = rna_seq_breast_long[rna_seq_breast_long['model_id'].isin(patients_ids)]
 
 
     rna_seq_data_filtered = rna_seq_data_filtered[['model_id', 'gene_symbol', 'rsem_tpm']]
@@ -747,7 +875,6 @@ def correlate_boolean_predictions_with_gene_signatures(proba_phenotype, hallmark
         columns='model_id',      # Model IDs become columns
         values='rsem_tpm'        # Expression values fill the matrix
     )
-
 
 
 
@@ -815,109 +942,157 @@ def correlate_boolean_predictions_with_gene_signatures(proba_phenotype, hallmark
 
     return results_corr_df, correlation_data
 
-
-def compute_phenotype_table(
-    folder_save_results,
-    folder_models,
-    patient_id,
-    input_nodes,
-    phenotypes_interest,
-):
-
-
-    model_pers_bnd = f"{folder_models}/{patient_id}.bnd"
-    model_pers_cfg = f"{folder_models}/{patient_id}.cfg"
-
-    if not os.path.exists(model_pers_bnd) or not os.path.exists(model_pers_cfg):
-        print(f"Missing model files for {patient_id}")
-        return None
-
-    model_pers_lung = maboss.load(model_pers_bnd, model_pers_cfg)
-
-    results = pd.DataFrame(index=input_nodes, columns=phenotypes_interest)
-
-    threshold_diff = 0.01
-    initial_max_time = 5
-    max_time_limit = 30
-
-    for active_node in input_nodes:
-        model_pers_lung.network.set_istate(active_node, [0, 1])
-        for inactive_node in input_nodes:
-            if inactive_node != active_node:
-                model_pers_lung.network.set_istate(inactive_node, [1, 0])
-
-        converged = False
-        current_max_time = initial_max_time
-        while not converged and current_max_time < max_time_limit:
-            model_pers_lung.update_parameters(
-                time_tick=0.1, max_time=current_max_time, sample_count=500
-            )
-            res_lung_pers = model_pers_lung.run()
-
-            last_state = res_lung_pers.get_nodes_probtraj()
-            if len(last_state) < 10:
-                print(
-                    f"[{active_node}] Warning: Not enough data for convergence check."
-                )
-                break
-            diff = last_state.diff().abs()
-            max_change_recent = diff.tail(10).max()
-            # print(f"Max change over last 10 time steps for {active_node}:\n{max_change_recent}\n")
-            if (max_change_recent > threshold_diff).any():
-                current_max_time += 1
-            else:
-                converged = True
-        if not converged:
-            print(
-                f"[{active_node}] Did not fully converge by max_time = {max_time_limit}."
-            )
-        final_probs = last_state.iloc[-1]
-        # print(f"[{active_node}] Final probabilities:\n{final_probs}\n")
-        for phenotype in phenotypes_interest:
-            if phenotype in final_probs.index:
-                results.loc[active_node, phenotype] = final_probs[phenotype]
-    results.to_csv(f"{folder_save_results}/{patient_id}.csv")
-    return results
-
-
-
-
-def combine_patient_results(results_folder):
+# vizualise the results 
+def visualize_correlation_results(results_corr_df, correlation_data, hallmark):
     """
-    Combine individual patient CSV files into one dataframe
+    Create comprehensive visualization of Boolean network validation results
     """
-    all_data = []
     
-    # Get all CSV files in the results folder
-    csv_files = [f for f in os.listdir(results_folder) if f.endswith('.csv')]
+    # Set up the plotting style
+    plt.style.use('default')
+    sns.set_palette("husl")
     
-    for csv_file in csv_files:
-        # Extract patient ID from filename (remove .csv extension)
-        patient_id = Path(csv_file).stem
+    # Get gene signature column name
+    gene_signature_col = f'{hallmark}_gene_signature_score'
+    gene_scores = correlation_data[gene_signature_col]
+    
+    # Get Boolean network columns (excluding patient_id and gene signature)
+    boolean_cols = [col for col in correlation_data.columns 
+                   if col not in ['patient_id', gene_signature_col]]
+    
+    # Calculate number of subplots
+    n_scenarios = len(boolean_cols)
+    n_cols = min(3, n_scenarios)
+    n_rows = max(2, (n_scenarios + n_cols - 1) // n_cols)
+    
+    fig = plt.figure(figsize=(5*n_cols, 4*n_rows))
+    
+    # Main title
+    fig.suptitle(f'Boolean Network Validation: {hallmark}', fontsize=16, fontweight='bold')
+    
+    # Individual scatter plots
+    for i, col in enumerate(boolean_cols):
+        ax = plt.subplot(n_rows, n_cols, i+1)
         
-        # Read the CSV file
-        df = pd.read_csv(os.path.join(results_folder, csv_file), index_col=0)
+        # Get data for this scenario
+        boolean_probs = correlation_data[col]
         
-        # Calculate mean values across all inputs for each phenotype
-        patient_data = {
-            'patient_id': patient_id,
-            'Proliferation': df['Proliferation'].mean(),
-            'Apoptosis': df['Apoptosis'].mean()
-        }
+        # Get correlation from results
+        corr = float(results_corr_df.loc[col, 'correlation_value'])
+        pval = float(results_corr_df.loc[col, 'p_val'])
         
-        all_data.append(patient_data)
+        # Create scatter plot with patient labels
+        scatter = ax.scatter(gene_scores, boolean_probs, 
+                           alpha=0.8, s=120, 
+                           c=range(len(gene_scores)), 
+                           cmap='viridis',
+                           edgecolors='black', linewidth=0.5)
+        
+        # Add patient labels
+        for j, patient_id in enumerate(correlation_data['patient_id']):
+            ax.annotate(patient_id, 
+                       (gene_scores.iloc[j], boolean_probs.iloc[j]),
+                       xytext=(5, 5), textcoords='offset points',
+                       fontsize=9, alpha=0.8, fontweight='bold')
+        
+        # Add correlation line
+        if len(gene_scores) > 1:  # Only if we have multiple points
+            z = np.polyfit(gene_scores, boolean_probs, 1)
+            p = np.poly1d(z)
+            x_line = np.linspace(gene_scores.min(), gene_scores.max(), 100)
+            ax.plot(x_line, p(x_line), "r--", alpha=0.8, linewidth=2)
+        
+        # Formatting
+        ax.set_xlabel(f'{hallmark}\nGene Signature Score', fontsize=10)
+        ax.set_ylabel(f'Boolean Network\n{col.replace("_", " ")}', fontsize=10)
+        
+        # Title with correlation info
+        if pval < 0.001:
+            sig_text = "***"
+        elif pval < 0.01:
+            sig_text = "**"
+        elif pval < 0.05:
+            sig_text = "*"
+        else:
+            sig_text = "ns"
+        
+        title_text = f'{col.replace("_", " ")}\nr = {corr:.3f} ({sig_text})'
+        ax.set_title(title_text, fontsize=11, fontweight='bold')
+        
+        # Color code the title based on significance
+        if pval < 0.05:
+            ax.title.set_color('green')
+        else:
+            ax.title.set_color('red')
+        
+        ax.grid(True, alpha=0.3)
+        
+        # Add correlation strength text
+        abs_corr = abs(corr)
+        if abs_corr >= 0.7:
+            strength = "Strong"
+            strength_color = 'darkgreen'
+        elif abs_corr >= 0.5:
+            strength = "Moderate"
+            strength_color = 'orange'
+        elif abs_corr >= 0.3:
+            strength = "Weak"
+            strength_color = 'red'
+        else:
+            strength = "Very Weak"
+            strength_color = 'darkred'
+        
+        ax.text(0.05, 0.95, f'{strength}', transform=ax.transAxes,
+                fontsize=9, fontweight='bold', color=strength_color,
+                bbox=dict(boxstyle="round,pad=0.3", facecolor='white', alpha=0.7))
     
-    # Create combined dataframe
-    combined_df = pd.DataFrame(all_data)
-    combined_df.set_index('patient_id', inplace=True)
+    # Summary statistics subplot (if space allows)
+    if n_scenarios < n_rows * n_cols:
+        ax_summary = plt.subplot(n_rows, n_cols, n_scenarios + 1)
+        
+        # Create summary statistics
+        correlations = results_corr_df['correlation_value'].astype(float)
+        p_values = results_corr_df['p_val'].astype(float)
+        
+        # Bar plot of correlations
+        scenario_names = [name.split('_')[0] for name in results_corr_df.index]
+        bars = ax_summary.bar(range(len(correlations)), correlations, 
+                             color=['green' if p < 0.05 else 'red' for p in p_values],
+                             alpha=0.7, edgecolor='black')
+        
+        ax_summary.axhline(y=0, color='black', linestyle='-', alpha=0.3)
+        ax_summary.axhline(y=0.7, color='green', linestyle='--', alpha=0.5, label='Strong (0.7)')
+        ax_summary.axhline(y=-0.7, color='green', linestyle='--', alpha=0.5)
+        ax_summary.axhline(y=0.5, color='orange', linestyle='--', alpha=0.5, label='Moderate (0.5)')
+        ax_summary.axhline(y=-0.5, color='orange', linestyle='--', alpha=0.5)
+        
+        ax_summary.set_xlabel('Scenarios')
+        ax_summary.set_ylabel('Correlation Coefficient')
+        ax_summary.set_title('Correlation Summary', fontweight='bold')
+        ax_summary.set_xticks(range(len(correlations)))
+        ax_summary.set_xticklabels(scenario_names, rotation=45, ha='right')
+        ax_summary.legend()
+        ax_summary.grid(True, alpha=0.3)
+        
+        # Add value labels on bars
+        for i, (bar, corr, pval) in enumerate(zip(bars, correlations, p_values)):
+            height = bar.get_height()
+            ax_summary.text(bar.get_x() + bar.get_width()/2., height + 0.02*np.sign(height),
+                           f'{corr:.2f}', ha='center', va='bottom' if height > 0 else 'top',
+                           fontsize=8, fontweight='bold')
     
-    return combined_df
+    plt.tight_layout()
+    plt.show()
+    
+    return fig
+
+
 
 
 
 
 # Survival Analysis 
-def survival_analysis_comparison(data, group_col, time_col='OS_MONTHS', event_col='OS_STATUS', pers_technique=None, save_plots=True):
+def survival_analysis_comparison(normalization_method, discrete_variable, continuous_variable, data, group_col, time_col='OS_MONTHS', event_col='OS_STATUS', save_plots=True):
     """
     Perform complete survival analysis comparison between groups
     """
@@ -926,15 +1101,13 @@ def survival_analysis_comparison(data, group_col, time_col='OS_MONTHS', event_co
     groups = data[group_col].unique()
     
     if len(groups) != 2:
-        print(f"Warning: Expected 2 groups, found {len(groups)}")
+        logger.warning(f"Warning: Expected 2 groups, found {len(groups)}")
         return None
     
     # Separate groups
     group1_data = data[data[group_col] == groups[0]]
     group2_data = data[data[group_col] == groups[1]]
     
-    print(f"Group '{groups[0]}': {len(group1_data)} patients")
-    print(f"Group '{groups[1]}': {len(group2_data)} patients")
     
     # Log-rank test
     results = logrank_test(
@@ -944,10 +1117,6 @@ def survival_analysis_comparison(data, group_col, time_col='OS_MONTHS', event_co
         group2_data[event_col]
     )
     
-    print(f"\nLog-rank test:")
-    print(f"Test statistic: {results.test_statistic:.4f}")
-    print(f"p-value: {results.p_value:.4f}")
-    print(f"Significant difference (α=0.05): {results.p_value < 0.05}")
     
     # Plot Kaplan-Meier curves
     kmf = KaplanMeierFitter()
@@ -969,11 +1138,8 @@ def survival_analysis_comparison(data, group_col, time_col='OS_MONTHS', event_co
     # Save plot if requested
     if save_plots:
         # Create output directory
-        if pers_technique:
-            output_dir = f"analysis/validation_Breast_{pers_technique}/results/outputs"
-        else:
-            output_dir = f"analysis/validation_Breast_{pers_technique}/results/outputs"
-        
+    
+        output_dir = f'analysis/validation_Breast/{discrete_variable}_{continuous_variable}/{normalization_method}/results/outputs'
         os.makedirs(output_dir, exist_ok=True)
         
         # Create filename
@@ -981,11 +1147,9 @@ def survival_analysis_comparison(data, group_col, time_col='OS_MONTHS', event_co
         filepath = os.path.join(output_dir, filename)
         
         # Save the plot
-        plt.savefig(filepath, dpi=300, bbox_inches='tight', facecolor='white')
-        print(f"\nPlot saved to: {filepath}")
-    
+        plt.savefig(filepath, dpi=300, bbox_inches='tight', facecolor='white')    
     plt.show()
     
-    return results
+
 
     

@@ -55,8 +55,6 @@ def create_generic_patients_cfg_bnd_validation(
         with open(bnd_output_path, "w") as file:
             file.write(patient_bnd)
 
-    print("All .cfg and .bnd files created for the validation.")
-
 
 # Load patient IDs
 

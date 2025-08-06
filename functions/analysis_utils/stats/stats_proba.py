@@ -315,4 +315,61 @@ def compute_power_calculation_genes(
         effect_size=effect_size, power=power, alpha=alpha, alternative=alternative
     )
     return sample_size
-    # print(f"Required sample size per group: {float(sample_size):.2f}")
+
+
+
+
+
+
+# Mannwhiteney stats test before and after KO 
+def compute_stats_test_after_ko(res_values, sens_values, res_values_knockout_ctnnb1, sens_values_knockout_ctnnb1, output_folder , input_interest, phenotype_interest):
+
+
+
+    res_values_knockout = res_values_knockout_ctnnb1.loc[input_interest, phenotype_interest]
+    res_values = res_values.loc[input_interest, phenotype_interest]
+    res_values_knockout = ast.literal_eval(res_values_knockout)
+    res_values = ast.literal_eval(res_values)
+
+
+
+    sens_values_knockout = sens_values_knockout_ctnnb1.loc[input_interest, phenotype_interest]
+    sens_values = sens_values.loc[input_interest, phenotype_interest]
+    sens_values_knockout = ast.literal_eval(sens_values_knockout)
+    sens_values = ast.literal_eval(sens_values)
+
+    stat_sens, p_value_sens = mannwhitneyu(sens_values_knockout, sens_values, alternative='two-sided')
+    stat_res, p_value_res = mannwhitneyu(res_values_knockout, res_values, alternative='two-sided')
+
+
+    results_pval_ko = pd.DataFrame(index = ['resistant', 'sensitive'], columns = ['stat', 'mannwhitneyu_pval', 'mean_change_KO_vs_baseline'])
+    results_pval_ko.loc['resistant','stat'] = stat_res
+    results_pval_ko.loc['sensitive','stat'] = stat_sens
+
+
+    results_pval_ko.loc['resistant','mannwhitneyu_pval'] = p_value_res
+    results_pval_ko.loc['sensitive','mannwhitneyu_pval'] = p_value_sens
+
+
+    results_pval_ko.loc['resistant','mean_change_KO_vs_baseline'] = np.mean(sens_values_knockout) - np.mean(sens_values)
+    results_pval_ko.loc['sensitive','mean_change_KO_vs_baseline'] = np.mean(res_values_knockout) - np.mean(res_values)
+
+    results_pval_ko.to_csv(
+        f'{output_folder}/pval_test_after_ko.csv'
+    )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

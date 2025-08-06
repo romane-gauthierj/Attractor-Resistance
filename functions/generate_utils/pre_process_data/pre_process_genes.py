@@ -13,7 +13,9 @@ from scipy.stats import chi2
 import matplotlib.pyplot as plt
 
 from sklearn.model_selection import KFold
+import logging
 
+logger = logging.getLogger(__name__)
 
 ### =========  Assess the gene's distribution ==========  
 # Bimodal patterns: (Hartigan's Dip test < 0.05, Bimodality Index > 1.5, and Kurtosis < 1) 
@@ -27,7 +29,19 @@ def identify_genes_distribution(rna_seq_data_filtered_analysis_pivoted):
     Classifies each gene as 'bimodal', 'zero_infl', or 'unimodal' based on distribution tests.
     Adds a 'genes_distribution' column to the input DataFrame.
     """
-     
+
+    
+    rna_seq_data_filtered_analysis_pivoted = rna_seq_data_filtered_analysis_pivoted.drop('Entrez_Gene_Id', axis=1, errors='ignore')
+    
+    # remove duplicates
+
+    rna_seq_data_filtered_analysis_pivoted = (
+    rna_seq_data_filtered_analysis_pivoted.groupby(rna_seq_data_filtered_analysis_pivoted.index)
+    .mean()     
+    )
+
+
+
     def hartigan_dip_test(gene_data):
         dip, pval = diptest.diptest(gene_data)
         return dip,pval 
@@ -83,7 +97,12 @@ def identify_genes_distribution(rna_seq_data_filtered_analysis_pivoted):
             (results_bimodal['BI'] > 1.5) 
             & (results_bimodal['Kurtosis'] < 1)
         ]
-            bimodal_genes = list(set(results_genes_bimodal.index))
+            
+        # if results_genes_bimodal.empty:
+        #     bimodal_genes = []
+        # else:
+        #     
+        bimodal_genes = list(set(results_genes_bimodal.index))
 
         return bimodal_genes
 
@@ -161,11 +180,18 @@ def identify_genes_distribution(rna_seq_data_filtered_analysis_pivoted):
                     (zi_score > 0.5)  # 50% more zeros than expected
                 )
                 
+
                 results_zero_inflation.loc[gene, 'is_zero_inflated'] = is_zero_inflated
 
-                list_zero_infla_genes = list(results_zero_inflation[
-                    results_zero_inflation['is_zero_inflated'] == True
-                ].index)
+                # list_zero_infla_genes = list(results_zero_inflation[
+                #     results_zero_inflation['is_zero_inflated'] == True
+                # ].index)
+        if 'is_zero_inflated' in results_zero_inflation.columns:
+            list_zero_infla_genes = list(
+            results_zero_inflation[results_zero_inflation['is_zero_inflated'].fillna(False) == True].index
+        )
+        else:
+            list_zero_infla_genes = []
         
         return list_zero_infla_genes
     
@@ -319,8 +345,18 @@ def compute_multi_distrib_normalization(expression_genes):
     bimodal_list = bimodal_genes.index.tolist()
 
     # --- Apply normalization for each group ---
-    results_zero = compute_zero_inflat_genes_normalization(zero_infl_genes, zero_infl_list)
-    results_bimodal = compute_bimodal_genes_gaussian_mixture_model(bimodal_genes, bimodal_list)
+    if len(zero_infl_list) != 0:
+        results_zero = compute_zero_inflat_genes_normalization(zero_infl_genes, zero_infl_list)
+    else:
+        logger.warning('no genes with zero distribution')
+
+        results_zero = pd.DataFrame()
+
+    if len(bimodal_list) != 0:
+        results_bimodal = compute_bimodal_genes_gaussian_mixture_model(bimodal_genes, bimodal_list)
+    else:
+        logger.warning('no genes with bimodal distribution')
+        results_bimodal = pd.DataFrame()
 
     # Unimodal genes: convert to long format and apply sigmoid normalization
     unimodal_long = (
@@ -330,6 +366,7 @@ def compute_multi_distrib_normalization(expression_genes):
         .melt(id_vars='Hugo_Symbol', var_name='model_id', value_name='rsem_tpm')
         .rename(columns={'Hugo_Symbol': 'gene_symbol'})
     )
+
     results_unimodal = (
         unimodal_long
         .groupby('gene_symbol', group_keys=False)
@@ -382,53 +419,7 @@ def process_genes(patients_ids, rna_seq_data, all_montagud_nodes, synonyms_to_no
             # Remove original MTOR and add both complexes
             rna_seq_data_filtered = rna_seq_data_filtered[rna_seq_data_filtered['gene_symbol'] != duplicate_gene]
             rna_seq_data_filtered = pd.concat([rna_seq_data_filtered, gene_duplicate_1_data, gene_duplicate_2_data], ignore_index=True)
-
-            print(f" Duplicated {duplicate_gene}: {syn_dict[duplicate_gene][0]} ({len(gene_duplicate_1_data)} rows) + {syn_dict[duplicate_gene][1]} ({len(gene_duplicate_2_data)} rows)")
-
         
 
     rna_seq_data_models_filtered = rna_seq_data_filtered[["model_id", "gene_symbol", "rsem_tpm"]]
     return rna_seq_data_models_filtered
-
-
-
-
-
-# def classify_expression(z):
-#     if z > 1:
-#         return "high"
-#     elif z < -1:
-#         return "low"
-#     else:
-#         return "normal"
-
-
-# def create_table_rna_seq_patients(rna_seq_data_filtered):
-#     # filter only data with patient id and the nodes of the montagud_data
-
-#     rna_seq_data_filtered["z_score"] = rna_seq_data_filtered.groupby("gene_symbol")["rsem_tpm"].transform(
-#         lambda x: (x - x.mean()) / x.std()
-#     )
-
-#     rna_seq_data_filtered["gene_expression_level"] = rna_seq_data_filtered["z_score"].apply(
-#         classify_expression
-#     )
-
-#     rna_seq_data_filtered = rna_seq_data_filtered[["model_id", "gene_symbol", "gene_expression_level"]]
-#     rna_seq_data_filtered.rename(columns={"gene_symbol": "gene_name"}, inplace=True)
-#     rna_seq_data_filtered = rna_seq_data_filtered[
-#         rna_seq_data_filtered["gene_expression_level"].isin(["low", "high"])
-#     ]
-
-#     table_rna_seq_patients = rna_seq_data_filtered.pivot_table(
-#         index="model_id",
-#         columns="gene_expression_level",
-#         values="gene_name",
-#         aggfunc=lambda x: ", ".join(sorted(set(x))),
-#     ).fillna("-")
-
-#     table_rna_seq_patients = table_rna_seq_patients.rename(
-#         columns={"low": "Low Gene Expression", "high": "High Gene Expression"}
-#     )
-
-#     return table_rna_seq_patients
