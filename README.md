@@ -17,13 +17,11 @@ pip install -r requirements.txt
 
 ## Pipelines
 
-1. pipeline generic: Growth Truth of the personalization, run maboss simulation on generic model (no personalization) 
-2. Pipeline 0: Validate the personalization with the TCGA dataset: create personalized boolean networks with TCGA prostate data, and compare to gleason score (Montagud paper)(approx. 20 min)
-3. pipeline 1: create personalized networks (gene expression, cnv) (approx. 4 min) for resistant, sensitive and healthy patients. 
-4. pipeline 2: run maboss simulation and gene diff expressed analysis
-5. pipeline 3: simulate a KO of genes identified and check what lead to reduction of proliferation (approx 3 hours for all the genes)
+Pipeline generic: run MaBoSS on generic boolean model (Montagud)
+Main Pipeline:  create personalized cell models boolean networks from the Montagud boolean networks based on expression data, run the MaBoSS stochastic simulation, compute correlation of probability phenotype and genes signature, perform genes differential expression and identify potential genes drivers of resistance.
+Simulate KO of some potential candidates and compute invasion mean value as well as stats test between before KO and after
 
-
+Pipeline Validation: Create personalized Boolean networks from Fumia Boolean network with METABRIC datasets, run MaBoSS, compute correlation between phenotype probability and Proliferation/ Apoptosis as well as to MIP 
 
 
 

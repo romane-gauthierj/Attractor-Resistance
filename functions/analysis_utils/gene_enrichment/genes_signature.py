@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import scipy.stats as stats
 import os
+from statsmodels.stats.multitest import multipletests
 
 
 # compute genes mean and variability
@@ -156,7 +157,20 @@ def compute_genes_mean_signature(
 
         genes_stats_results.at[gene, "P-value"] = p_value
 
-    significant_genes = genes_stats_results[genes_stats_results["P-value"] <= 0.05]
+
+
+
+
+        ## TEST TEST TEST - p adjusted value 
+        genes_stats_results["P-value"] = genes_stats_results["P-value"].astype(float)
+        pvals = genes_stats_results["P-value"].values
+        # Compute adjusted p-values (FDR, Benjamini-Hochberg)
+        _, pvals_adj, _, _ = multipletests(pvals, method="fdr_bh")
+        genes_stats_results["P-adj"] = pvals_adj
+
+
+
+    significant_genes = genes_stats_results[genes_stats_results["P-adj"] <= 0.05]
     output_dir = f"{folder}/genes_diff_expressed"
     os.makedirs(output_dir, exist_ok=True)
     file_path = f"{output_dir}/significant_genes_{condition}_ON_{phenotype}.csv"

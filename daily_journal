@@ -1882,3 +1882,29 @@ First 10 gene sets:
 
 
   how can i assess the genes to intervene ??
+
+
+
+
+
+  TODO: for compute gene differential expression analysis -> compute the p adjusted value, attention!
+  find a way to identify directly the genes to target (significantly more expressed in resistant)- maybe compute diff of expression between resistant and sensitive ? 
+
+  TODO- run breast pipeline for min-max
+  keep writing/ updating -> and continue methods diagram : explain clearly that used patients data (metabric) and find best pers method based on gene signature score and then use this pers method identified for cell models to explore drug resistance 
+  create/ add tables of person combination with their correlation value (MPI, proliferation, apoptosis)
+  -> both for the normalization technique and for the person combination of data 
+
+
+
+TODO 
+  update genes differential expression how compute p value-> need p adjusted values
+
+
+  try to cluster the patients based on both their apoptosis and invasion phenotypes
+  -> or keep patients with both high invasion and low apoptosis and repeat differential gene expression 
+
+  check nb de patients and healthy group - sur qu on peut comparer
+
+
+  further work : try to not simulate the drug effect 
