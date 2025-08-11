@@ -1908,3 +1908,7 @@ TODO
 
 
   further work : try to not simulate the drug effect 
+
+
+  TODO - repeat with proteins instead of genes (change tailor fct with diff methods of normalization), and run again pipeline; and try to combine cnv mutations and genes/ proteins and then with all together 
+  also recreate methods diagram and updates the discussion, and gives more details about how maboss work

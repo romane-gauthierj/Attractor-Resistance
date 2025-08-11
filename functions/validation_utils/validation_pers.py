@@ -26,7 +26,7 @@ from functions.generate_utils.create_generic_models.update_phenotypes_generic_mo
 
 from functions.generate_utils.create_person_models.tailor_cfgs_patients import (
     personalized_patients_genes_cfgs,
-    personalized_patients_proteins_cfgs,
+    # personalized_patients_proteins_cfgs,
 )
 from functions.generate_utils.create_person_models.tailor_bnd_cnv import (
     tailor_bnd_cnv_validation,
@@ -381,12 +381,23 @@ def create_pers_models_generic(
                 
             )
         else:
-            personalized_patients_proteins_cfgs(
+            # test (with proteins)
+            personalized_patients_genes_cfgs(
                 df_melted_proteins,
                 montagud_node_model,
                 folder_validation_temp,
+                amplif_factor,
                 context_label = context_label,
+                normalization_method = normalization_method,
+                
             )
+
+            # personalized_patients_proteins_cfgs(
+            #     df_melted_proteins,
+            #     montagud_node_model,
+            #     folder_validation_temp,
+            #     context_label = context_label,
+            # )
 
         # # personalize the networks with CNV
         tailor_bnd_cnv_validation(df_melted_cnv, folder_validation_temp, context_label)
