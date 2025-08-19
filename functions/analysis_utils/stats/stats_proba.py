@@ -355,7 +355,7 @@ def compute_stats_test_after_ko(res_values, sens_values, res_values_knockout_ctn
     results_pval_ko.loc['sensitive','mean_change_KO_vs_baseline'] = np.mean(res_values_knockout) - np.mean(res_values)
 
     results_pval_ko.to_csv(
-        f'{output_folder}/pval_test_after_ko.csv'
+        f'{output_folder}/pval_test_after_ko_{phenotype_interest}.csv'
     )
 
 

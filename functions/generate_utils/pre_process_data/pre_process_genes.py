@@ -423,3 +423,17 @@ def process_genes(patients_ids, rna_seq_data, all_montagud_nodes, synonyms_to_no
 
     rna_seq_data_models_filtered = rna_seq_data_filtered[["model_id", "gene_symbol", "rsem_tpm"]]
     return rna_seq_data_models_filtered
+
+
+
+# if combined with proteins
+
+def process_genes_proteins(df_melted_protein,rna_seq_data_models_filtered):
+    df_melted_protein = df_melted_protein.groupby(['model_id', 'protein_symbol'], as_index=False).agg({'rsem_tpm': 'mean'})
+    protein_pairs = set(zip(df_melted_protein['model_id'], df_melted_protein['protein_symbol']))
+
+    # Filter the genes dataframe to exclude those pairs
+    filtered_genes_df = rna_seq_data_models_filtered[~rna_seq_data_models_filtered.apply(lambda row: (row['model_id'], row['gene_symbol']) in protein_pairs, axis=1)]
+
+
+    return filtered_genes_df

@@ -1912,3 +1912,64 @@ TODO
 
   TODO - repeat with proteins instead of genes (change tailor fct with diff methods of normalization), and run again pipeline; and try to combine cnv mutations and genes/ proteins and then with all together 
   also recreate methods diagram and updates the discussion, and gives more details about how maboss work
+
+
+   TRY THIS: KI of CTNNB1 - can we see dual role of CTNNB1??
+
+
+
+
+
+   Aug 12
+   - try cb protein and genes to personalize the networks 
+   - update discussion part 
+
+
+
+   specify that in the breast validation datasets -> no proteins 
+   so identified mutations-genes as the best personalization method -> get results with this personalization method 
+   and then try run the main analysis on proteins combined with genes (gene if protein not present)
+   and check the results 
+
+
+
+   add table with diffential genes 
+   add more info in discussion - why use prostate model for pan cancer
+   try to remove the prostate specific genes or do not mention it and say that the sginaling pathways are conserved accross
+
+
+
+   TODO:
+   - check what are the prostate specific genes- try to remove them? or justify why keep them
+   - try KI of beta catenin
+   - add genes diff expression table 
+   - should we add proliferation phenotype ? and heatmap only with proteins ?
+
+   find another target to block?? 
+   beta catenin only gene induce invasion?
+
+
+
+
+
+
+
+add p value for the heatmap genes-proteins model KO beta catenin legend
+
+
+
+
+
+19 august 
+
+to do:
+- check why pipeline does not run with intervation = beta catenin-> meme resultats avant et apres KO ce qui n'est pas possible
+- create run validation pipeline with variables in the config.env
+- apres push config.env
+- try more or less patients for the validation to have survival analysis that makes sense
+
+check nb of patients for the breast analysis -> was about 1800... so first try with 200
+check the packages used to create the heatmap and boxplot 
+
+
+ask thomas how i can remove the analysis folder of my github

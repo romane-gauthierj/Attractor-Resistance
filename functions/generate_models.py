@@ -8,7 +8,7 @@ from functions.generate_utils.identification_patients.get_patients_sens_res impo
 )
 from functions.generate_utils.pre_process_data.pre_process_cnv import preprocess_cnv
 from functions.generate_utils.pre_process_data.pre_process_genes import (
-    process_genes,
+    process_genes,process_genes_proteins
 )
 from functions.generate_utils.pre_process_data.pre_process_montagud_nodes import (
     process_montagud_nodes,process_montagud_nodes_synonyms
@@ -109,6 +109,10 @@ def pre_process_re(
         top_healthy_ids = list(set(df_melted_protein["model_id"]) & set(healthy_ids))
 
     elif type_models == "genes_proteins_models":
+
+        # priority to proteins  -> only use genes data if not in protein
+        rna_seq_data_models_filtered = process_genes_proteins(df_melted_protein,rna_seq_data_models_filtered)
+
         top_resistant_ids = list(
             set(df_melted_protein["model_id"])
             & set(rna_seq_data_models_filtered["model_id"])
@@ -258,9 +262,9 @@ def generate_models_re(
                 rna_seq_data_models_filtered,
                 montagud_node_model,
                 folder_models_categ,
-                drug_interest,  # context label
+                amplif_factor,
+                drug_interest, # context label
                 normalization_method,
-
             )
             # test
             personalized_patients_proteins_cfgs(
