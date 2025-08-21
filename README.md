@@ -13,43 +13,51 @@ This project provides a computational framework to analyze and model cell behavi
 This approach enables systematic exploration of resistance mechanisms and supports the development of personalized cell models.
 
 
+## Dependency
+1. Install miniconda (https://www.anaconda.com/docs/getting-started/miniconda/install)
+
+2. Install MaBoSS dependency
+```
+conda install -c colomoto::maboss
+``` 
+
 
 ## Set up
 
 1. create directory, enter it and clone the github 
-1. Ensure you are on the right branch. 
+2. Ensure you are on the right branch. 
 
 ```
 git checkout master
 ``` 
 
-1. create virtual environment 
+3. create virtual environment 
 
 ```
 python -m venv .env
 ``` 
 
-2. activate virtual environment 
+4. activate virtual environment 
 ```
 source .env/bin/activate
 ``` 
 
 
-3. Install requirements txt file that contains all the required library to run the code. In the terminal run:
+5. Install requirements txt file that contains all the required library to run the code. In the terminal run:
 
 ```
 pip install -r requirements.txt
 ```
 
 
-4. Load the datasets (original datasets are saved in a drive folder)
+6. Load the datasets (original datasets are saved in a drive folder)
 
 ```
 gdown --folder https://drive.google.com/drive/folders/1Tp_wRLTVEFLWm_mwrubFYBSsbt6xTnQG
 
 ```
 
-5. Run the pipelines with the default parameters 
+7. Run the pipelines with the default parameters 
 
 Validation pipeline with the command (100 cell models, personalization using mutations and genes):
 

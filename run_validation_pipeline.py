@@ -238,7 +238,6 @@ def main_validation():
 
 
 
-
     rna_seq_breast_filtered['Hugo_Symbol'] = rna_seq_breast_filtered['Hugo_Symbol'].str.strip()
 
         # Transform from wide to long format

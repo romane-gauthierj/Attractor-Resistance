@@ -28,6 +28,10 @@ load_dotenv('config.env')
 def load_config():
 
     mutations_data = pd.read_csv(os.getenv('mutations_data_path', 'data/cellmodel_data/mutations_all_20250318.csv'))
+    rna_seq_data = pd.read_csv(os.getenv('rna_seq_data_path', 'data/cellmodel_data/rnaseq_merged_20250117/rnaseq_merged_20250117.csv'))
+    cnv_data = pd.read_csv(os.getenv('cnv_data_path', 'data/cellmodel_data/cnv_summary_20250207.csv'))
+    proteins_data = pd.read_csv(os.getenv('proteins_data_path', 'data/cellmodel_data/proteomics_all_20250211.csv'))
+    
     annotations_models = pd.read_csv(os.getenv('annotations_models_path', 'data/model_list_20250407.csv'))
     
     drug_data = pd.read_csv(os.getenv('drug_data_path', 'data/drug_sensitivity.csv'))
@@ -40,9 +44,7 @@ def load_config():
 
 
     nodes_montagud_synonyms = pd.read_csv(os.getenv('nodes_montagud_synonyms_path', 'data/montagud_models/nodes_processed.csv'))
-    rna_seq_data = pd.read_csv(os.getenv('rna_seq_data_path', 'data/cellmodel_data/rnaseq_merged_20250117/rnaseq_merged_20250117.csv'))
-    cnv_data = pd.read_csv(os.getenv('cnv_data_path', 'data/cellmodel_data/cnv_summary_20250207.csv'))
-    proteins_data = pd.read_csv(os.getenv('proteins_data_path', 'data/cellmodel_data/proteomics_all_20250211.csv'))
+    
     onco_tsg_data = pd.read_csv(os.getenv('onco_tsg_data_path', 'data/oncogenes_tsg.tsv'), sep='\t')
     
     generic_model_path = os.getenv('generic_model_path', 'data/montagud_models/Montagud2022_Prostate_Cancer')
