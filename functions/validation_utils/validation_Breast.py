@@ -1147,7 +1147,7 @@ def survival_analysis_comparison(normalization_method, discrete_variable, contin
         
         # Save the plot
         plt.savefig(filepath, dpi=300, bbox_inches='tight', facecolor='white')    
-    plt.show()
+    # plt.show()
     
 
 

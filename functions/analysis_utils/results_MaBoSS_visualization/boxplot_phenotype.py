@@ -138,14 +138,14 @@ def create_boxplot(folder_result, res_data, sens_data, significant_df):
 
     output_path = f"{folder_result}/output"
     os.makedirs(output_path, exist_ok=True)
+    plt.tight_layout()
     plt.savefig(
         f"{output_path}/boxplot_expression_per_phenotype.png",
         dpi=400,
         bbox_inches="tight",
     )
 
-    plt.tight_layout()
-    plt.show()
+    # plt.show()
 
 
 def create_boxplot_three_groups(
@@ -393,4 +393,4 @@ def create_boxplot_three_groups(
         bbox_inches="tight",  # Ensure everything is saved
     )
 
-    plt.show()
+    # plt.show()

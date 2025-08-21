@@ -2,18 +2,14 @@ numpy
 pandas
 maboss
 ginsim
-seaborn
-os
+seaborn 
 statsmodels
 scipy
-ast
-shutil
 gseapy
 lifelines
-sklearn
+scikit-learn
 diptest
 dotenv
-logging
-pathlib
+gdown
 
 

@@ -91,7 +91,7 @@ def vizualise_table_phenotype_condition(
         index=False,
     )
 
-    plt.show()
+    # plt.show()
 
 
 def plot_side_by_side_heatmaps(resistant_mean, sensitive_mean, folder_results):
@@ -161,7 +161,7 @@ def plot_side_by_side_heatmaps(resistant_mean, sensitive_mean, folder_results):
         f"{output_path}/heatmap_resistant_vs_sensitive.png",
         dpi=400,
     )
-    plt.show()
+    # plt.show()
 
 
 def plot_three_side_by_side_heatmaps(mean1, mean2, mean3, folder_results, labels=None):
@@ -201,7 +201,7 @@ def plot_three_side_by_side_heatmaps(mean1, mean2, mean3, folder_results, labels
         f"{output_path}/heatmap_three_groups.png",
         dpi=400,
     )
-    plt.show()
+    # plt.show()
 
 
 
@@ -252,4 +252,4 @@ def plot_two_stacked_heatmaps(mean1, mean3, folder_results, labels=None):
         dpi=400,
         bbox_inches="tight",
     )
-    plt.show()
+    # plt.show()
