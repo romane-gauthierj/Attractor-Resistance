@@ -75,7 +75,8 @@ def main():
 
 
     if interventions is not None:
-        intervention_list = [None] + [[i.strip()] for i in interventions.split(',')]
+        # intervention_list = [None] + [[i.strip()] for i in interventions.split(',')]
+        intervention_list = [None, [i.strip() for i in interventions.split(',')]]
     else:
         intervention_list = [None]
 
@@ -85,7 +86,6 @@ def main():
 
 
     for intervention_gene in intervention_list:
-        print(f"Processing intervention_gene: {intervention_gene}")
     
 
         # for drug in drugs_dict:
@@ -96,9 +96,6 @@ def main():
             subdir = f"{'_'.join(drug_targets)}_target_{normalization_technique}/intervention_{'_'.join(intervention_gene)}"
         else: 
             subdir = f"{'_'.join(drug_targets)}_target_{normalization_technique}"
-
-
-        print(f"Using subdir: {subdir}")
 
 
         folder_generic_models = f"analysis/{drug_name}/{folder_name}/{subdir}/models/generic/"

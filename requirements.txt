@@ -13,3 +13,7 @@ lifelines
 sklearn
 diptest
 dotenv
+logging
+pathlib
+
+

@@ -5,10 +5,7 @@ import shutil
 import maboss
 import gseapy as gp
 import logging
-
 from scipy.stats import spearmanr
-import pandas as pd
-import os
 from pathlib import Path
 from dotenv import load_dotenv
 

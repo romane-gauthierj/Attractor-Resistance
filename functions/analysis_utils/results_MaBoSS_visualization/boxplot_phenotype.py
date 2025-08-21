@@ -13,38 +13,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Step 1: Convert the dataframes to long format and min-max normalization
-# def melt_df(df, group_label):
-#     records = []
-#     phenotypes = df.index
-
-#     conditions = df.columns
-#     for phenotype in phenotypes:
-#         all_values = []
-#         for condition in conditions:
-#             values = ast.literal_eval(df.loc[phenotype, condition])
-#             all_values.extend(values)
-#         # Min-max scaling
-#         min_val, max_val = min(all_values), max(all_values)
-#         normalized_values = [
-#             (v - min_val) / (max_val - min_val + 1e-9) for v in all_values
-#         ]  # Avoid division by zero
-
-#         i = 0
-#         for condition in conditions:
-#             values = ast.literal_eval(df.loc[phenotype, condition])
-#             for _ in values:
-#                 records.append(
-#                     {
-#                         "Phenotype": phenotype,
-#                         "Condition": condition,
-#                         "Group": group_label,
-#                         "Expression": normalized_values[i],
-#                         "Condition_Group": f"{condition} ({group_label})",
-#                     }
-#                 )
-#                 i += 1
-#     return pd.DataFrame(records)
 
 
 def create_boxplot(folder_result, res_data, sens_data, significant_df):
@@ -135,8 +103,7 @@ def create_boxplot(folder_result, res_data, sens_data, significant_df):
         ax.set_xticklabels(group_labels, rotation=45, ha="right")
         ax.set_xlabel("Condition")
         ax.set_title(phenotype)
-        if i == 0:
-            ax.set_ylabel("Expression Values")
+        ax.set_ylabel("Expression Values")
 
         # Add significance stars (above the higher of the two boxplots)
         for j, condition in enumerate(conditions):
@@ -163,7 +130,8 @@ def create_boxplot(folder_result, res_data, sens_data, significant_df):
     sensitive_patch = mpatches.Patch(color="#008000", label="Sensitive")
     fig.legend(
         handles=[resistant_patch, sensitive_patch],
-        loc="upper right",
+        loc="upper left",
+        bbox_to_anchor=(0.04, 0.99),  
         fontsize=12,
         title="Group",
     )
