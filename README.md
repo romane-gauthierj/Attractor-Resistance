@@ -16,6 +16,13 @@ This approach enables systematic exploration of resistance mechanisms and suppor
 
 ## Set up
 
+1. create directory, enter it and clone the github 
+1. Ensure you are on the right branch. 
+
+```
+git checkout master
+``` 
+
 1. create virtual environment 
 
 ```
