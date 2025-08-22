@@ -24,7 +24,7 @@ conda install -c colomoto::maboss
 
 ## Set up
 
-1. create directory
+1. In a terminal, create a directory
 
 ```
 mkdir attractors_project
