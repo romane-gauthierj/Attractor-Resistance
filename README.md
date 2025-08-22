@@ -24,40 +24,50 @@ conda install -c colomoto::maboss
 
 ## Set up
 
-1. create directory, enter it and clone the github 
-2. Ensure you are on the right branch. 
+1. create directory
 
 ```
-git checkout master
+mkdir attractors_project
 ``` 
 
-3. create virtual environment 
+2. go inside the directory
+```
+cd attractors_project
+``` 
+
+3. clone the github repo (with all the code) inside the directory 
+
+```
+git clone https://github.com/romane-gauthierj/Attractor-Resistance.git
+``` 
+
+4. create virtual environment 
 
 ```
 python -m venv .env
 ``` 
 
-4. activate virtual environment 
+5. activate virtual environment 
 ```
 source .env/bin/activate
 ``` 
 
 
-5. Install requirements txt file that contains all the required library to run the code. In the terminal run:
+6. Install requirements txt file that contains all the required library to run the code. In the terminal run:
 
 ```
 pip install -r requirements.txt
 ```
 
 
-6. Load the datasets (original datasets are saved in a drive folder)
+7. Load the datasets (original datasets are saved in a drive folder)
 
 ```
 gdown --folder https://drive.google.com/drive/folders/1Tp_wRLTVEFLWm_mwrubFYBSsbt6xTnQG
 
 ```
 
-7. Run the pipelines with the default parameters 
+8. Run the pipelines with the default parameters 
 
 Validation pipeline with the command (100 cell models, personalization using mutations and genes):
 
