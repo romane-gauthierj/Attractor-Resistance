@@ -247,15 +247,7 @@ def generate_models_re(
                 normalization_method,
             )
 
-        # elif continuous_variable == "proteins":
-        #     personalized_patients_proteins_cfgs(
-        #         df_melted_proteins,
-        #         montagud_node_model,
-        #         folder_models_categ,
-        #         drug_interest,  # context label
-        #     )
 
-        # try differentially to change the genes only if not in the proteins data 
         elif continuous_variable == "genes_proteins":
             # proteins will overwrite genes
             personalized_patients_genes_cfgs(
@@ -276,12 +268,7 @@ def generate_models_re(
                 normalization_method,
             )
 
-            # personalized_patients_proteins_cfgs(
-            #     df_melted_proteins,
-            #     montagud_node_model,
-            #     folder_models_categ,
-            #     drug_interest,  # context label
-            # )
+    
         else:
             raise ValueError(
                 "Type of models not recognized. Please choose from 'genes_models', 'proteins_models', or 'genes_proteins_models'."

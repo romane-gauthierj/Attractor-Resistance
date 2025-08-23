@@ -402,21 +402,3 @@ def create_pers_models_generic(
         # # personalize the networks with CNV
         tailor_bnd_cnv_validation(df_melted_cnv, folder_validation_temp, context_label)
 
-
-
-# def pre_process_montagud_nodes(montagud_data, name_maps, nodes_to_add):
-#     # transform nodes_to_add to list if single element
-#     if isinstance(nodes_to_add, str):
-#         nodes_to_add = [nodes_to_add]
-
-#     # Create list of genes of interest (in Montagud data)
-#     montagud_nodes = list(
-#         set(montagud_data["Target node"].tolist() + montagud_data["Source"].tolist())
-#     )
-#     montagud_nodes = [node for node in montagud_nodes if node != "0/1"]
-#     # Apply mapping
-#     montagud_nodes = [name_maps.get(x, x) for x in montagud_nodes]
-#     # Add any additional nodes
-#     montagud_nodes = list(set(montagud_nodes + nodes_to_add))
-
-#     return montagud_nodes

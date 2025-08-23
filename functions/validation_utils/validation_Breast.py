@@ -353,51 +353,6 @@ def generic_models_update_phenotypes(phenotype_interest, folder_models):
 
 
 
-# def normalize_rna_seq_efficient(rna_seq_data_models_filtered):
-#     rna_normalized = rna_seq_data_models_filtered.copy()
-
-#     def sigmoid_normalize_group(group):
-#         """
-#         Apply sigmoid normalization to a group (gene) -> when data is unimodal
-#         1. Subtract median from all values
-#         2. Calculate lambda using MAD (Median Absolute Deviation)
-#         3. Apply sigmoid function: 1 / (1 + exp(-λ * x))
-#         """
-#         # Step 1: Calculate median and subtract from all values
-#         median_value = group['rsem_tpm'].median()
-#         centered_values = group['rsem_tpm'] - median_value
-        
-#         # Step 2: Calculate MAD (Median Absolute Deviation)
-#         # MAD = median(|xi - median(X)|)
-#         mad_value = np.median(np.abs(centered_values))
-        
-#         # Handle edge case where MAD is 0 (all values are identical)
-#         if mad_value == 0:
-#             # If all values are the same, set them all to 0.5 (median mapping)
-#             sigmoid_values = np.full(len(group), 0.5)
-#         else:
-#             # Step 3: Calculate lambda (λ) = log(3) / MAD
-#             lambda_param = np.log(3) / mad_value
-            
-#             # Step 4: Apply sigmoid function with lambda scaling
-#             # sigmoid(x) = 1 / (1 + exp(-λ * x))
-#             sigmoid_values = 1 / (1 + np.exp(-lambda_param * centered_values))
-        
-#         # Store the normalized values
-#         group['rsem_tpm_normalized'] = sigmoid_values
-        
-#         # Store additional metrics for debugging/validation
-#         group['median_value'] = median_value
-#         group['mad_value'] = mad_value
-#         group['lambda_param'] = lambda_param if mad_value != 0 else np.nan
-        
-#         return group
-#    # Group by gene and apply normalization
-#     rna_normalized = rna_normalized.groupby('gene_symbol').apply(sigmoid_normalize_group).reset_index(drop=True)
-
-    
-
-
 #     return rna_normalized
 
 def normalize_rna_seq_efficient(rna_seq_data_models_filtered, normalize_technique):

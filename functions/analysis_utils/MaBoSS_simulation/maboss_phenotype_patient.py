@@ -86,9 +86,6 @@ def compute_phenotype_table(
 ):
     # context_label: can be either the tissue name or the drug name
 
-    # model_pers_bnd = f"{folder_models}/pers_models/{patient_id}_{context_label}.bnd"
-    # model_pers_cfg = f"{folder_models}/pers_models/{patient_id}_{context_label}.cfg"
-
     model_pers_bnd = f"{folder_models}/{patient_id}_{context_label}.bnd"
     model_pers_cfg = f"{folder_models}/{patient_id}_{context_label}.cfg"
 

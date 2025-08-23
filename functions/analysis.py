@@ -217,10 +217,6 @@ def downstream_analysis(
     patient_healthy_mean = compute_mean_phenotype_values(df_healthy_combined)
 
 
-    # patient_resistant_median = compute_median_phenotype_values(df_res_combined)
-    # patient_sensitive_median = compute_median_phenotype_values(df_sens_combined)
-    # patient_healthy_median = compute_median_phenotype_values(df_healthy_combined)
-
 
 
     # resistant and sensitive patients

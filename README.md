@@ -2,15 +2,22 @@
 
 
 
-## Project Overview
+## 📌 Overview
 
-This project provides a computational framework to analyze and model cell behavior, with a focus on understanding gene expression and resistance mechanisms. The pipeline integrates Boolean network modeling and stochastic simulations to identify key drivers of resistance and validate findings across datasets. It includes:
+This project provides a **computational framework** for analyzing and modeling cell behavior, with a focus on **adaptive resistance mechanisms** in cancer.  
 
-- A main analysis pipeline for discovering resistance pathways and candidate genes.
-- A validation pipeline to ensure robustness using independent data.
-- A baseline pipeline for initial model setup and comparison.
+It integrates **Boolean network modeling** with **stochastic simulations** to:
 
-This approach enables systematic exploration of resistance mechanisms and supports the development of personalized cell models.
+- Identify **key resistance drivers**  
+- Validate findings across independent datasets  
+- Support the development of **personalized cell models**
+
+### Pipelines included:
+- **Main pipeline** → explores resistance pathways and highlights candidate genes  
+- **Validation pipeline** → tests different personalization strategies to find the most reliable approach  
+- **Baseline pipeline** → runs simulations on the unpersonalized baseline model for comparison  
+
+
 
 
 ## Dependency
@@ -81,53 +88,72 @@ Main pipeline with the command (35 cell models in each group, Pictilisib drug, p
 python run_main_pipeline.py
 ```
 
-
-## Output - Results
-The results and output figures can be found in the analysis folder in the respective folder. 
+The **Baseline pipeline** (and its results) is available in the [`pipeline_generic.ipynb`](./pipeline_generic.ipynb) notebook.  
 
 
+## 📊 Outputs & Results
 
-
-
-
-## Configuration- User parameters
-
-It is also possible to change some default parameters.  
-
-You can configure:
-- **Number of cell models/patients**
-- **Drug of interest**
-- **Normalization technique**
-- **Other parameters**
-
-All variables are stored in the [`config.env`](./config.env) file.  
-To update a value, edit the line corresponding to the variable.  
-You can also change dataset paths in this file.  
-
-Note: All variables for the **three pipelines** are in the same `config.env`.  
-Be careful to edit the variables corresponding to the pipeline you are running.
+All results are saved in the **`analysis/`** folder.  
 
 ---
 
-### Available options
+### 🔬 Main Pipeline  
+(Default: 35 cell models per group, genes as continuous, mutations as discrete)  
+
+👉 For quick test runs, reduce models per group (number_patients) to **4**.  
+
+- **Invasion & Apoptosis probability distributions**  
+  ![](outputs_README/boxplot_expression_per_phenotype_readme.png)
+
+- **Heatmap: Resistant vs. Sensitive models**  
+  ![](outputs_README/heatmap_resistant_vs_sensitive_readme.png)
+
+- **Heatmap: Resistant, Sensitive, Healthy groups**  
+  ![](outputs_README/heatmap_three_groups_readme.png)
+
+---
+
+### 🧪 Validation Pipeline  
+(Default: 1865 patients per group, sigmoid normalization)  
+
+👉 For quick test runs, reduce patients per group to **4**.  
+
+- **Survival analysis – Proliferation phenotype**  
+  ![](outputs_README/survival_analysis_group-proliferation_readme.png)
+
+- **Survival analysis – Invasion phenotype**  
+  ![](outputs_README/survival_analysis_group-apoptosis_readme.png)
+
+
+## ⚙️ Configuration
+
+You can customize pipeline settings by editing the [`config.env`](./config.env) file.  
+This file controls parameters for **all three pipelines** (main, validation, baseline).  
+
+👉 Make sure you edit the variables for the pipeline you are running.  
+
+### Parameters you can configure:
+- **Number of cell models/patients**
+- **Drug of interest**
+- **Normalization technique**
+- **Data types (genes, proteins, mutations, CNVs)**
+
+---
+
+### Example options
 
 ```env
-genetic_intervention = KO | KI
-drug_name            = Pictilisib | AZD7762
-continuous_variable  = genes | proteins | genes_proteins
-discrete_variable    = mutations | cnv
-normalization_techniques = sigmoid | min-max | ...
-```
+# Type of genetic intervention
+genetic_intervention     = KO | KI
 
+# Drug of interest
+drug_name                = Pictilisib | AZD7762
 
+# Continuous variables
+continuous_variable      = genes | proteins | genes_proteins
 
+# Discrete variables
+discrete_variable        = mutations | cnv | mutations_cnv
 
-
-
-
-
-
-
-
-
-
+# Normalization methods
+normalization_techniques = sigmoid | min-max | log_transf | global_minmax | global_log | distribution_normalization
