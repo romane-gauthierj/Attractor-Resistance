@@ -25,7 +25,7 @@ It integrates **Boolean network modeling** with **stochastic simulations** to:
 
 2. Install MaBoSS dependency
 ```
-conda install -c colomoto::maboss
+conda install -c colomoto maboss
 ``` 
 
 
@@ -57,6 +57,12 @@ python -m venv .env
 5. activate virtual environment 
 ```
 source .env/bin/activate
+``` 
+
+6. go install the folder 
+```
+cd Attractor-Resistance
+ 
 ``` 
 
 
