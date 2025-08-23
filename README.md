@@ -100,7 +100,7 @@ All results are saved in the **`analysis/`** folder.
 ### 🔬 Main Pipeline  
 (Default: 35 cell models per group, genes as continuous, mutations as discrete)  
 
-👉 For quick test runs, reduce models per group (number_patients) to **4**.  
+👉 For quick test runs (but not significant results), reduce models per group (number_patients) to **4**.  
 
 - **Invasion & Apoptosis probability distributions**  
   ![](outputs_README/boxplot_expression_per_phenotype_readme.png)
@@ -116,13 +116,13 @@ All results are saved in the **`analysis/`** folder.
 ### 🧪 Validation Pipeline  
 (Default: 1865 patients per group, sigmoid normalization)  
 
-👉 For quick test runs, reduce patients per group to **4**.  
+👉 For quick test runs (but not significant results), reduce patients per group to **4**.  
 
 - **Survival analysis – Proliferation phenotype**  
-  ![](outputs_README/survival_analysis_group-proliferation_readme.png)
+  ![](outputs_README/prolif_surv_analysis_VF_readme.png)
 
-- **Survival analysis – Invasion phenotype**  
-  ![](outputs_README/survival_analysis_group-apoptosis_readme.png)
+- **Survival analysis – Apoptosis phenotype**  
+  ![](outputs_README/apoptosis_survival_VF_readme.png)
 
 
 ## ⚙️ Configuration

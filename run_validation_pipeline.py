@@ -115,45 +115,47 @@ def main_validation():
     mutations_data_filtered =  pre_process_mutations(patients_ids, mutations_data_filtered, onco_tsg_data, all_montagud_nodes, synonyms_to_nodes_dict)
 
 
-    create_generic_patients_cfgs_bnds(
-    folder_generic_models,
-    folder_models,
-    patients_ids,
-)
+#     create_generic_patients_cfgs_bnds(
+#     folder_generic_models,
+#     folder_models,
+#     patients_ids,
+# )
     
-    generic_models_update_phenotypes(phenotypes_interest, folder_models)
+#     generic_models_update_phenotypes(phenotypes_interest, folder_models)
 
-    if discrete_variable == 'mutations':
-        tailor_bnd_cnv_cm(mutations_data_filtered, folder_models)
-        logger.debug('mutations selected')
+#     if discrete_variable == 'mutations':
+#         tailor_bnd_cnv_cm(mutations_data_filtered, folder_models)
+#         logger.debug('mutations selected')
 
-    elif discrete_variable == 'cnv':
-        tailor_bnd_cnv_cm(cnv_data_filt, folder_models)
-        logger.debug('cnv selected')
-    elif discrete_variable == 'cnv_mutations':
-        tailor_bnd_cnv_cm(cnv_data_filt, folder_models)
-        tailor_bnd_cnv_cm(mutations_data_filtered, folder_models)
-        logger.debug('mutations and cnv selected')
+#     elif discrete_variable == 'cnv':
+#         tailor_bnd_cnv_cm(cnv_data_filt, folder_models)
+#         logger.debug('cnv selected')
+#     elif discrete_variable == 'cnv_mutations':
+#         tailor_bnd_cnv_cm(cnv_data_filt, folder_models)
+#         tailor_bnd_cnv_cm(mutations_data_filtered, folder_models)
+#         logger.debug('mutations and cnv selected')
 
-    else:
-        logger.debug('select between mutations or cnv or cnv_mutations')
+#     else:
+#         logger.debug('select between mutations or cnv or cnv_mutations')
 
-    personalized_patients_genes_cfgs(
-    rna_seq_data_final,
-    all_montagud_nodes,
-    folder_models,
-    amplif_factor = 100,
-    normalization_method = normalization_method
-)
+#     personalized_patients_genes_cfgs(
+#     rna_seq_data_final,
+#     all_montagud_nodes,
+#     folder_models,
+#     amplif_factor = 100,
+#     normalization_method = normalization_method
+# )
     
-    for patient in patients_ids:
-        results_maboss = compute_phenotype_table(
-            results_folder,
-            folder_models,
-            patient,
-            inputs_list,
-            phenotypes_interest,
-        )
+#     for patient in patients_ids:
+#         results_maboss = compute_phenotype_table(
+#             results_folder,
+#             folder_models,
+#             patient,
+#             inputs_list,
+#             phenotypes_interest,
+#         )
+
+
     combined_results = combine_patient_results(results_folder)
     # combined_results = pd.read_csv('analysis/validation_Breast/mutations_genes/sigmoid/results/combined_patients_ids.csv')
 

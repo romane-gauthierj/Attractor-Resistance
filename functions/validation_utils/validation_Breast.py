@@ -896,150 +896,6 @@ def correlate_boolean_predictions_with_gene_signatures(validation, proba_phenoty
 
     return results_corr_df, correlation_data
 
-# vizualise the results 
-def visualize_correlation_results(results_corr_df, correlation_data, hallmark):
-    """
-    Create comprehensive visualization of Boolean network validation results
-    """
-    
-    # Set up the plotting style
-    plt.style.use('default')
-    sns.set_palette("husl")
-    
-    # Get gene signature column name
-    gene_signature_col = f'{hallmark}_gene_signature_score'
-    gene_scores = correlation_data[gene_signature_col]
-    
-    # Get Boolean network columns (excluding patient_id and gene signature)
-    boolean_cols = [col for col in correlation_data.columns 
-                   if col not in ['patient_id', gene_signature_col]]
-    
-    # Calculate number of subplots
-    n_scenarios = len(boolean_cols)
-    n_cols = min(3, n_scenarios)
-    n_rows = max(2, (n_scenarios + n_cols - 1) // n_cols)
-    
-    fig = plt.figure(figsize=(5*n_cols, 4*n_rows))
-    
-    # Main title
-    fig.suptitle(f'Boolean Network Validation: {hallmark}', fontsize=16, fontweight='bold')
-    
-    # Individual scatter plots
-    for i, col in enumerate(boolean_cols):
-        ax = plt.subplot(n_rows, n_cols, i+1)
-        
-        # Get data for this scenario
-        boolean_probs = correlation_data[col]
-        
-        # Get correlation from results
-        corr = float(results_corr_df.loc[col, 'correlation_value'])
-        pval = float(results_corr_df.loc[col, 'p_val'])
-        
-        # Create scatter plot with patient labels
-        scatter = ax.scatter(gene_scores, boolean_probs, 
-                           alpha=0.8, s=120, 
-                           c=range(len(gene_scores)), 
-                           cmap='viridis',
-                           edgecolors='black', linewidth=0.5)
-        
-        # Add patient labels
-        for j, patient_id in enumerate(correlation_data['patient_id']):
-            ax.annotate(patient_id, 
-                       (gene_scores.iloc[j], boolean_probs.iloc[j]),
-                       xytext=(5, 5), textcoords='offset points',
-                       fontsize=9, alpha=0.8, fontweight='bold')
-        
-        # Add correlation line
-        if len(gene_scores) > 1:  # Only if we have multiple points
-            z = np.polyfit(gene_scores, boolean_probs, 1)
-            p = np.poly1d(z)
-            x_line = np.linspace(gene_scores.min(), gene_scores.max(), 100)
-            ax.plot(x_line, p(x_line), "r--", alpha=0.8, linewidth=2)
-        
-        # Formatting
-        ax.set_xlabel(f'{hallmark}\nGene Signature Score', fontsize=10)
-        ax.set_ylabel(f'Boolean Network\n{col.replace("_", " ")}', fontsize=10)
-        
-        # Title with correlation info
-        if pval < 0.001:
-            sig_text = "***"
-        elif pval < 0.01:
-            sig_text = "**"
-        elif pval < 0.05:
-            sig_text = "*"
-        else:
-            sig_text = "ns"
-        
-        title_text = f'{col.replace("_", " ")}\nr = {corr:.3f} ({sig_text})'
-        ax.set_title(title_text, fontsize=11, fontweight='bold')
-        
-        # Color code the title based on significance
-        if pval < 0.05:
-            ax.title.set_color('green')
-        else:
-            ax.title.set_color('red')
-        
-        ax.grid(True, alpha=0.3)
-        
-        # Add correlation strength text
-        abs_corr = abs(corr)
-        if abs_corr >= 0.7:
-            strength = "Strong"
-            strength_color = 'darkgreen'
-        elif abs_corr >= 0.5:
-            strength = "Moderate"
-            strength_color = 'orange'
-        elif abs_corr >= 0.3:
-            strength = "Weak"
-            strength_color = 'red'
-        else:
-            strength = "Very Weak"
-            strength_color = 'darkred'
-        
-        ax.text(0.05, 0.95, f'{strength}', transform=ax.transAxes,
-                fontsize=9, fontweight='bold', color=strength_color,
-                bbox=dict(boxstyle="round,pad=0.3", facecolor='white', alpha=0.7))
-    
-    # Summary statistics subplot (if space allows)
-    if n_scenarios < n_rows * n_cols:
-        ax_summary = plt.subplot(n_rows, n_cols, n_scenarios + 1)
-        
-        # Create summary statistics
-        correlations = results_corr_df['correlation_value'].astype(float)
-        p_values = results_corr_df['p_val'].astype(float)
-        
-        # Bar plot of correlations
-        scenario_names = [name.split('_')[0] for name in results_corr_df.index]
-        bars = ax_summary.bar(range(len(correlations)), correlations, 
-                             color=['green' if p < 0.05 else 'red' for p in p_values],
-                             alpha=0.7, edgecolor='black')
-        
-        ax_summary.axhline(y=0, color='black', linestyle='-', alpha=0.3)
-        ax_summary.axhline(y=0.7, color='green', linestyle='--', alpha=0.5, label='Strong (0.7)')
-        ax_summary.axhline(y=-0.7, color='green', linestyle='--', alpha=0.5)
-        ax_summary.axhline(y=0.5, color='orange', linestyle='--', alpha=0.5, label='Moderate (0.5)')
-        ax_summary.axhline(y=-0.5, color='orange', linestyle='--', alpha=0.5)
-        
-        ax_summary.set_xlabel('Scenarios')
-        ax_summary.set_ylabel('Correlation Coefficient')
-        ax_summary.set_title('Correlation Summary', fontweight='bold')
-        ax_summary.set_xticks(range(len(correlations)))
-        ax_summary.set_xticklabels(scenario_names, rotation=45, ha='right')
-        ax_summary.legend()
-        ax_summary.grid(True, alpha=0.3)
-        
-        # Add value labels on bars
-        for i, (bar, corr, pval) in enumerate(zip(bars, correlations, p_values)):
-            height = bar.get_height()
-            ax_summary.text(bar.get_x() + bar.get_width()/2., height + 0.02*np.sign(height),
-                           f'{corr:.2f}', ha='center', va='bottom' if height > 0 else 'top',
-                           fontsize=8, fontweight='bold')
-    
-    plt.tight_layout()
-    plt.show()
-    
-    return fig
-
 
 
 
@@ -1077,17 +933,28 @@ def survival_analysis_comparison(normalization_method, discrete_variable, contin
     plt.figure(figsize=(10, 6))
     
     # Plot each group
-    colors = ['red', 'blue']
-    for i, group in enumerate(groups):
-        group_data = data[data[group_col] == group]
-        kmf.fit(group_data[time_col], group_data[event_col], label=f'{group_col}: {group}')
-        kmf.plot_survival_function(color=colors[i])
     
-    plt.title(f'Survival Analysis by {group_col}\nLog-rank p-value: {results.p_value:.4f}')
+
+    color_map = {'high': 'red', 'low': 'blue'}
+    for group in ['low', 'high']:
+        group_data = data[data[group_col] == group]
+        if not group_data.empty:
+            kmf.fit(group_data[time_col], group_data[event_col], label=f'{group_col}: {group}')
+            kmf.plot_survival_function(color=color_map[group])
+
+
+    # colors = ['red', 'blue']
+    # for i, group in enumerate(groups):
+    #     group_data = data[data[group_col] == group]
+    #     kmf.fit(group_data[time_col], group_data[event_col], label=f'{group_col}: {group}')
+    #     kmf.plot_survival_function(color=colors[i])
+    
+    plt.title(f'Survival Analysis by {group_col}\nLog-rank p-value: {results.p_value:.3e}')
     plt.xlabel('Time (months)')
     plt.ylabel('Survival Probability')
     plt.legend()
     plt.grid(True, alpha=0.3)
+    plt.xlim(0, 120)
     
     # Save plot if requested
     if save_plots:
