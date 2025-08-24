@@ -94,6 +94,10 @@ Main pipeline with the command (35 cell models in each group, Pictilisib drug, p
 python run_main_pipeline.py
 ```
 
+
+
+kill a la fin 
+
 The **Baseline pipeline** (and its results) is available in the [`pipeline_generic.ipynb`](./pipeline_generic.ipynb) notebook.  
 
 
