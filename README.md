@@ -59,28 +59,28 @@ python -m venv .env
 source .env/bin/activate
 ``` 
 
-6. go install the folder 
+6. go inside the folder 
 ```
 cd Attractor-Resistance
  
 ``` 
 
 
-6. Install requirements txt file that contains all the required library to run the code. In the terminal run:
+7. Install requirements txt file that contains all the required library to run the code. In the terminal run:
 
 ```
 pip install -r requirements.txt
 ```
 
 
-7. Load the datasets (original datasets are saved in a drive folder)
+8. Load the datasets (original datasets are saved in a drive folder)
 
 ```
 gdown --folder https://drive.google.com/drive/folders/1Tp_wRLTVEFLWm_mwrubFYBSsbt6xTnQG
 
 ```
 
-8. Run the pipelines with the default parameters 
+9. Run the pipelines with the default parameters 
 
 Validation pipeline with the command (100 cell models, personalization using mutations and genes):
 
@@ -95,8 +95,6 @@ python run_main_pipeline.py
 ```
 
 
-
-kill a la fin 
 
 The **Baseline pipeline** (and its results) is available in the [`pipeline_generic.ipynb`](./pipeline_generic.ipynb) notebook.  
 
