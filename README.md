@@ -111,13 +111,13 @@ Default: 35 cell models per group, genes as continuous, mutations as discrete
 👉 For quick test runs (but not significant results), reduce models per group (number_patients) to **4**.  
 
 - **Invasion & Apoptosis probability distributions**  
-  ![](outputs_figures/boxplot.png)
+  ![](outputs_figures/readme_boxplot.png)
 
 - **Heatmap: Resistant vs. Sensitive models**  
-  ![](outputs_figures/heatmap_resistant_vs_sensitive.png)
+  ![](outputs_figures/readme_heatmaps_2.png)
 
 - **Heatmap: Resistant, Sensitive, Healthy groups**  
-  ![](outputs_figures/heatmap_three_groups.png)
+  ![](outputs_figures/readme_heatmaps_3.png)
 
 ---
 

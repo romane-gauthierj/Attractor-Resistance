@@ -190,10 +190,10 @@ def plot_side_by_side_heatmaps(resistant_mean, sensitive_mean, folder_results):
         linecolor="white",
         cbar_kws={"label": "Mean Value"},
         ax=axes[0],
-        vmin=vmin,
-        vmax=vmax,
+        vmin=0.3,
+        vmax=0.65,
     )
-    axes[0].set_title("Resistant Mean Phenotypes", fontsize=14)
+    axes[0].set_title("Resistant cell lines", fontsize=14)
     axes[0].set_ylabel("Condition", fontsize=12)
     axes[0].set_xlabel("Phenotype", fontsize=12)
     axes[0].tick_params(axis="x", rotation=45)
@@ -208,10 +208,10 @@ def plot_side_by_side_heatmaps(resistant_mean, sensitive_mean, folder_results):
         linecolor="white",
         cbar_kws={"label": "Mean Value"},
         ax=axes[1],
-        vmin=vmin,
-        vmax=vmax,
+        vmin=0.3,
+        vmax=0.65,
     )
-    axes[1].set_title("Sensitive Mean Phenotypes", fontsize=14)
+    axes[1].set_title("Sensitive cell lines", fontsize=14)
     axes[1].set_ylabel("Condition", fontsize=12)
     axes[1].set_xlabel("Phenotype", fontsize=12)
     axes[1].tick_params(axis="x", rotation=45)
@@ -282,8 +282,8 @@ def plot_three_side_by_side_heatmaps(mean1, mean2, mean3, folder_results, labels
     mean3 = mean3.loc[common_idx, common_cols].astype(float)
 
     # Compute global vmin and vmax
-    vmin = min(mean1.min().min(), mean2.min().min(), mean3.min().min())
-    vmax = max(mean1.max().max(), mean2.max().max(), mean3.max().max())
+    # vmin = min(mean1.min().min(), mean2.min().min(), mean3.min().min())
+    # vmax = max(mean1.max().max(), mean2.max().max(), mean3.max().max())
 
     for ax, data, label in zip(axes, [mean1, mean2, mean3], labels):
         sns.heatmap(
@@ -295,10 +295,10 @@ def plot_three_side_by_side_heatmaps(mean1, mean2, mean3, folder_results, labels
             linecolor="white",
             cbar_kws={"label": "Mean Value"},
             ax=ax,
-            vmin=vmin,
-            vmax=vmax,
+            vmin=0.3,
+            vmax=0.65,
         )
-        ax.set_title(f"{label} Mean Phenotypes", fontsize=14)
+        ax.set_title(label, fontsize=14)
         ax.set_ylabel("Condition", fontsize=12)
         ax.set_xlabel("Phenotype", fontsize=12)
         ax.tick_params(axis="x", rotation=45)

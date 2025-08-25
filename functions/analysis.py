@@ -234,7 +234,7 @@ def downstream_analysis(
         patient_sensitive_mean,
         patient_healthy_mean,
         folder_results_temp,
-        labels=patients_categ,
+        labels=['Resistant cell lines', 'Sensitive cell lines', 'Healthy cell lines'],
     )
 
 
