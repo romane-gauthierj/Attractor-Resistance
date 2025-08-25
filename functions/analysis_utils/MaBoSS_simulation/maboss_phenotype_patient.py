@@ -68,8 +68,6 @@ def compute_phenotype_table_generic(
         for phenotype in phenotypes_interest:
             if phenotype in final_probs.index:
                 results.loc[active_node, phenotype] = final_probs[phenotype]
-
-        results.loc["Overal Mean"] = results.mean()
     os.makedirs(results_dir, exist_ok=True)
     results.to_csv(f"{results_dir}/phenotype_distribution_generic.csv")
     return results
