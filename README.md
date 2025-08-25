@@ -106,7 +106,7 @@ All results are saved in the **`analysis/`** folder.
 ---
 
 ### 🔬 Main Pipeline  
-(Default: 35 cell models per group, genes as continuous, mutations as discrete)  
+Default: 35 cell models per group, genes as continuous, mutations as discrete
 
 👉 For quick test runs (but not significant results), reduce models per group (number_patients) to **4**.  
 
@@ -122,8 +122,9 @@ All results are saved in the **`analysis/`** folder.
 ---
 
 ### 🧪 Validation Pipeline  
-(Default: 1865 patients per group, sigmoid normalization)  
+Default: 1865 patients per group, genes as continuous, mutations as discrete, sigmoid normalization 
 
+**⚠️ Warning:** The simulation with these settings takes about **8–9 hours** to run.
 👉 For quick test runs (but not significant results), reduce patients per group to **4**.  
 
 - **Survival analysis – Proliferation phenotype**  
@@ -139,6 +140,7 @@ You can customize pipeline settings by editing the [`config.env`](./config.env) 
 This file controls parameters for **all three pipelines** (main, validation, baseline).  
 
 👉 Make sure you edit the variables for the pipeline you are running.  
+
 
 ### Parameters you can configure:
 - **Number of cell models/patients**
@@ -165,3 +167,26 @@ discrete_variable        = mutations | cnv | mutations_cnv
 
 # Normalization methods
 normalization_techniques = sigmoid | min-max | log_transf | global_minmax | global_log | distribution_normalization
+```
+
+### 📝 How to Change the Number of Patients
+
+You can easily change the default parameters used in your analysis by editing the `config.env` file, here is an example to change the number of patients for the main analysis:
+
+1. Open the configuration file in your terminal:
+```
+nano config.env
+```
+
+2. Find the line that starts with:
+number_patients=
+
+
+3. Change the value to your desired number (e.g., `4` for a quick test run).
+
+4. Save your changes:
+- Press `Ctrl+O` to save, then `Enter` to confirm.
+- Press `Ctrl+X` to exit nano.
+
+**Tip:**  
+Reducing the number of patients (e.g., to 4) will make the pipeline run much faster for testing purposes.
