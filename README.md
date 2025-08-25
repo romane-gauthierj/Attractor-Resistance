@@ -111,13 +111,13 @@ All results are saved in the **`analysis/`** folder.
 👉 For quick test runs (but not significant results), reduce models per group (number_patients) to **4**.  
 
 - **Invasion & Apoptosis probability distributions**  
-  ![](outputs_README/boxplot_expression_per_phenotype_readme.png)
+  ![](outputs_figures/boxplot.png)
 
 - **Heatmap: Resistant vs. Sensitive models**  
-  ![](outputs_README/heatmap_resistant_vs_sensitive_readme.png)
+  ![](outputs_figures/heatmap_resistant_vs_sensitive.png)
 
 - **Heatmap: Resistant, Sensitive, Healthy groups**  
-  ![](outputs_README/heatmap_three_groups_readme.png)
+  ![](outputs_figures/heatmap_three_groups.png)
 
 ---
 
@@ -127,10 +127,10 @@ All results are saved in the **`analysis/`** folder.
 👉 For quick test runs (but not significant results), reduce patients per group to **4**.  
 
 - **Survival analysis – Proliferation phenotype**  
-  ![](outputs_README/prolif_surv_analysis_VF_readme.png)
+  ![](outputs_figures/proliferation_survival.png)
 
 - **Survival analysis – Apoptosis phenotype**  
-  ![](outputs_README/apoptosis_survival_VF_readme.png)
+  ![](outputs_figures/apoptosis_survival.png)
 
 
 ## ⚙️ Configuration
