@@ -4,7 +4,8 @@ data
 __pycache__
 *.cfg
 *.bnd
-results
 papers
 *.csv
 *.txt
+models
+data_filtered
