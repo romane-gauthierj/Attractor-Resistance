@@ -113,11 +113,11 @@ Default: 35 cell models per group, genes as continuous, mutations as discrete
 - **Invasion & Apoptosis probability distributions**  
   ![](outputs_figures/readme_boxplot.png)
 
-- **Heatmap: Resistant vs. Sensitive models**  
-  ![](outputs_figures/readme_heatmaps_2.png)
-
-- **Heatmap: Resistant, Sensitive, Healthy groups**  
+- **Heatmap: Resistant, Sensitive, Healthy groups - Before Knockout**  
   ![](outputs_figures/readme_heatmaps_3.png)
+
+- **Heatmap: Resistant, Sensitive, Healthy groups - After B-catenin Knockout**  
+  ![](analysis/Pictilisib/mutations_genes/PI3K_target_sigmoid/intervention_beta_catenin/results/output/heatmap_three_groups.png)
 
 ---
 
