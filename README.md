@@ -111,13 +111,13 @@ Default: 35 cell models per group, genes as continuous, mutations as discrete
 👉 For quick test runs (but not significant results), reduce models per group (number_patients) to **4**.  
 
 - **Invasion & Apoptosis probability distributions**  
-  ![](outputs_figures/readme_boxplot.png)
+  ![](README_OUTPUTS/boxplot_expression_per_phenotype.png)
 
 - **Heatmap: Resistant, Sensitive, Healthy groups - Before Knockout**  
-  ![](outputs_figures/readme_heatmaps_3.png)
+  ![](README_OUTPUTS/heatmap_three_groups_before_KO.png)
 
 - **Heatmap: Resistant, Sensitive, Healthy groups - After B-catenin Knockout**  
-  ![](analysis/Pictilisib/mutations_genes/PI3K_target_sigmoid/intervention_beta_catenin/results/output/heatmap_three_groups.png)
+  ![](README_OUTPUTS/heatmap_three_groups_after_KO.png)
 
 ---
 
@@ -128,10 +128,10 @@ Default: 1865 patients per group, genes as continuous, mutations as discrete, si
 👉 For quick test runs (but not significant results), reduce patients per group to **4**.  
 
 - **Survival analysis – Proliferation phenotype**  
-  ![](outputs_figures/proliferation_survival.png)
+  ![](README_OUTPUTS/survival_analysis_group-proliferation.png)
 
 - **Survival analysis – Apoptosis phenotype**  
-  ![](outputs_figures/apoptosis_survival.png)
+  ![](README_OUTPUTS/survival_analysis_group-apoptosis.png)
 
 
 ## ⚙️ Configuration
